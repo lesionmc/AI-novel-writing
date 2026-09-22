@@ -362,13 +362,27 @@ PRAGMA user_version = 1;
 --   · 删除章节（DELETE /api/chapters/{id}）→ 同事务删除对应 chapter_fts 行（坑 13）
 --   · 设定新增/变更/删除（character / world_entry）→ 同步维护 setting_fts
 -- FTS5 不可用时本段整体跳过，全文检索标为不可用（由 /api/system/capabilities 暴露）。
+--
+-- 【分词器：trigram，2026-09-22 从 unicode61 改过来】
+--   为什么改：`unicode61` 把**连续中文当成一个超长 token**，于是「七号仓库」这类
+--   中文子串的 `MATCH` 恒为 0 条 —— 检索只能静默降级成全表 LIKE 扫描。
+--   `trigram` 按三字滑动窗口建索引，中文子串能直接命中（实测 SQLite 3.49.1 通过）。
+--
+--   ⚠️ **trigram 的已知边界（必须与 LIKE 兜底共存，别删那个兜底）**：
+--      查询词**短于 3 个字符时 trigram 一律不命中**。中文里「陈默」「仓库」这种
+--      两字查询极其常见，所以 `search_setting_repo` 在 FTS 无结果时**必须**继续走
+--      LIKE 子串兜底 —— 那条兜底不是"老代码残留"，是 trigram 的必要补充。
+--
+--   ⚠️ **存量书库需要迁移**：`CREATE VIRTUAL TABLE IF NOT EXISTS` 不会改动已存在的表，
+--      所以老库仍是 unicode61。启动时由 `services/fts_migration.py` 幂等重建
+--      （判据 = 表定义里有没有 `trigram`，不依赖额外标记）。
 -- ============================================================================
 -- @@OPTIONAL fts
 CREATE VIRTUAL TABLE IF NOT EXISTS chapter_fts USING fts5(
     chapter_id UNINDEXED,
     title,
     content,
-    tokenize = 'unicode61'
+    tokenize = 'trigram'
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS setting_fts USING fts5(
@@ -376,7 +390,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS setting_fts USING fts5(
     source_id   UNINDEXED,
     name,
     body,
-    tokenize = 'unicode61'
+    tokenize = 'trigram'
 );
 -- @@END
 

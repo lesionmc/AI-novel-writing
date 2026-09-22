@@ -1,13 +1,17 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { WritingMode } from '@/types/api';
 import { formatNumber, formatWordCount } from '@/lib/format';
 import { WRITING_MODE_LABELS } from '@/lib/labels';
 import { getThemeDef } from '@/lib/theme';
+import { useDeskStore } from '@/stores/deskStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
 import { Icon } from '@/components/common/Icon';
 import { Menu } from '@/components/common/Menu';
+import { toast } from '@/stores/toastStore';
+import { WritingAiDialog, type WritingAiMode } from './WritingAiDialog';
 import styles from './TopBar.module.css';
 
 export interface TopBarProps {
@@ -58,6 +62,25 @@ export function TopBar({
   // 当前主题属于深色系还是浅色系 —— 决定快捷按钮显示「太阳」还是「月亮」
   const resolvedTheme = useThemeStore((s) => s.resolved);
   const toggleNight = useThemeStore((s) => s.toggleNight);
+
+  // 正文辅助 AI：章节 id 与选中文本都从 deskStore 取 —— 顶栏不是编辑器的父组件，
+  // 走 store 可以完全避免 prop 穿透（编辑器已实时上报这两者）。
+  const activeChapterId = useDeskStore((s) => s.activeChapterId);
+  const selectionText = useDeskStore((s) => s.selectionText);
+  const [aiMode, setAiMode] = useState<WritingAiMode | null>(null);
+
+  /** 打开某个正文辅助能力；前置条件不满足时给明确提示，而不是弹一个必然失败的空窗 */
+  const openWritingAi = (mode: WritingAiMode) => {
+    if (activeChapterId === null) {
+      toast.info('先打开一章再使用');
+      return;
+    }
+    if (mode === 'expand' && !selectionText.trim()) {
+      toast.info('先在正文里选中一段，再点扩写');
+      return;
+    }
+    setAiMode(mode);
+  };
   const isDarkTheme = getThemeDef(resolvedTheme).scheme === 'dark';
   const chapterMenuItems = [
     { key: 'prev', label: '上一章', icon: 'chevronUp' as const, onSelect: onPrev, disabled: !hasPrev },
@@ -74,6 +97,7 @@ export function TopBar({
   ];
 
   return (
+    <>
     <header className={styles.bar}>
       {/* 写作台是全屏布局（刻意不套全局导航，避免写作时被干扰），
           但没有出口会让用户找不到回书库的路 —— 这里必须有明确的返回入口。 */}
@@ -190,15 +214,34 @@ export function TopBar({
                   icon: 'retry',
                   onSelect: onRefetchRecall,
                 },
-                // 还没做的能力**折成一条**说明，不再摆 4 个点不动的死胡同；
-                // 也绝不出现「(M2)」这种内部里程碑号（QA M4）
+                // 正文辅助 AI（M2 批次二）。分两组：
+                //   上两个**不产出正文**（剧情走向给选项、校对只挑错）—— 与「不在写的环节代笔」一致；
+                //   下两个产出**草稿**，会落到编辑器里由作者删改，**不自动保存**。
+                // 两个"代笔"项在标签里就写明是草稿，避免用户以为 AI 直接定了稿。
                 {
-                  key: 'coming',
-                  label: '续写 / 扩写 / 剧情走向 / 校对 —— 即将上线',
-                  icon: 'info',
-                  disabled: true,
+                  key: 'plot-directions',
+                  label: '接下来往哪走（给方向，不写正文）',
+                  icon: 'plotArc',
                   separatorBefore: true,
-                  onSelect: () => {},
+                  onSelect: () => openWritingAi('directions'),
+                },
+                {
+                  key: 'proofread',
+                  label: '校对这一章（只挑错，不改字）',
+                  icon: 'audit',
+                  onSelect: () => openWritingAi('proofread'),
+                },
+                {
+                  key: 'continue',
+                  label: '续写一段草稿',
+                  icon: 'layers',
+                  onSelect: () => openWritingAi('continue'),
+                },
+                {
+                  key: 'expand',
+                  label: selectionText.trim() ? '扩写选中的段落' : '扩写（先在正文里选中一段）',
+                  icon: 'edit',
+                  onSelect: () => openWritingAi('expand'),
                 },
               ]}
             />
@@ -236,5 +279,22 @@ export function TopBar({
         />
       </div>
     </header>
+
+      {/* 正文辅助 AI 弹窗。草稿插入要带 `seq` 对齐（编辑器的消费守卫按章号过滤），
+          所以章号或章节 id 任一为空都不渲染，避免"插错章"。 */}
+      {aiMode && activeChapterId !== null && seq !== null ? (
+        <WritingAiDialog
+          chapterId={activeChapterId}
+          seq={seq}
+          mode={aiMode}
+          selectedText={selectionText}
+          onOpenConfig={() => {
+            setAiMode(null);
+            navigate(`/book/${encodeURIComponent(slug)}/config`);
+          }}
+          onClose={() => setAiMode(null)}
+        />
+      ) : null}
+    </>
   );
 }

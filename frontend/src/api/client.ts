@@ -10,6 +10,7 @@
  */
 
 import { downloadFile, request } from './request';
+import { writingApi } from './writingApi';
 import type {
   AffectedChapter,
   AiFlavorResult,
@@ -70,6 +71,10 @@ export { ApiError, isApiError, userMessageOf } from './request';
    ============================================================ */
 
 export const api = {
+  // 正文辅助 AI + 一致性审校（M2-batch2）：在 `./writingApi` 里分组维护，
+  // 展开进同一个 `api` 对象 —— 调用方仍写 `api.plotDirections(...)`，且主 client 不超行数门禁。
+  ...writingApi,
+
   /* --- 5.1 books（R15） --- */
   /** 列表返回契约 `BookBrief`（6 字段，故意不含 target_words/premise/writing_mode） */
   listBooks: () => request<BookBrief[]>('/books'),

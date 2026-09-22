@@ -12,6 +12,7 @@
  *   · `topics.d.ts` —— 选题向导（四问 + 三数据 → 蓝海细分方向，同步端点）
  *   · `ai.d.ts` —— AI 对话式建设定（AI 只出草稿，确认后由前端逐条入库）
  *   · `audit.d.ts` —— 质检（去 AI 味 / 敏感词 / 词库状态）
+ *   · `writing.d.ts` —— 正文辅助 AI（剧情走向 / 校对 / 续写 / 扩写）+ 一致性审校 SSE
  * 业务代码统一 `import type { ... } from '@/types/api'`。统一前缀 /api。
  */
 
@@ -33,6 +34,7 @@ export * from './system';
 export * from './topics';
 export * from './ai';
 export * from './audit';
+export * from './writing';
 
 /* ============================ books（R15） ============================ */
 

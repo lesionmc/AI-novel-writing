@@ -8,7 +8,7 @@ import { SensitiveSection } from '@/components/audit/SensitiveSection';
 /**
  * 质检 `/book/:slug/audit`（04 §5.4）。
  * 三个独立区块，各自一个按钮 + 结果列表：
- *   1) 一致性审校 —— 本轮未实现，保留区块位置，做「即将上线」说明态
+ *   1) 一致性审校 —— 完整实现（SSE 流式，边审边出；可中断）
  *   2) 去 AI 味   —— 完整实现（单章）
  *   3) 敏感词自查 —— 完整实现（整本书），含免责文案与词库缺失引导
  * 页面本身只做组装，细节在各区块组件里（对齐开发导览「场景 B：加一个页面」）。
@@ -44,7 +44,7 @@ export function AuditPage() {
         </div>
       </header>
 
-      <ConsistencySection />
+      <ConsistencySection slug={slug} />
       <AiFlavorSection slug={slug} />
       <SensitiveSection slug={slug} />
     </main>

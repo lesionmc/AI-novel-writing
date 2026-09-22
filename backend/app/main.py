@@ -25,9 +25,11 @@ from app.routers import (
     providers,
     system,
     topics,
+    writing_ai,
 )
 from app.routers import settings as settings_router
 from app.services import provider_migration
+from app.services import fts_migration
 
 logger = get_logger("app.main")
 
@@ -43,6 +45,8 @@ async def lifespan(app: FastAPI):
     logger.info("startup self-check done", **log_fields(**caps.as_dict()))
     # 一次性把老书库里的模型配置搬到全局库（幂等、失败非致命）
     provider_migration.migrate_providers_to_global()
+    # 把老书库的 FTS 索引从 unicode61 重建为 trigram（幂等、失败非致命）
+    fts_migration.migrate_all_book_fts()
     yield
 
 
@@ -74,6 +78,7 @@ app.include_router(export.router)
 app.include_router(system.router)
 app.include_router(topics.router)
 app.include_router(ai_setup.router)
+app.include_router(writing_ai.router)
 
 
 def _mount_frontend(application: FastAPI) -> None:

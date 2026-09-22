@@ -1,0 +1,157 @@
+/* ============================================================================
+   正文辅助 AI 弹窗（剧情走向 / 校对 / 续写 / 扩写）
+   ----------------------------------------------------------------------------
+   全部颜色 / 间距 / 字号走 Token，不得硬编码；深浅主题自动跟随。
+   ========================================================================== */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ---------- 状态区 ---------- */
+.stateBox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.spin {
+  animation: spin var(--duration-slow) linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}
+
+.emptyBox {
+  padding: var(--space-6);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+/* ---------- 通用列表 ---------- */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: 52vh;
+  overflow-y: auto;
+}
+
+.item {
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.itemHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.itemTitle {
+  flex: 1;
+  min-width: 0;
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.itemMeta {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+.fieldRow {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+}
+
+.fieldLabel {
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+}
+
+.fieldValue {
+  color: var(--color-text-secondary);
+  min-width: 0;
+}
+
+/* ---------- 校对：原文片段 ---------- */
+.excerpt {
+  margin: var(--space-2) 0;
+  padding: var(--space-2) var(--space-3);
+  border-left: var(--border-width-2) solid var(--color-border-strong);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ---------- 草稿预览 ---------- */
+.draft {
+  margin: 0;
+  padding: var(--space-4);
+  max-height: 46vh;
+  overflow-y: auto;
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ---------- 草稿操作条 ---------- */
+.draftActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+/* ---------- 顶部提示条 ---------- */
+.notice {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--color-warning-soft);
+  border: var(--border-width-1) solid var(--color-warning-border);
+  color: var(--color-warning-text);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+}

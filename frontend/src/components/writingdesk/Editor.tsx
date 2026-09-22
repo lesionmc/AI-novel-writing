@@ -13,6 +13,7 @@ import { toast } from '@/stores/toastStore';
 import { EditorToolbar } from './EditorToolbar';
 import { FindBar } from './FindBar';
 import { createChunkHighlightExtension, setChunkHighlight } from './chunkHighlight';
+import { useDraftInsert } from './useDraftInsert';
 import styles from './Editor.module.css';
 
 export interface EditorDoc {
@@ -90,6 +91,7 @@ export function Editor({
   const toggleFocusMode = useDeskStore((s) => s.toggleFocusMode);
   const chunkHighlight = useDeskStore((s) => s.chunkHighlight);
   const clearChunkHighlight = useDeskStore((s) => s.clearChunkHighlight);
+  const setSelectionText = useDeskStore((s) => s.setSelectionText);
 
   const highlightExtension = useMemo(
     () => createChunkHighlightExtension({ className: styles.chunkHighlight }),
@@ -105,6 +107,15 @@ export function Editor({
     },
     onUpdate: ({ editor: ed }) => {
       setDoc((d) => ({ ...d, html: ed.getHTML() }));
+    },
+    /**
+     * 实时把「当前选中的纯文本」上报到 store。
+     * 顶栏的「扩写」要用它（顶栏不是编辑器的父组件，拿不到 editor 实例）。
+     * 折叠选区（光标）时 `from === to` → `textBetween` 返回空串，正好表示"没有选中"。
+     */
+    onSelectionUpdate: ({ editor: ed }) => {
+      const { from, to } = ed.state.selection;
+      setSelectionText(from === to ? '' : ed.state.doc.textBetween(from, to, '\n'));
     },
   });
 
@@ -197,6 +208,17 @@ export function Editor({
     },
     [],
   );
+
+  // 消费「插入 AI 草稿」请求（续写 / 扩写）：守卫逻辑在 useDraftInsert 里，这里只装配。
+  useDraftInsert({
+    editor,
+    contentReady,
+    seq,
+    chapterId,
+    reloadKey,
+    content,
+    readAppliedKey: () => appliedRef.current,
+  });
 
   // 字数上报顶栏
   useEffect(() => {
