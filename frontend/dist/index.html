@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <meta name="description" content="AI 小说创作工具 —— 本地运行的中文长篇小说写作助手，用记忆外置解决长篇吃书" />
+    <title>AI 小说创作工具</title>
+    <script>
+      /*
+       * 防首屏白闪（FOUC）—— 必须在 <head> 里同步执行，不能挪进 React。
+       *
+       * 问题：主题由 JS 写进 <html data-theme>。若等 React 挂载后再写，浏览器会先
+       * 用默认浅色把界面画一遍、再切成深色 —— 用户会看到一下刺眼的白闪。
+       * 夜里写稿时这一下最难受。
+       *
+       * 做法：在解析到 <body> 之前就把主题定好，首屏直接是最终颜色，全程无闪烁。
+       *
+       * 注意：这里的解析规则是 src/lib/theme.ts 的**精简副本**，属有意为之的重复 ——
+       * 内联脚本不能 import 模块，而首屏时序不允许它异步加载。改主题机制时两处必须
+       * 一起改：
+       *   · 存储键                'ainovel.theme'  （theme.ts: THEME_STORAGE_KEY）
+       *   · 跟随系统时深色用哪个   'night'          （theme.ts: SYSTEM_DARK_THEME）
+       */
+      (function () {
+        var STORAGE_KEY = 'ainovel.theme';
+        var SYSTEM_DARK_THEME = 'night';
+        var VALID = ['light', 'night', 'black', 'sepia', 'pine'];
+
+        var pref = 'light';
+        try {
+          var raw = window.localStorage.getItem(STORAGE_KEY);
+          if (raw === 'system') pref = 'system';
+          else if (VALID.indexOf(raw) !== -1) pref = raw;
+        } catch (e) {
+          /* 存储被禁用（隐私模式）→ 用默认主题，不影响使用 */
+        }
+
+        var dark = false;
+        try {
+          dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        } catch (e) {
+          dark = false;
+        }
+
+        var theme = pref === 'system' ? (dark ? SYSTEM_DARK_THEME : 'light') : pref;
+        // 'light' 等于「不写 data-theme」，保证默认渲染路径与加主题之前完全一致
+        if (theme !== 'light') document.documentElement.setAttribute('data-theme', theme);
+        var scheme = theme === 'night' || theme === 'black' ? 'dark' : 'light';
+        document.documentElement.style.colorScheme = scheme;
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-FhR1rCKq.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-a3vCQrF-.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
