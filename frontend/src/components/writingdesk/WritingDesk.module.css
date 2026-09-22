@@ -1,0 +1,97 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-width: var(--layout-min-app-width);
+  background-color: var(--color-bg);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.left {
+  width: var(--layout-sidebar-width);
+  flex-shrink: 0;
+  min-height: 0;
+}
+
+.leftCollapsed {
+  width: var(--layout-sidebar-collapsed-width);
+}
+
+.center {
+  flex: 1;
+  min-width: var(--layout-editor-min-width);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.right {
+  width: var(--layout-recall-panel-width);
+  flex-shrink: 0;
+  min-height: 0;
+}
+
+.rightCollapsed {
+  width: var(--layout-recall-panel-collapsed-width);
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  height: 100%;
+  padding-top: var(--space-3);
+  background-color: var(--color-surface-sunken);
+  border-right: var(--border-width-1) solid var(--color-border);
+}
+
+.railRight {
+  border-right: 0;
+  border-left: var(--border-width-1) solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.railButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.railButton:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.railButtonActive {
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.railLabel {
+  writing-mode: vertical-rl;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+}
+
+/* 无章节时的编辑器空态 */
+.editorEmpty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-editor-bg);
+}

@@ -1,0 +1,261 @@
+/* ============================================================================
+   全局基础样式 — 仅放重置、根级排版、可访问性与少量跨组件布局
+   组件级样式一律走 CSS Modules（*.module.css）。
+   所有颜色 / 尺寸一律引用 design-tokens.css 的 CSS 变量，禁止硬编码色值。
+   ========================================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  /* 根元素也要上底色：深色主题下「滚动到顶/底时的回弹区」和「首屏之前的空白」
+     取的正是 html 的背景。只给 body 上色的话，这两处会露出白底闪一下。 */
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+}
+
+body {
+  margin: 0;
+  min-width: var(--layout-min-app-width);
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  letter-spacing: var(--tracking-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-snug);
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* --- 键盘可达：仅键盘聚焦时显示焦点环，鼠标点击不显示 --- */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-xs);
+}
+
+/* --- 滚动条 --- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-scrollbar-thumb);
+  border-radius: var(--radius-pill);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-track {
+  background-color: var(--color-scrollbar-track);
+}
+
+/* --- 供屏幕阅读器使用 --- */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- 应用级：内容区最大宽与水平留白（书库 / 设定库 / 大纲 / 统计 / 设置共用） --- */
+.pageContent {
+  width: 100%;
+  max-width: var(--layout-content-max);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-8) var(--space-12);
+}
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.pageTitle {
+  font-size: var(--text-2xl);
+  letter-spacing: var(--tracking-tight);
+}
+
+.pageSubtitle {
+  margin-top: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* 数字统一等宽，便于对齐（字数 / token） */
+.tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================================
+   编辑器正文画布（TipTap ProseMirror）
+   中文书稿衬线体 + 17px / 行高 1.9（04 §2.3 / §6.3）——「像稿纸」的写作留白
+   ========================================================================= */
+.editorProse {
+  outline: none;
+  font-family: var(--font-editor);
+  font-size: var(--editor-font-size);
+  line-height: var(--editor-line-height);
+  color: var(--color-editor-text);
+  caret-color: var(--color-editor-caret);
+  letter-spacing: var(--tracking-normal);
+  word-break: break-word;
+}
+
+.editorProse p {
+  margin: 0 0 var(--editor-paragraph-gap);
+}
+
+.editorProse p:last-child {
+  margin-bottom: 0;
+}
+
+.editorProse strong {
+  font-weight: var(--font-weight-bold);
+}
+
+.editorProse em {
+  font-style: italic;
+}
+
+.editorProse ::selection {
+  background-color: var(--color-editor-selection);
+}
+
+.editorProse:focus-visible {
+  outline: none;
+}
+
+/* 无衬线 UI 下的正文内容（只读预览等） */
+.editorProseSans {
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+}
+
+/* 官方约定：无衬线 UI + 衬线编辑画布 —— 编辑器字体由 Editor 组件显式声明 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================================
+   主题切换 Theme switching
+   ----------------------------------------------------------------------------
+   问题：切换主题时，五六十个组件的颜色会在同一帧里一起跳变，视觉上像「闪一下」，
+   深色↔浅色之间尤其刺眼。
+
+   做法：切换的那一瞬间给 <html> 挂一个临时类，让所有元素在 180ms 内平滑过渡；
+   过渡结束后立刻摘掉这个类，因此**平时零开销**（不会让每次 hover 都走这条规则）。
+
+   注意两个刻意的取舍：
+     · 不用 !important —— 上面的 prefers-reduced-motion 媒体查询靠 !important 把
+       时长归零，只有当本规则不是 !important 时，它才能压得住。
+       对「减少动效」用户来说，主题切换应当是瞬时的，这里必须让位。
+     · 规则挂在 `html.themeSwitching *` 上，特异性高于组件自己的 `.btn { transition }`，
+       所以能覆盖到已经声明过 transition 的组件，不需要逐个改。
+   ========================================================================= */
+html.themeSwitching,
+html.themeSwitching *,
+html.themeSwitching *::before,
+html.themeSwitching *::after {
+  transition:
+    background-color var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard),
+    outline-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
+}
+
+/* 全局选区配色：默认的浏览器蓝在深色主题上过亮，统一走 token */
+::selection {
+  background-color: var(--color-editor-selection);
+}

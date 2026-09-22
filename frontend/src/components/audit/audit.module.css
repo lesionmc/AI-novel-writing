@@ -1,0 +1,281 @@
+/* 质检页（一致性审校 / 去 AI 味）
+   —— 敏感词与词库状态样式见 sensitive.module.css（拆文件守住单文件 ≤ 300 行）
+   颜色一律走 design-tokens 的语义 token，禁止硬编码色值。 */
+
+/* ---------------- 区块容器（与设置页 section 同构） ---------------- */
+
+.section {
+  margin-bottom: var(--space-6);
+  padding: var(--space-5);
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.sectionTitleWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sectionTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-medium);
+}
+
+.sectionHint {
+  max-width: 72ch;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+}
+
+.sectionBody {
+  margin-top: var(--space-4);
+}
+
+.stateWrap {
+  padding: var(--space-2) 0;
+}
+
+/* ---------------- 工具条（选章 + 主按钮） ---------------- */
+
+.toolbar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.chapterSelect {
+  min-width: 200px;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+/* ---------------- 「即将上线」说明态（不摆一排点不动的死按钮） ---------------- */
+
+.comingBox {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-width-1) dashed var(--color-border-strong);
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface-sunken);
+}
+
+.comingIcon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--color-text-tertiary);
+}
+
+.comingBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.comingHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.comingTitle {
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.comingText {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  max-width: 72ch;
+}
+
+/* ---------------- 去 AI 味：评分环 ---------------- */
+
+.scorePanel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.ringWrap {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ringTrack {
+  stroke: var(--color-border);
+}
+
+.ringValue {
+  transition: stroke-dashoffset var(--duration-slow) var(--ease-standard);
+}
+
+.tone_success {
+  stroke: var(--color-success);
+}
+
+.tone_neutral {
+  stroke: var(--color-text-secondary);
+}
+
+.tone_warning {
+  stroke: var(--color-warning);
+}
+
+.tone_danger {
+  stroke: var(--color-danger);
+}
+
+.ringCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ringScore {
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--leading-none);
+}
+
+.ringUnit {
+  margin-top: var(--space-1);
+  color: var(--color-text-tertiary);
+  font-size: var(--text-2xs);
+}
+
+.scoreSummary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.scoreSummaryTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.scoreSummaryText {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  max-width: 56ch;
+}
+
+/* 短文本提示（评分环旁）：低强度，不抢评分本身的视觉权重 */
+.shortNote {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+  max-width: 56ch;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+}
+
+.shortNoteIcon {
+  flex: none;
+  margin-top: 2px;
+}
+
+/* ---------------- 命中列表（去 AI 味） ---------------- */
+
+.hitList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.hitCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface);
+}
+
+.hitHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* 原文片段：凹陷底 + 编辑字体，像贴在稿纸上的一小块 */
+.hitQuote {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text-primary);
+  font-family: var(--font-editor);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.suggestionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-accent-soft);
+}
+
+.suggestionText {
+  color: var(--color-accent-strong);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.hitActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.fieldLabel {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+}

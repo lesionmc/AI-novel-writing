@@ -1,0 +1,238 @@
+{
+  "_meta": {
+    "version": "0.1.0",
+    "updated_at": "2026-09-20",
+    "purpose": "选题建议功能（R0）的题材知识库。随项目版本发布，用户可自行修改或替换。",
+    "field_meaning": {
+      "heat": "读者需求规模，1-100，越高表示该赛道读者越多",
+      "competition": "竞争饱和程度，1-100，越高表示同类作品越拥挤",
+      "blue_ocean_score": "机会分，计算公式 heat * (100 - competition) / 100，越高表示越值得新人切入"
+    },
+    "data_source": "初版数据基于 2026 年 9 月的公开网络调研，主要参考：番茄小说与起点中文网的分类书量对比（如传统玄幻约 47 万本、单书均读者不足 60 人；民俗志怪不足 8000 本、单书均读者超 1100 人）、规则怪谈与无限流的搜索量增长（同比约 300%）、女频热榜题材分布等公开信息。",
+    "calibration_warning": "⚠️ 初版数值为量级估算，不是精确统计。上线前必须按目标平台的实际榜单重新校准：进入平台分类页，记录该分类的书目总数、榜单前 20 名的读者数、以及近 30 天新增书数，据此调整 heat 与 competition。",
+    "benchmark_note": "benchmarks 字段未填写具体书名，因为榜单作品变动快，写死的书名半年后就失效。请按校准时的实际榜单填入 3 本代表作，或改为由用户自行维护。"
+  },
+
+  "genres": [
+    {
+      "name": "传统玄幻",
+      "category": "玄幻仙侠",
+      "heat": 95,
+      "competition": 95,
+      "blue_ocean_score": 4,
+      "core_experience": "变强、等级攀升、以力破局",
+      "typical_tropes": ["废材逆袭", "家族争斗", "越级挑战"],
+      "benchmarks": []
+    },
+    {
+      "name": "家族修仙",
+      "category": "玄幻仙侠",
+      "heat": 78,
+      "competition": 72,
+      "blue_ocean_score": 21,
+      "core_experience": "集体经营、资源积累、家族兴衰代入感",
+      "typical_tropes": ["族谱体系", "资源分配", "代际传承"],
+      "benchmarks": []
+    },
+    {
+      "name": "仙侠·反爽文",
+      "category": "玄幻仙侠",
+      "heat": 62,
+      "competition": 40,
+      "blue_ocean_score": 37,
+      "core_experience": "摆脱金手指依赖，靠心性与选择推进",
+      "typical_tropes": ["无金手指", "慢热成长", "道德困境"],
+      "benchmarks": []
+    },
+    {
+      "name": "赛博修仙",
+      "category": "玄幻仙侠",
+      "heat": 58,
+      "competition": 30,
+      "blue_ocean_score": 40,
+      "core_experience": "东方修真与科技设定的化学反应",
+      "typical_tropes": ["数据化修炼", "义体与丹田", "公司制宗门"],
+      "benchmarks": []
+    },
+    {
+      "name": "都市脑洞",
+      "category": "都市",
+      "heat": 90,
+      "competition": 60,
+      "blue_ocean_score": 36,
+      "core_experience": "现实题材加一个荒诞前提，反差感强",
+      "typical_tropes": ["规则异常", "全民异能", "日常怪异化"],
+      "benchmarks": []
+    },
+    {
+      "name": "都市高武",
+      "category": "都市",
+      "heat": 72,
+      "competition": 68,
+      "blue_ocean_score": 23,
+      "core_experience": "现实社会外壳下的武力秩序",
+      "typical_tropes": ["武者等级", "官方机构", "隐世门派"],
+      "benchmarks": []
+    },
+    {
+      "name": "职业异能",
+      "category": "都市",
+      "heat": 55,
+      "competition": 28,
+      "blue_ocean_score": 39,
+      "core_experience": "用真实职业知识解决超常问题",
+      "typical_tropes": ["法医视角", "工程思维破局", "行业 insider"],
+      "benchmarks": []
+    },
+    {
+      "name": "规则怪谈",
+      "category": "悬疑灵异",
+      "heat": 82,
+      "competition": 38,
+      "blue_ocean_score": 50,
+      "core_experience": "在既定规则内求生，烧脑解谜",
+      "typical_tropes": ["规则清单", "违规即死", "逻辑推演"],
+      "benchmarks": []
+    },
+    {
+      "name": "民俗志怪",
+      "category": "悬疑灵异",
+      "heat": 55,
+      "competition": 20,
+      "blue_ocean_score": 44,
+      "core_experience": "本土怪谈的代入感与地域神秘感",
+      "typical_tropes": ["祖传手艺", "地方禁忌", "单元剧式怪谈"],
+      "benchmarks": []
+    },
+    {
+      "name": "无限流",
+      "category": "悬疑灵异",
+      "heat": 75,
+      "competition": 35,
+      "blue_ocean_score": 48,
+      "core_experience": "多场景闯关，团队博弈与生存压力",
+      "typical_tropes": ["副本世界", "队友背叛", "积分兑换"],
+      "benchmarks": []
+    },
+    {
+      "name": "中式克苏鲁",
+      "category": "悬疑灵异",
+      "heat": 48,
+      "competition": 18,
+      "blue_ocean_score": 39,
+      "core_experience": "不可名状的恐惧与东方语境的融合",
+      "typical_tropes": ["旧神本土化", "理智值", "隐秘宗族"],
+      "benchmarks": []
+    },
+    {
+      "name": "历史权谋",
+      "category": "历史",
+      "heat": 65,
+      "competition": 45,
+      "blue_ocean_score": 35,
+      "core_experience": "智斗、朝堂博弈、步步为营",
+      "typical_tropes": ["夺嫡", "党争", "变法"],
+      "benchmarks": []
+    },
+    {
+      "name": "历史·实业种田",
+      "category": "历史",
+      "heat": 58,
+      "competition": 32,
+      "blue_ocean_score": 39,
+      "core_experience": "从零建设，看得见的成长",
+      "typical_tropes": ["技术引进", "商战", "基建"],
+      "benchmarks": []
+    },
+    {
+      "name": "末世求生",
+      "category": "科幻",
+      "heat": 70,
+      "competition": 50,
+      "blue_ocean_score": 35,
+      "core_experience": "资源匮乏下的生存压力与秩序重建",
+      "typical_tropes": ["囤货", "基地建设", "人性考验"],
+      "benchmarks": []
+    },
+    {
+      "name": "游戏现实主义",
+      "category": "科幻",
+      "heat": 55,
+      "competition": 25,
+      "blue_ocean_score": 41,
+      "core_experience": "游戏机制照进现实社会的推演",
+      "typical_tropes": ["版本更新", "职业玩家", "经济系统"],
+      "benchmarks": []
+    },
+    {
+      "name": "豪门总裁",
+      "category": "言情（女频）",
+      "heat": 85,
+      "competition": 88,
+      "blue_ocean_score": 10,
+      "core_experience": "身份悬殊下的情感拉扯",
+      "typical_tropes": ["契约婚姻", "追妻火葬场", "身份反转"],
+      "benchmarks": []
+    },
+    {
+      "name": "年代文",
+      "category": "言情（女频）",
+      "heat": 72,
+      "competition": 42,
+      "blue_ocean_score": 41,
+      "core_experience": "时代细节的沉浸感与生活流成长",
+      "typical_tropes": ["知青岁月", "个体户", "家族兴旺"],
+      "benchmarks": []
+    },
+    {
+      "name": "恶毒女配",
+      "category": "言情（女频）",
+      "heat": 80,
+      "competition": 48,
+      "blue_ocean_score": 41,
+      "core_experience": "视角反转带来的爽感与解构",
+      "typical_tropes": ["穿书", "全员反派", "打脸原女主"],
+      "benchmarks": []
+    },
+    {
+      "name": "女性悬疑",
+      "category": "言情（女频）",
+      "heat": 70,
+      "competition": 28,
+      "blue_ocean_score": 50,
+      "core_experience": "情感线与悬疑线的双线绷紧",
+      "typical_tropes": ["婚姻真相", "女性视角解谜", "心理惊悚"],
+      "benchmarks": []
+    },
+    {
+      "name": "无 CP 事业流",
+      "category": "言情（女频）",
+      "heat": 58,
+      "competition": 22,
+      "blue_ocean_score": 45,
+      "core_experience": "专注成长与成就，情感不占主线",
+      "typical_tropes": ["技能升级", "职场博弈", "独立人格"],
+      "benchmarks": []
+    },
+    {
+      "name": "甜宠日常",
+      "category": "言情（女频）",
+      "heat": 76,
+      "competition": 70,
+      "blue_ocean_score": 22,
+      "core_experience": "低压力高浓度的情绪补给",
+      "typical_tropes": ["青梅竹马", "先婚后爱", "双向奔赴"],
+      "benchmarks": []
+    },
+    {
+      "name": "系统流·反套路",
+      "category": "玄幻仙侠",
+      "heat": 68,
+      "competition": 55,
+      "blue_ocean_score": 30,
+      "core_experience": "对系统流本身的解构与玩梗",
+      "typical_tropes": ["系统反水", "任务陷阱", "规则漏洞"],
+      "benchmarks": []
+    }
+  ]
+}

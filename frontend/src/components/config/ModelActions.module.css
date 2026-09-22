@@ -1,0 +1,35 @@
+/* 模型发现 / 保存前测试：按钮行 + 状态行（ProviderForm 专用） */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* 拉取结果 / 平台提示（hint 之外的第二行补充信息） */
+.note {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-tertiary);
+  letter-spacing: var(--tracking-wide);
+}
+
+/* 连通成功：绿色对勾 + 延迟 */
+.ok {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-success);
+}
+
+/* 连通失败：红色可读文案（绝不显示原始报错） */
+.fail {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-danger);
+}

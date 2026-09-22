@@ -1,0 +1,152 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--card-padding);
+  border: var(--border-width-1) solid var(--card-border-color);
+  border-radius: var(--card-radius);
+  background-color: var(--card-bg);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.card:hover {
+  border-color: var(--color-border-strong);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.titleRow {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.title:hover {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+/* [QA L1] 题材标签不许撑破卡片，也不许跟「新建 / 连载中」叠在一起 */
+.genreWrap {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.genreBadge {
+  max-width: 100%;
+}
+
+.stateTag {
+  flex: none;
+}
+
+.stats {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.words {
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-tight);
+}
+
+.wordsUnit {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  font-family: var(--font-ui);
+}
+
+.chapters {
+  margin-left: auto;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.progressTrack {
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-surface-sunken);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-primary);
+  transition: width var(--duration-base) var(--ease-standard);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: auto;
+}
+
+.updated {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.createCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 168px;
+  border: var(--border-width-1) dashed var(--color-border-strong);
+  border-radius: var(--card-radius);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.createCard:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-subtle);
+  color: var(--color-primary);
+}

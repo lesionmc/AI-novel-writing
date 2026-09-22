@@ -1,0 +1,170 @@
+/* ThemeSwitcher —— 外观主题选择器
+   全部颜色走 design-tokens 的语义层，因此本组件在五个主题下都自动成立 */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.options {
+  display: grid;
+  /* 300px 下限 → 内容区（约 1056px）一行放 3 个，5 个主题排成 3+2，两行都对齐。
+     试过 200px（挤成 4+1，最后一张孤零零占一行）和 190px（一行 5 个，但卡片太窄、
+     说明文字折成三行）—— 300px 是「行列平衡 + 说明可读」的那个点。 */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-3);
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  text-align: left;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  background-color: var(--color-surface);
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--radius-card);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.option:hover {
+  border-color: var(--color-border-strong);
+  background-color: var(--color-surface-hover);
+}
+
+.option:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-shadow);
+}
+
+/* 选中态用主色描边 + 淡底，不用阴影堆叠，避免和卡片本身的层级打架 */
+.optionOn,
+.optionOn:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+
+/* ---- 色卡预览 ---- */
+.swatch {
+  display: block;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: var(--border-width-1) solid var(--color-border-subtle);
+}
+
+.swatchBg {
+  display: block;
+  padding: 10px;
+}
+
+.swatchSurface {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 4px;
+}
+
+.swatchPrimary,
+.swatchText {
+  display: block;
+  border-radius: 2px;
+}
+
+.swatchPrimary {
+  width: 26px;
+  height: 8px;
+}
+
+.swatchText {
+  width: 48px;
+  height: 6px;
+  opacity: 0.55;
+}
+
+/* ---- 文案 ---- */
+.labelRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-primary);
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.check {
+  margin-left: auto;
+  display: inline-flex;
+  color: var(--color-primary);
+}
+
+.hint {
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  color: var(--color-text-tertiary);
+}
+
+/* ---- 跟随系统 ---- */
+.footer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: var(--border-width-1) solid var(--color-border-subtle);
+}
+
+.systemBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--btn-height-md);
+  padding: 0 var(--btn-padding-x-md);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  background-color: transparent;
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--btn-radius);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.systemBtn:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-hover);
+  border-color: var(--color-border-strong);
+}
+
+.systemBtn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-shadow);
+}
+
+.systemBtnOn,
+.systemBtnOn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary-border);
+  background-color: var(--color-primary-soft);
+}
+
+.footerHint {
+  flex: 1 1 260px;
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}

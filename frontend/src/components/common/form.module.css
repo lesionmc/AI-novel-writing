@@ -1,0 +1,210 @@
+/* 表单控件共用样式（Input / Textarea / Select / Field / FieldWithHint） */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.required {
+  color: var(--color-danger);
+}
+
+.hint {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-secondary);
+  letter-spacing: var(--tracking-wide);
+}
+
+.error {
+  font-size: var(--text-xs);
+  color: var(--color-danger);
+}
+
+.control {
+  width: 100%;
+  min-height: var(--input-height);
+  padding: var(--input-padding-y) var(--input-padding-x);
+  border: var(--border-width-1) solid var(--input-border);
+  border-radius: var(--input-radius);
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  font-size: var(--text-base);
+  font-family: var(--font-ui);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.control::placeholder {
+  color: var(--input-placeholder);
+}
+
+.control:hover:not(:disabled):not(:focus) {
+  border-color: var(--color-border-strong);
+}
+
+.control:focus {
+  outline: none;
+  border-color: var(--input-focus-border);
+  box-shadow: var(--focus-ring-shadow);
+}
+
+.control:disabled {
+  background-color: var(--input-disabled-bg);
+  color: var(--input-disabled-text);
+  cursor: not-allowed;
+}
+
+.invalid {
+  border-color: var(--input-error-border);
+}
+
+.invalid:focus {
+  border-color: var(--input-error-border);
+  box-shadow: 0 0 0 3px var(--input-error-ring);
+}
+
+.textarea {
+  min-height: 88px;
+  resize: vertical;
+  line-height: var(--leading-relaxed);
+}
+
+.selectWrap {
+  position: relative;
+  display: inline-flex;
+  width: 100%;
+}
+
+.select {
+  appearance: none;
+  padding-right: var(--space-8);
+  cursor: pointer;
+}
+
+.selectIcon {
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+/* 带说明文字的字段（立体人物公式四要素） */
+.hintText {
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-secondary);
+  letter-spacing: var(--tracking-wide);
+}
+
+/* ---------------------------------------------------------------
+   Combobox（可选可输）
+   给新手「先选一个套路，再改成自己的」的脚手架。
+   预设只是起点，不是约束——输入框始终可自由编辑。
+   --------------------------------------------------------------- */
+.comboWrap {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+}
+
+.comboWrap .control {
+  padding-right: var(--space-8);
+}
+
+.comboToggle {
+  position: absolute;
+  top: 50%;
+  right: var(--space-1);
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.comboToggle:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.comboToggle:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.comboList {
+  position: absolute;
+  z-index: var(--z-dropdown);
+  top: calc(100% + var(--space-1));
+  right: 0;
+  left: 0;
+  max-height: 220px;
+  margin: 0;
+  padding: var(--space-1);
+  overflow-y: auto;
+  list-style: none;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  box-shadow: var(--shadow-md);
+}
+
+.comboOption {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.comboOptionLabel {
+  font-weight: var(--font-weight-medium);
+}
+
+/* 选项的灰色说明：一句话讲清「这是什么」（QA M2：光看名字选不出来） */
+.comboOptionHint {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-secondary);
+  letter-spacing: var(--tracking-wide);
+}
+
+.comboOption:hover,
+.comboOption[aria-selected='true'] {
+  background: var(--color-surface-hover);
+}
+
+.comboOption:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}

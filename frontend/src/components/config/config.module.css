@@ -1,0 +1,292 @@
+/* 设置页（模型配置 / 任务分配 / 写作模式 / 数据导出） */
+
+.section {
+  margin-bottom: var(--space-6);
+  padding: var(--space-5);
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.sectionTitleWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sectionTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-medium);
+}
+
+.sectionHint {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+  max-width: 70ch;
+}
+
+.sectionBody {
+  margin-top: var(--space-4);
+}
+
+/* ---------- 写作模式三档 ---------- */
+.modeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+@media (max-width: 900px) {
+  .modeGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.modeOption {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--radius-button);
+  background-color: var(--color-surface);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.modeOption:hover {
+  border-color: var(--color-border-strong);
+}
+
+.modeOptionActive {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+}
+
+.modeOptionTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.modeOptionHint {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+}
+
+/* ---------- 任务分配 ---------- */
+.roleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: var(--border-width-1) solid var(--color-border-subtle);
+}
+
+.roleRow:last-child {
+  border-bottom: 0;
+}
+
+.roleInfo {
+  min-width: 0;
+}
+
+.roleLabel {
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.roleHint {
+  margin-top: var(--space-1);
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.roleSelect {
+  flex-shrink: 0;
+  width: 220px;
+}
+
+/* 同一定位被多个模型占用时的告知条（DB 层无唯一约束，拦不住，只能如实提示） */
+.roleWarn {
+  margin-top: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width-1) solid var(--color-warning-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-soft);
+  color: var(--color-warning-text);
+  font-size: var(--text-xs);
+}
+
+/* ---------- 模型卡片 ---------- */
+.providerList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.providerCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--radius-button);
+  background-color: var(--color-surface);
+}
+
+.providerCardDisabled {
+  opacity: 0.6;
+}
+
+.providerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.providerNameWrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.providerName {
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.providerIcon {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.providerModel {
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.providerMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.providerMetaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.providerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* ---------- 导出 ---------- */
+.exportRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.exportFormat {
+  width: 160px;
+}
+
+.exportRange {
+  width: 220px;
+}
+
+/* ---------- KeyInput ---------- */
+.keyWrap {
+  position: relative;
+}
+
+.keyToggle {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.keyToggle:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.keyRef {
+  margin-top: var(--space-1);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.stateWrap {
+  padding: var(--space-6) 0;
+}
+
+/* ---------- 复选框行 ---------- */
+.checkRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+
+.checkRow input {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.checkLabel {
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+}
+
+.checkHint {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+}

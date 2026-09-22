@@ -1,0 +1,63 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--badge-padding-y) var(--badge-padding-x);
+  border-radius: var(--badge-radius);
+  border: var(--border-width-1) solid transparent;
+  font-size: var(--badge-font-size);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+  letter-spacing: var(--tracking-wide);
+  white-space: nowrap;
+}
+
+.neutral {
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+
+.primary {
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+  border-color: var(--color-primary-border);
+}
+
+.accent {
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+  border-color: var(--color-accent-border);
+}
+
+.danger {
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger);
+  border-color: var(--color-danger-border);
+}
+
+.warning {
+  background-color: var(--color-warning-soft);
+  color: var(--color-warning-text);
+  border-color: var(--color-warning-border);
+}
+
+.success {
+  background-color: var(--color-success-soft);
+  color: var(--color-success);
+  border-color: var(--color-success-border);
+}
+
+.aging {
+  background-color: var(--color-foreshadow-aging-soft);
+  color: var(--color-foreshadow-aging-strong);
+  border-color: var(--color-foreshadow-aging-border);
+}
+
+/* 纯文本点标记（重要度圆点等），无底色 */
+.plain {
+  padding: 0;
+  background-color: transparent;
+  border-color: transparent;
+  font-weight: var(--font-weight-regular);
+}

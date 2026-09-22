@@ -1,0 +1,97 @@
+.viewport {
+  position: fixed;
+  right: var(--space-6);
+  bottom: var(--space-6);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 220px;
+  max-width: 380px;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width-1) solid var(--color-border);
+  border-left-width: 3px;
+  border-radius: var(--radius-button);
+  background-color: var(--color-surface-raised);
+  box-shadow: var(--shadow-md);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  pointer-events: auto;
+  animation: toastIn var(--duration-base) var(--ease-out);
+}
+
+.success {
+  border-left-color: var(--color-success);
+}
+.error {
+  border-left-color: var(--color-danger);
+}
+.info {
+  border-left-color: var(--color-primary);
+}
+
+.iconSuccess {
+  color: var(--color-success);
+}
+.iconError {
+  color: var(--color-danger);
+}
+.iconInfo {
+  color: var(--color-primary);
+}
+
+.message {
+  flex: 1;
+  min-width: 0;
+  line-height: var(--leading-snug);
+}
+
+.dismiss {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+
+/* 视觉仍是 20×20，但把可点热区扩到 44×44（WCAG 2.5.5 触摸目标）——
+   用伪元素外扩，不改变 toast 的排版高度。 */
+.dismiss::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+
+.dismiss:hover {
+  background-color: var(--color-surface-hover);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}

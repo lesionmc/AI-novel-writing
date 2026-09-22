@@ -1,0 +1,145 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--btn-gap);
+  border: var(--border-width-1) solid transparent;
+  border-radius: var(--btn-radius);
+  font-family: var(--font-ui);
+  font-weight: var(--btn-font-weight);
+  font-size: var(--btn-font-size);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  background-color: transparent;
+  color: inherit;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-shadow);
+}
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: var(--disabled-opacity);
+}
+
+/* ---- 尺寸 ---- */
+.sm {
+  height: var(--btn-height-sm);
+  padding: 0 var(--btn-padding-x-sm);
+  font-size: var(--text-sm);
+}
+
+.md {
+  height: var(--btn-height-md);
+  padding: 0 var(--btn-padding-x-md);
+}
+
+.lg {
+  height: var(--btn-height-lg);
+  padding: 0 var(--btn-padding-x-lg);
+}
+
+/* 仅图标：正方形点击区，保证 ≥44px 触摸目标在 sm 下靠 padding 补偿 */
+.iconOnly.sm {
+  width: var(--btn-height-sm);
+  padding: 0;
+}
+.iconOnly.md {
+  width: var(--btn-height-md);
+  padding: 0;
+}
+.iconOnly.lg {
+  width: var(--btn-height-lg);
+  padding: 0;
+}
+
+/* ---- 变体 ---- */
+.primary {
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+.primary:hover:not(:disabled) {
+  background-color: var(--btn-primary-bg-hover);
+}
+.primary:active:not(:disabled) {
+  background-color: var(--btn-primary-bg-active);
+}
+
+.secondary {
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border-color: var(--btn-secondary-border);
+}
+.secondary:hover:not(:disabled) {
+  background-color: var(--btn-secondary-bg-hover);
+}
+.secondary:active:not(:disabled) {
+  background-color: var(--color-surface-active);
+}
+
+.ghost {
+  background-color: var(--btn-ghost-bg);
+  color: var(--btn-ghost-text);
+}
+.ghost:hover:not(:disabled) {
+  background-color: var(--btn-ghost-bg-hover);
+  color: var(--color-text-primary);
+}
+.ghost:active:not(:disabled) {
+  background-color: var(--color-surface-active);
+}
+
+.accent {
+  background-color: var(--btn-accent-bg);
+  color: var(--btn-accent-text);
+}
+.accent:hover:not(:disabled) {
+  background-color: var(--btn-accent-bg-hover);
+}
+.accent:active:not(:disabled) {
+  background-color: var(--color-accent-active);
+}
+
+.danger {
+  background-color: var(--btn-danger-bg);
+  color: var(--btn-danger-text);
+}
+.danger:hover:not(:disabled) {
+  background-color: var(--btn-danger-bg-hover);
+}
+.danger:active:not(:disabled) {
+  background-color: var(--color-danger-active);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.loadingLabel {
+  opacity: 0;
+}
+
+.spinner {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 1.6s;
+  }
+}

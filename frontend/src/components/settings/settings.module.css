@@ -1,0 +1,219 @@
+/* 设定库 / 大纲 / 设置 三页共用的列表、表单与表格样式 */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.toolbarSpacer {
+  flex: 1;
+}
+
+.list {
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface);
+  overflow: hidden;
+}
+
+.listItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width-1) solid var(--color-border-subtle);
+}
+
+.listItem:last-child {
+  border-bottom: 0;
+}
+
+.listItemMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.listItemTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.listItemMeta {
+  margin-top: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+}
+
+.listItemActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.formStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+@media (max-width: 720px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.formSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.formSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--text-2xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.formSectionBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-left: var(--space-3);
+  border-left: var(--border-width-2) solid var(--color-border);
+}
+
+.hintBlock {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background-color: var(--color-surface);
+}
+
+.th {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border-width-1) solid var(--color-border);
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border-width-1) solid var(--color-border-subtle);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  vertical-align: middle;
+}
+
+.tableRow:last-child .td {
+  border-bottom: 0;
+}
+
+.cellTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--font-weight-medium);
+}
+
+.rowIcon {
+  flex-shrink: 0;
+  color: var(--color-foreshadow-aging);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+
+.inlineSelect {
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: var(--border-width-1) solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.inlineSelect:focus {
+  outline: none;
+  border-color: var(--input-focus-border);
+  box-shadow: var(--focus-ring-shadow);
+}
+
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.filterLabel {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+.filterIcon {
+  color: var(--color-text-tertiary);
+}
+
+.stateWrap {
+  padding: var(--space-6) 0;
+}
+
+.affectedList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.placeholderBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}

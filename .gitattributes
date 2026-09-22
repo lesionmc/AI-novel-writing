@@ -1,0 +1,57 @@
+# ============================================================================
+# 换行符与二进制处理纪律（跨平台）
+# ============================================================================
+# 为什么需要这个文件：
+#   Windows 版 git 默认开启 core.autocrlf，会把仓库里的 LF 在检出时换成 CRLF。
+#   后果有两类，都很隐蔽：
+#     · `start.sh` 被换成 CRLF → 在 macOS / Linux 上直接报
+#       `bash: ./start.sh: /usr/bin/env: bad interpreter: No such file or directory`
+#       或者 `$'\r': command not found` —— 用户只会觉得"这脚本是坏的"。
+#     · 同一个文件在不同机器上 diff 出满屏"改动"，其实只差换行符，
+#       把真正的修改淹没掉（这个项目曾经在 3 万行代码上没有版本控制，尤其经不起这个）。
+#
+#   所以：**仓库内统一 LF，检出时按平台自动处理**。
+# ============================================================================
+
+# 默认：文本自动识别，仓库内 LF
+* text=auto eol=lf
+
+# --- 必须 CRLF（Windows 原生命令解释器对 LF 容错差） -------------------------
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# --- 必须 LF（POSIX shell 的 shebang 行带 \r 会直接执行失败） ----------------
+*.sh   text eol=lf
+*.bash text eol=lf
+
+# --- 明确按二进制处理，绝不改一个字节 ---------------------------------------
+#   注意：`books/**/novel.db` 与 `data/app.db` 已在 .gitignore 里不进仓库，
+#   这里只是防止将来有人把小体积的库文件或快照误提交后被动过。
+*.db      binary
+*.sqlite  binary
+*.sqlite3 binary
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.webp    binary
+*.ico     binary
+*.woff    binary
+*.woff2   binary
+*.ttf     binary
+*.otf     binary
+*.pdf     binary
+*.docx    binary
+*.rar     binary
+*.zip     binary
+
+# --- 让 git 在 diff / status 里正确识别语言（也避免被当成二进制） -----------
+*.py    text diff=python
+*.ts    text
+*.tsx   text
+*.css   text
+*.json  text
+*.md    text
+*.sql   text
+*.yaml  text
+*.yml   text

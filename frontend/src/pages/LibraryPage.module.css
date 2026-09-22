@@ -1,0 +1,19 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
+/* 选题向导入口横幅（横跨内容区） */
+.entryWrap {
+  margin-bottom: var(--space-5);
+}
+
+/* 「还没配模型」配置引导条：首页顶部的一条内容，不是遮挡内容的浮层（TC-03 / 红线 3） */
+.noticeWrap {
+  margin-bottom: var(--space-5);
+}
+
+.stateWrap {
+  padding: var(--space-6) 0;
+}

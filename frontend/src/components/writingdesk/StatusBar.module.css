@@ -1,0 +1,57 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  height: var(--layout-statusbar-height);
+  flex-shrink: 0;
+  padding: 0 var(--space-4);
+  background-color: var(--statusbar-bg);
+  border-top: var(--border-width-1) solid var(--color-border);
+  color: var(--statusbar-text);
+  font-size: var(--statusbar-font-size);
+  z-index: var(--z-statusbar);
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  white-space: nowrap;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-circle);
+  flex-shrink: 0;
+}
+
+.dotPending {
+  background-color: var(--color-warning);
+}
+
+.dotSaving {
+  background-color: var(--color-primary);
+}
+
+.dotSaved {
+  background-color: var(--color-success);
+}
+
+.dotError {
+  background-color: var(--color-danger);
+}
+
+.num {
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.failed {
+  color: var(--color-danger);
+}

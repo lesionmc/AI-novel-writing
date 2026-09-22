@@ -1,0 +1,182 @@
+/* 选题向导（PHASE 1）—— 问卷 / 加载 / 结果三态。
+   所有色值一律引用 design-tokens.css 的 CSS 变量，无硬编码色值。 */
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+
+/* ---------- 加载态（可能十几秒，必须有明确反馈） ---------- */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.loadingIcon {
+  color: var(--color-primary);
+  animation: spin 1200ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.loadingDesc {
+  max-width: 40ch;
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+/* ---------- 结果：推荐卡片 ---------- */
+.resultHead {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+/* 分数标尺注解（QA M7：不给标尺的数字等于没说） */
+.resultLegend {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+  letter-spacing: var(--tracking-wide);
+}
+
+.recList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.recCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface);
+}
+
+.recNiche {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  letter-spacing: var(--tracking-tight);
+}
+
+.recReason {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+.recLabel {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.recBench {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.recBenchItem {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: var(--text-2xs);
+}
+
+.recPremise {
+  padding: var(--space-2) var(--space-3);
+  border-left: var(--border-width-2) solid var(--color-accent-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-accent-soft);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+.recActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ---------- 结果：不建议写 ---------- */
+.avoidBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: var(--border-width-1) solid var(--color-danger-border);
+  border-radius: var(--radius-card);
+  background-color: var(--color-danger-soft);
+}
+
+.avoidTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-danger);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.avoidIntro {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+}
+
+.avoidList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.avoidItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.avoidDirection {
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.avoidReason {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+}
+
+/* ---------- 状态块 ---------- */
+.stateWrap {
+  padding: var(--space-6) 0;
+}

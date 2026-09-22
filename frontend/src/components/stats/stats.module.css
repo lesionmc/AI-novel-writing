@@ -1,0 +1,182 @@
+/* 统计页：总览卡片 + 日更曲线 + 进度条（只读） */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 900px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface);
+}
+
+.cardLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+.cardValue {
+  color: var(--color-text-primary);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.cardSub {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+}
+
+/* ---------- 图表区 ---------- */
+.panel {
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface);
+}
+
+.panelHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.panelTitle {
+  color: var(--color-text-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-medium);
+}
+
+.panelNote {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  height: 168px;
+}
+
+.barCol {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  height: 100%;
+}
+
+.barValue {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.bar {
+  width: 100%;
+  max-width: 48px;
+  min-height: 2px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background-color: var(--color-primary);
+}
+
+.barEmpty {
+  background-color: var(--color-surface-sunken);
+}
+
+.barDate {
+  color: var(--color-text-secondary);
+  font-size: var(--text-2xs);
+  white-space: nowrap;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+.legendSwatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-xs);
+  background-color: var(--color-primary);
+}
+
+.emptyChart {
+  padding: var(--space-8) 0;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* ---------- 进度条 ---------- */
+.progressRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.progressHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.progressValue {
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.track {
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-surface-sunken);
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-primary);
+  transition: width var(--duration-base) var(--ease-standard);
+}
+
+.fillAccent {
+  background-color: var(--color-accent);
+}

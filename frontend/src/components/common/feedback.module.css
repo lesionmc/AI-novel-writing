@@ -1,0 +1,283 @@
+/* 反馈类组件共用：EmptyState / ErrorBar / OfflineBanner / CollapsibleSection */
+
+/* ---------- EmptyState ---------- */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.emptyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-circle);
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+}
+
+.emptyTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.emptyDesc {
+  max-width: 46ch;
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-secondary);
+}
+
+.emptyAction {
+  margin-top: var(--space-1);
+}
+
+/* ---------- ErrorBar（就地错误条 + 重试，不用 alert） ---------- */
+.errorBar {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width-1) solid var(--color-danger-border);
+  border-radius: var(--radius-button);
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+}
+
+.errorBarRetry {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ---------- OfflineBanner（顶部黄条） ---------- */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-warning-soft);
+  border-bottom: var(--border-width-1) solid var(--color-warning-border);
+  color: var(--color-warning-text);
+  font-size: var(--text-sm);
+}
+
+.bannerMessage {
+  flex: 1;
+  min-width: 0;
+}
+
+.bannerDismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-warning-text);
+  cursor: pointer;
+}
+
+.bannerDismiss:hover {
+  background-color: var(--color-warning-border);
+}
+
+/* ---------- AiUnavailableNotice（未配置模型的可读引导，同 RecallPanel 降级条） ---------- */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--radius-button);
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+}
+
+.noticeIcon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--color-text-tertiary);
+}
+
+.noticeBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.noticeTitle {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.noticeActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* ---------- EntryBanner（书库「让 AI 帮你选题」/ 设定库「跟 AI 聊聊」共用） ---------- */
+.entry {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-4);
+  border: var(--border-width-1) solid var(--color-primary-border);
+  border-radius: var(--radius-card);
+  background-color: var(--color-primary-subtle);
+  color: var(--color-text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.entry:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+}
+
+/* 空态下更突出：主色描边加粗 + 轻微底纹 */
+.entryProminent {
+  border-width: var(--border-width-2);
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+}
+
+.entryIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-circle);
+  background-color: var(--color-surface);
+  color: var(--color-primary);
+}
+
+.entryBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.entryTitle {
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.entryDesc {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+}
+
+.entryChevron {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+/* ---------- CollapsibleSection（召回面板四个分区共用） ---------- */
+.section {
+  border-bottom: var(--border-width-1) solid var(--color-border-subtle);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--recall-section-header-height);
+  padding: 0 var(--recall-item-padding-x);
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.sectionHeader:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.sectionChevron {
+  color: var(--color-text-secondary);
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+.sectionChevronOpen {
+  transform: rotate(90deg);
+}
+
+.sectionIcon {
+  color: var(--color-text-secondary);
+}
+
+.sectionTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.sectionAging {
+  color: var(--color-foreshadow-aging);
+}
+
+.sectionCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.sectionCollapsedHint {
+  margin-left: auto;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+}
+
+/* 折叠动效：grid-template-rows 0fr↔1fr（不动 height，避免重排抖动） */
+.sectionBody {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--duration-base) var(--ease-standard);
+}
+
+.sectionBodyCollapsed {
+  grid-template-rows: 0fr;
+}
+
+.sectionBodyInner {
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 0 var(--space-2);
+}
+
+.sectionA11yHidden {
+  visibility: hidden;
+}

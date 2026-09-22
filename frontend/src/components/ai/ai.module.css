@@ -1,0 +1,271 @@
+/* AI 对话式建设定 —— 对话流 + 草稿确认两态。
+   所有色值一律引用 design-tokens.css 的 CSS 变量，无硬编码色值。 */
+
+/* ============ 对话态 ============ */
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  height: min(58vh, 480px);
+}
+
+.transcript {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-right: var(--space-1);
+  overflow-y: auto;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.rowAi {
+  justify-content: flex-start;
+}
+
+.rowUser {
+  justify-content: flex-end;
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-circle);
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.bubble {
+  max-width: 78%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.bubbleAi {
+  border-bottom-left-radius: var(--radius-sm);
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text-primary);
+}
+
+.bubbleUser {
+  border-bottom-right-radius: var(--radius-sm);
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.typing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-secondary);
+}
+
+.typingIcon {
+  animation: spin 1000ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- 快捷回复 ---- */
+.quickRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.quick {
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-surface);
+  color: var(--color-primary);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.quick:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+}
+
+/* 「可以了，帮我整理」—— 明确的收敛出口，视觉上比普通快捷回复更实一点 */
+.quickFinish {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+  font-weight: var(--font-weight-medium);
+}
+
+.quickFinish:hover {
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+/* ---- 输入区 ---- */
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.composerInput {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--input-height-lg);
+  max-height: 132px;
+  padding: var(--input-padding-y) var(--input-padding-x);
+  border: var(--border-width-1) solid var(--input-border);
+  border-radius: var(--input-radius);
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  resize: vertical;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.composerInput::placeholder {
+  color: var(--input-placeholder);
+}
+
+.composerInput:focus {
+  outline: none;
+  border-color: var(--input-focus-border);
+  box-shadow: var(--focus-ring-shadow);
+}
+
+/* ============ 草稿确认态 ============ */
+.review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.reviewNote {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-button);
+  background-color: var(--color-warning-soft);
+  color: var(--color-warning-text);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+}
+
+.reviewSummary {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.reviewWarn {
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.groupHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.groupTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.groupCount {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.groupEmpty {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface);
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.cardOff {
+  opacity: 0.55;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.check {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.cardName {
+  flex: 1;
+  min-width: 0;
+}
+
+.cardRole {
+  flex-shrink: 0;
+  width: 132px;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2) var(--space-3);
+}

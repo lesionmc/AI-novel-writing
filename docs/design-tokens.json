@@ -1,0 +1,499 @@
+{
+  "$meta": {
+    "name": "AI 小说创作工具 Design Tokens",
+    "designer": "颜好看",
+    "source": [
+      "04-界面设计说明.md §6.3 视觉规范",
+      "03-技术方案.md §1.2 目录结构",
+      "09-开发规范与依赖版本.md §2.2（原生 CSS 变量，不引入 UI 框架）"
+    ],
+    "cssSource": "frontend/src/styles/design-tokens.css",
+    "register": "product",
+    "designScale": { "variance": 3, "motion": 3, "density": 4 },
+    "colorArchetype": "color-palettes.md 第 29 套「保险安全蓝绿」（结构原型，色值由 04 覆盖）",
+    "typographyArchetype": "typography-pairings.md 第 5 套 Minimal Swiss + 第 22 套 Chinese Simplified",
+    "iconContract": "lucide-react==1.47.0（严格描边 SVG，MIT，版本等号锁死）；尺寸 16/20/24px，描边 1.75，currentColor 取色；经 components/common/Icon 单一入口，业务禁直接 import 图标库",
+    "darkMode": "已实现 4 个可选主题（night 夜航灯 / black 纯黑 / sepia 米黄纸 / pine 松林）+ 默认主题 light（等于不写 data-theme）。切换逻辑见 frontend/src/lib/theme.ts，选择器见 frontend/src/components/config/ThemeSwitcher.tsx。",
+    "themesContract": "见下方 themes 段。色值唯一真相源是同源的 design-tokens.css；本段只登记「有哪些主题」，不复制色值，避免双真源。",
+    "notes": "本文件与 design-tokens.css 同源。所有颜色只在该 CSS 里定义（含各主题覆盖块），组件禁止硬编码色值。加主题时必须同步本文件 themes 段，并跑 npm run check:theme 验证。"
+  },
+
+  "themes": {
+    "$meta": "主题登记表：只登记 id 与对应的 CSS 覆盖块选择器。色值在 design-tokens.css，标签与色卡预览在 frontend/src/lib/theme.ts。npm run check:theme 会校验本段与 CSS 里的主题块一一对应。",
+    "default": "light",
+    "defaultNote": "light 是默认主题，等于「不写 data-theme」，其色值就是本文件 color 段描述的那一套。",
+    "list": [
+      { "id": "night", "label": "夜航灯", "scheme": "dark", "cssSelector": ":root[data-theme='night']", "hint": "夜间写稿主推，深灰蓝低眩光" },
+      { "id": "black", "label": "纯黑", "scheme": "dark", "cssSelector": ":root[data-theme='black']", "hint": "OLED 省电、对比最高" },
+      { "id": "sepia", "label": "米黄纸", "scheme": "light", "cssSelector": ":root[data-theme='sepia']", "hint": "纸质书暖色，长时阅读眼压最低" },
+      { "id": "pine", "label": "松林", "scheme": "light", "cssSelector": ":root[data-theme='pine']", "hint": "低饱和绿灰，缓解屏幕发白" }
+    ]
+  },
+
+  "primitive": {
+    "blue": {
+      "50": { "value": "#e3f2fd", "type": "color" },
+      "100": { "value": "#bbdefb", "type": "color" },
+      "200": { "value": "#90caf9", "type": "color" },
+      "300": { "value": "#64b5f6", "type": "color" },
+      "400": { "value": "#42a5f5", "type": "color" },
+      "500": { "value": "#2196f3", "type": "color" },
+      "600": { "value": "#1e88e5", "type": "color" },
+      "700": { "value": "#1976d2", "type": "color" },
+      "800": { "value": "#1565c0", "type": "color" },
+      "900": { "value": "#0d47a1", "type": "color" }
+    },
+    "teal": {
+      "50": { "value": "#e0f2f1", "type": "color" },
+      "100": { "value": "#b2dfdb", "type": "color" },
+      "200": { "value": "#80cbc4", "type": "color" },
+      "400": { "value": "#26a69a", "type": "color" },
+      "500": { "value": "#009688", "type": "color" },
+      "600": { "value": "#00897b", "type": "color" },
+      "700": { "value": "#00796b", "type": "color" },
+      "800": { "value": "#00695c", "type": "color" }
+    },
+    "red": {
+      "50": { "value": "#ffebee", "type": "color" },
+      "100": { "value": "#ffcdd2", "type": "color" },
+      "200": { "value": "#ef9a9a", "type": "color" },
+      "600": { "value": "#e53935", "type": "color" },
+      "700": { "value": "#d32f2f", "type": "color" },
+      "800": { "value": "#c62828", "type": "color" },
+      "900": { "value": "#b71c1c", "type": "color" }
+    },
+    "orange": {
+      "50": { "value": "#fff3e0", "type": "color" },
+      "100": { "value": "#ffe0b2", "type": "color" },
+      "400": { "value": "#ffa726", "type": "color" },
+      "800": { "value": "#ef6c00", "type": "color" },
+      "900": { "value": "#e65100", "type": "color" }
+    },
+    "amber": {
+      "50": { "value": "#fff8e1", "type": "color" },
+      "100": { "value": "#ffecb3", "type": "color" },
+      "400": { "value": "#ffca28", "type": "color" },
+      "800": { "value": "#ff8f00", "type": "color" }
+    },
+    "grey": {
+      "0": { "value": "#ffffff", "type": "color" },
+      "50": { "value": "#f5f6f8", "type": "color" },
+      "100": { "value": "#edeff2", "type": "color" },
+      "200": { "value": "#e2e6eb", "type": "color" },
+      "300": { "value": "#c7cdd6", "type": "color" },
+      "400": { "value": "#bdbdbd", "type": "color" },
+      "500": { "value": "#9e9e9e", "type": "color" },
+      "600": { "value": "#757575", "type": "color" },
+      "700": { "value": "#616161", "type": "color" },
+      "800": { "value": "#424242", "type": "color" },
+      "900": { "value": "#212121", "type": "color" },
+      "1000": { "value": "#000000", "type": "color" }
+    }
+  },
+
+  "color": {
+    "surface": {
+      "bg": { "value": "{primitive.grey.50}", "type": "color", "css": "--color-bg" },
+      "surface": { "value": "{primitive.grey.0}", "type": "color", "css": "--color-surface" },
+      "sunken": { "value": "{primitive.grey.100}", "type": "color", "css": "--color-surface-sunken" },
+      "hover": { "value": "#f2f4f7", "type": "color", "css": "--color-surface-hover" },
+      "active": { "value": "{primitive.grey.100}", "type": "color", "css": "--color-surface-active" },
+      "raised": { "value": "{primitive.grey.0}", "type": "color", "css": "--color-surface-raised" }
+    },
+    "text": {
+      "primary": { "value": "{primitive.grey.900}", "type": "color", "css": "--color-text-primary", "note": "04 正文 #212121" },
+      "secondary": { "value": "{primitive.grey.700}", "type": "color", "css": "--color-text-secondary", "note": "04 次要 #616161" },
+      "tertiary": { "value": "{primitive.grey.600}", "type": "color", "css": "--color-text-tertiary" },
+      "disabled": { "value": "{primitive.grey.400}", "type": "color", "css": "--color-text-disabled" },
+      "inverse": { "value": "{primitive.grey.0}", "type": "color", "css": "--color-text-inverse" },
+      "onPrimary": { "value": "{primitive.grey.0}", "type": "color", "css": "--color-text-on-primary" },
+      "onAccent": { "value": "{primitive.grey.0}", "type": "color", "css": "--color-text-on-accent" },
+      "onDanger": { "value": "{primitive.grey.0}", "type": "color", "css": "--color-text-on-danger" }
+    },
+    "border": {
+      "default": { "value": "{primitive.grey.200}", "type": "color", "css": "--color-border" },
+      "strong": { "value": "{primitive.grey.300}", "type": "color", "css": "--color-border-strong" },
+      "subtle": { "value": "#eff1f4", "type": "color", "css": "--color-border-subtle" }
+    },
+    "primary": {
+      "default": { "value": "{primitive.blue.800}", "type": "color", "css": "--color-primary", "note": "04 主色 #1565C0" },
+      "hover": { "value": "{primitive.blue.900}", "type": "color", "css": "--color-primary-hover" },
+      "active": { "value": "#0a3d91", "type": "color", "css": "--color-primary-active" },
+      "soft": { "value": "{primitive.blue.50}", "type": "color", "css": "--color-primary-soft" },
+      "subtle": { "value": "#f2f7fd", "type": "color", "css": "--color-primary-subtle" },
+      "border": { "value": "{primitive.blue.200}", "type": "color", "css": "--color-primary-border" },
+      "focus": { "value": "{primitive.blue.500}", "type": "color", "css": "--color-primary-focus" }
+    },
+    "accent": {
+      "default": { "value": "{primitive.teal.600}", "type": "color", "css": "--color-accent", "note": "04 强调色 #00897B，每屏可见使用 ≤2 处" },
+      "hover": { "value": "{primitive.teal.700}", "type": "color", "css": "--color-accent-hover" },
+      "active": { "value": "{primitive.teal.800}", "type": "color", "css": "--color-accent-active" },
+      "strong": { "value": "{primitive.teal.800}", "type": "color", "css": "--color-accent-strong", "note": "小号文字用，白底对比 ≥4.5:1" },
+      "soft": { "value": "{primitive.teal.50}", "type": "color", "css": "--color-accent-soft" },
+      "border": { "value": "{primitive.teal.200}", "type": "color", "css": "--color-accent-border" }
+    },
+    "danger": {
+      "default": { "value": "{primitive.red.800}", "type": "color", "css": "--color-danger", "note": "04 警示色 #C62828" },
+      "hover": { "value": "{primitive.red.900}", "type": "color", "css": "--color-danger-hover" },
+      "active": { "value": "#8e1616", "type": "color", "css": "--color-danger-active" },
+      "soft": { "value": "{primitive.red.50}", "type": "color", "css": "--color-danger-soft" },
+      "border": { "value": "{primitive.red.200}", "type": "color", "css": "--color-danger-border" }
+    },
+    "warning": {
+      "default": { "value": "#b26a00", "type": "color", "css": "--color-warning" },
+      "text": { "value": "#8a6100", "type": "color", "css": "--color-warning-text", "note": "琥珀软底上的可读文字，对比 ≥4.5:1" },
+      "soft": { "value": "{primitive.amber.50}", "type": "color", "css": "--color-warning-soft" },
+      "border": { "value": "{primitive.amber.100}", "type": "color", "css": "--color-warning-border" }
+    },
+    "success": {
+      "default": { "value": "#2e7d32", "type": "color", "css": "--color-success" },
+      "hover": { "value": "#1b5e20", "type": "color", "css": "--color-success-hover" },
+      "soft": { "value": "#e6f3e7", "type": "color", "css": "--color-success-soft" },
+      "border": { "value": "#a9d3ab", "type": "color", "css": "--color-success-border" }
+    },
+    "info": {
+      "default": { "value": "{color.primary.default}", "type": "color", "css": "--color-info" },
+      "soft": { "value": "{color.primary.soft}", "type": "color", "css": "--color-info-soft" }
+    },
+    "foreshadowAging": {
+      "default": { "value": "{primitive.orange.900}", "type": "color", "css": "--color-foreshadow-aging", "note": "04 橙色，仅用于埋很久的伏笔" },
+      "soft": { "value": "{primitive.orange.50}", "type": "color", "css": "--color-foreshadow-aging-soft" },
+      "border": { "value": "{primitive.orange.100}", "type": "color", "css": "--color-foreshadow-aging-border" },
+      "strong": { "value": "#a63c00", "type": "color", "css": "--color-foreshadow-aging-strong" }
+    },
+    "importance": {
+      "high": { "value": "{color.danger.default}", "type": "color", "css": "--color-importance-high" },
+      "highSoft": { "value": "{color.danger.soft}", "type": "color", "css": "--color-importance-high-soft" },
+      "medium": { "value": "{color.warning.default}", "type": "color", "css": "--color-importance-medium" },
+      "mediumSoft": { "value": "{color.warning.soft}", "type": "color", "css": "--color-importance-medium-soft" },
+      "low": { "value": "{color.text.secondary}", "type": "color", "css": "--color-importance-low" },
+      "lowSoft": { "value": "{color.surface.sunken}", "type": "color", "css": "--color-importance-low-soft" }
+    },
+    "status": {
+      "alive": { "value": "{color.success.default}", "type": "color", "css": "--color-status-alive" },
+      "dead": { "value": "{color.text.tertiary}", "type": "color", "css": "--color-status-dead" },
+      "missing": { "value": "{color.warning.default}", "type": "color", "css": "--color-status-missing" },
+      "unknown": { "value": "{color.text.tertiary}", "type": "color", "css": "--color-status-unknown" },
+      "draft": { "value": "{color.text.secondary}", "type": "color", "css": "--color-status-draft" },
+      "done": { "value": "{color.success.default}", "type": "color", "css": "--color-status-done" },
+      "open": { "value": "{color.foreshadowAging.default}", "type": "color", "css": "--color-status-open" },
+      "closed": { "value": "{color.success.default}", "type": "color", "css": "--color-status-closed" },
+      "abandoned": { "value": "{color.text.tertiary}", "type": "color", "css": "--color-status-abandoned" }
+    },
+    "effect": {
+      "overlay": { "value": "rgba(16,24,40,0.45)", "type": "color", "css": "--color-overlay" },
+      "scrim": { "value": "rgba(16,24,40,0.08)", "type": "color", "css": "--color-scrim" },
+      "focusRing": { "value": "rgba(21,101,192,0.3)", "type": "color", "css": "--color-focus-ring" }
+    },
+    "editor": {
+      "bg": { "value": "{color.surface.surface}", "type": "color", "css": "--color-editor-bg" },
+      "text": { "value": "{color.text.primary}", "type": "color", "css": "--color-editor-text" },
+      "placeholder": { "value": "{color.text.disabled}", "type": "color", "css": "--color-editor-placeholder" },
+      "selection": { "value": "rgba(21,101,192,0.18)", "type": "color", "css": "--color-editor-selection" },
+      "caret": { "value": "{color.primary.default}", "type": "color", "css": "--color-editor-caret" },
+      "highlightAging": { "value": "rgba(230,81,0,0.14)", "type": "color", "css": "--color-editor-highlight-aging" },
+      "highlightConflict": { "value": "rgba(198,40,40,0.16)", "type": "color", "css": "--color-editor-highlight-conflict" }
+    },
+    "scrollbar": {
+      "thumb": { "value": "{primitive.grey.300}", "type": "color", "css": "--color-scrollbar-thumb" },
+      "thumbHover": { "value": "{primitive.grey.400}", "type": "color", "css": "--color-scrollbar-thumb-hover" },
+      "track": { "value": "transparent", "type": "color", "css": "--color-scrollbar-track" }
+    },
+    "skeleton": {
+      "base": { "value": "{primitive.grey.100}", "type": "color", "css": "--color-skeleton-base" },
+      "shine": { "value": "#f7f8fa", "type": "color", "css": "--color-skeleton-shine" }
+    }
+  },
+
+  "font": {
+    "family": {
+      "ui": {
+        "value": "Inter, Noto Sans SC, PingFang SC, Microsoft YaHei, Segoe UI, system-ui, -apple-system, sans-serif",
+        "type": "fontFamily",
+        "css": "--font-ui"
+      },
+      "editor": {
+        "value": "Noto Serif SC, Source Han Serif SC, Source Han Serif CN, Songti SC, STSong, SimSun, Noto Serif, Georgia, serif",
+        "type": "fontFamily",
+        "css": "--font-editor",
+        "note": "中文书稿衬线体；如需改无衬线，改为 var(--font-ui) 单点切换"
+      },
+      "mono": {
+        "value": "JetBrains Mono, Fira Code, ui-monospace, SFMono-Regular, Consolas, Liberation Mono, monospace",
+        "type": "fontFamily",
+        "css": "--font-mono"
+      },
+      "display": { "value": "{font.family.ui}", "type": "fontFamily", "css": "--font-display" },
+      "body": { "value": "{font.family.ui}", "type": "fontFamily", "css": "--font-body" }
+    },
+    "size": {
+      "2xs": { "value": "11px", "type": "dimension", "css": "--text-2xs" },
+      "xs": { "value": "12px", "type": "dimension", "css": "--text-xs" },
+      "sm": { "value": "13px", "type": "dimension", "css": "--text-sm" },
+      "base": { "value": "14px", "type": "dimension", "css": "--text-base" },
+      "lg": { "value": "16px", "type": "dimension", "css": "--text-lg" },
+      "xl": { "value": "18px", "type": "dimension", "css": "--text-xl" },
+      "2xl": { "value": "20px", "type": "dimension", "css": "--text-2xl" },
+      "3xl": { "value": "24px", "type": "dimension", "css": "--text-3xl" },
+      "4xl": { "value": "30px", "type": "dimension", "css": "--text-4xl" },
+      "editorBody": { "value": "17px", "type": "dimension", "css": "--text-editor-body", "note": "04 编辑器正文字号" }
+    },
+    "lineHeight": {
+      "none": { "value": "1", "type": "number", "css": "--leading-none" },
+      "tight": { "value": "1.25", "type": "number", "css": "--leading-tight" },
+      "snug": { "value": "1.4", "type": "number", "css": "--leading-snug" },
+      "normal": { "value": "1.5", "type": "number", "css": "--leading-normal" },
+      "relaxed": { "value": "1.7", "type": "number", "css": "--leading-relaxed" },
+      "editor": { "value": "1.9", "type": "number", "css": "--leading-editor", "note": "04 编辑器行高" }
+    },
+    "weight": {
+      "regular": { "value": 400, "type": "fontWeight", "css": "--font-weight-regular" },
+      "medium": { "value": 500, "type": "fontWeight", "css": "--font-weight-medium" },
+      "semibold": { "value": 600, "type": "fontWeight", "css": "--font-weight-semibold" },
+      "bold": { "value": 700, "type": "fontWeight", "css": "--font-weight-bold" }
+    },
+    "tracking": {
+      "tighter": { "value": "-0.02em", "type": "dimension", "css": "--tracking-tighter" },
+      "tight": { "value": "-0.01em", "type": "dimension", "css": "--tracking-tight" },
+      "normal": { "value": "0", "type": "dimension", "css": "--tracking-normal" },
+      "wide": { "value": "0.012em", "type": "dimension", "css": "--tracking-wide" },
+      "caps": { "value": "0.08em", "type": "dimension", "css": "--tracking-caps" }
+    }
+  },
+
+  "space": {
+    "0": { "value": "0", "type": "dimension", "css": "--space-0" },
+    "1": { "value": "4px", "type": "dimension", "css": "--space-1" },
+    "2": { "value": "8px", "type": "dimension", "css": "--space-2" },
+    "3": { "value": "12px", "type": "dimension", "css": "--space-3" },
+    "4": { "value": "16px", "type": "dimension", "css": "--space-4" },
+    "5": { "value": "20px", "type": "dimension", "css": "--space-5" },
+    "6": { "value": "24px", "type": "dimension", "css": "--space-6" },
+    "8": { "value": "32px", "type": "dimension", "css": "--space-8" },
+    "10": { "value": "40px", "type": "dimension", "css": "--space-10" },
+    "12": { "value": "48px", "type": "dimension", "css": "--space-12" },
+    "16": { "value": "64px", "type": "dimension", "css": "--space-16" }
+  },
+
+  "radius": {
+    "none": { "value": "0", "type": "dimension", "css": "--radius-none" },
+    "xs": { "value": "2px", "type": "dimension", "css": "--radius-xs" },
+    "sm": { "value": "4px", "type": "dimension", "css": "--radius-sm" },
+    "button": { "value": "6px", "type": "dimension", "css": "--radius-button", "note": "04 按钮圆角" },
+    "input": { "value": "6px", "type": "dimension", "css": "--radius-input" },
+    "card": { "value": "8px", "type": "dimension", "css": "--radius-card", "note": "04 卡片圆角" },
+    "lg": { "value": "12px", "type": "dimension", "css": "--radius-lg" },
+    "xl": { "value": "16px", "type": "dimension", "css": "--radius-xl" },
+    "pill": { "value": "9999px", "type": "dimension", "css": "--radius-pill" },
+    "circle": { "value": "50%", "type": "dimension", "css": "--radius-circle" }
+  },
+
+  "border": {
+    "width": {
+      "0": { "value": "0", "type": "dimension", "css": "--border-width-0" },
+      "1": { "value": "1px", "type": "dimension", "css": "--border-width-1" },
+      "2": { "value": "2px", "type": "dimension", "css": "--border-width-2" },
+      "focus": { "value": "2px", "type": "dimension", "css": "--border-width-focus" }
+    }
+  },
+
+  "shadow": {
+    "none": { "value": "none", "type": "shadow", "css": "--shadow-none" },
+    "xs": { "value": "0 1px 2px rgba(16,24,40,0.04)", "type": "shadow", "css": "--shadow-xs" },
+    "sm": { "value": "0 1px 3px rgba(16,24,40,0.08), 0 1px 2px rgba(16,24,40,0.04)", "type": "shadow", "css": "--shadow-sm" },
+    "md": { "value": "0 4px 8px -2px rgba(16,24,40,0.1), 0 2px 4px -2px rgba(16,24,40,0.06)", "type": "shadow", "css": "--shadow-md" },
+    "lg": { "value": "0 12px 24px -6px rgba(16,24,40,0.12), 0 4px 8px -4px rgba(16,24,40,0.06)", "type": "shadow", "css": "--shadow-lg" },
+    "focus": { "value": "0 0 0 3px rgba(21,101,192,0.3)", "type": "shadow", "css": "--shadow-focus" },
+    "insetTop": { "value": "inset 0 1px 0 rgba(16,24,40,0.04)", "type": "shadow", "css": "--shadow-inset-top" }
+  },
+
+  "zIndex": {
+    "base": { "value": 0, "type": "number", "css": "--z-base" },
+    "raised": { "value": 10, "type": "number", "css": "--z-raised" },
+    "sticky": { "value": 100, "type": "number", "css": "--z-sticky" },
+    "topbar": { "value": 200, "type": "number", "css": "--z-topbar" },
+    "statusbar": { "value": 300, "type": "number", "css": "--z-statusbar" },
+    "dropdown": { "value": 1000, "type": "number", "css": "--z-dropdown" },
+    "overlay": { "value": 1100, "type": "number", "css": "--z-overlay" },
+    "modal": { "value": 1200, "type": "number", "css": "--z-modal" },
+    "toast": { "value": 1300, "type": "number", "css": "--z-toast" },
+    "tooltip": { "value": 1400, "type": "number", "css": "--z-tooltip" }
+  },
+
+  "motion": {
+    "duration": {
+      "instant": { "value": "80ms", "type": "duration", "css": "--duration-instant" },
+      "fast": { "value": "150ms", "type": "duration", "css": "--duration-fast", "note": "收敛值" },
+      "base": { "value": "200ms", "type": "duration", "css": "--duration-base" },
+      "slow": { "value": "300ms", "type": "duration", "css": "--duration-slow" }
+    },
+    "easing": {
+      "standard": { "value": "cubic-bezier(0.2, 0, 0, 1)", "type": "cubicBezier", "css": "--ease-standard" },
+      "out": { "value": "cubic-bezier(0.16, 1, 0.3, 1)", "type": "cubicBezier", "css": "--ease-out" },
+      "inOut": { "value": "cubic-bezier(0.4, 0, 0.2, 1)", "type": "cubicBezier", "css": "--ease-in-out" },
+      "linear": { "value": "linear", "type": "cubicBezier", "css": "--ease-linear" }
+    },
+    "forbidden": {
+      "bounce": { "value": "cubic-bezier(0.68, -0.55, 0.265, 1.55)", "type": "string", "note": "禁止使用的弹跳/弹性缓动" }
+    }
+  },
+
+  "layout": {
+    "minAppWidth": { "value": "900px", "type": "dimension", "css": "--layout-min-app-width" },
+    "topbarHeight": { "value": "52px", "type": "dimension", "css": "--layout-topbar-height" },
+    "statusbarHeight": { "value": "28px", "type": "dimension", "css": "--layout-statusbar-height" },
+    "sidebarWidth": { "value": "220px", "type": "dimension", "css": "--layout-sidebar-width" },
+    "sidebarCollapsedWidth": { "value": "40px", "type": "dimension", "css": "--layout-sidebar-collapsed-width" },
+    "editorMinWidth": { "value": "480px", "type": "dimension", "css": "--layout-editor-min-width" },
+    "editorContentMax": { "value": "720px", "type": "dimension", "css": "--layout-editor-content-max" },
+    "recallPanelWidth": { "value": "340px", "type": "dimension", "css": "--layout-recall-panel-width" },
+    "recallPanelCollapsedWidth": { "value": "40px", "type": "dimension", "css": "--layout-recall-panel-collapsed-width" },
+    "rightCollapseBreakpoint": { "value": "1200px", "type": "dimension", "css": "--layout-right-collapse-breakpoint" },
+    "leftCollapseBreakpoint": { "value": "900px", "type": "dimension", "css": "--layout-left-collapse-breakpoint" },
+    "adminSidebarWidth": { "value": "240px", "type": "dimension", "css": "--layout-admin-sidebar-width" },
+    "dialogMaxWidth": { "value": "640px", "type": "dimension", "css": "--layout-dialog-max-width" },
+    "dialogSmMaxWidth": { "value": "420px", "type": "dimension", "css": "--layout-dialog-sm-max-width" },
+    "contentMax": { "value": "1120px", "type": "dimension", "css": "--layout-content-max" }
+  },
+
+  "icon": {
+    "sizeInline": { "value": "16px", "type": "dimension", "css": "--icon-size-inline" },
+    "sizeButton": { "value": "20px", "type": "dimension", "css": "--icon-size-button" },
+    "sizeStandalone": { "value": "24px", "type": "dimension", "css": "--icon-size-standalone" },
+    "strokeWidth": { "value": 1.75, "type": "number", "css": "--icon-stroke-width" },
+    "library": { "value": "lucide-react", "type": "string", "note": "架构师锁定 lucide-react==1.47.0（ADR-004）；严格描边 SVG，MIT，ESM tree-shake" },
+    "libraryVersion": { "value": "1.47.0", "type": "string", "note": "等号锁死，全项目不混用；业务代码禁直接 import 与 icons[...] 全量对象" },
+    "strokeWidthOverride": { "value": 1.75, "type": "number", "note": "lucide 默认 strokeWidth=2，须在 components/common/Icon 内覆盖为 1.75，对齐 --icon-stroke-width" }
+  },
+
+  "interaction": {
+    "touchTargetMin": { "value": "44px", "type": "dimension", "css": "--touch-target-min" },
+    "focusRingWidth": { "value": "2px", "type": "dimension", "css": "--focus-ring-width" },
+    "focusRingOffset": { "value": "2px", "type": "dimension", "css": "--focus-ring-offset" },
+    "focusRingColor": { "value": "{color.primary.default}", "type": "color", "css": "--focus-ring-color" },
+    "focusRingShadow": { "value": "{shadow.focus}", "type": "shadow", "css": "--focus-ring-shadow" },
+    "disabledOpacity": { "value": 0.45, "type": "number", "css": "--disabled-opacity" },
+    "hoverOverlayOpacity": { "value": 0.06, "type": "number", "css": "--hover-overlay-opacity" },
+    "activeOverlayOpacity": { "value": 0.1, "type": "number", "css": "--active-overlay-opacity" }
+  },
+
+  "component": {
+    "button": {
+      "heightSm": { "value": "28px", "type": "dimension", "css": "--btn-height-sm" },
+      "heightMd": { "value": "32px", "type": "dimension", "css": "--btn-height-md" },
+      "heightLg": { "value": "40px", "type": "dimension", "css": "--btn-height-lg" },
+      "paddingXSm": { "value": "{space.3}", "type": "dimension", "css": "--btn-padding-x-sm" },
+      "paddingXMd": { "value": "{space.4}", "type": "dimension", "css": "--btn-padding-x-md" },
+      "paddingXLg": { "value": "{space.5}", "type": "dimension", "css": "--btn-padding-x-lg" },
+      "radius": { "value": "{radius.button}", "type": "dimension", "css": "--btn-radius" },
+      "fontSize": { "value": "{font.size.base}", "type": "dimension", "css": "--btn-font-size" },
+      "fontWeight": { "value": "{font.weight.medium}", "type": "fontWeight", "css": "--btn-font-weight" },
+      "gap": { "value": "{space.2}", "type": "dimension", "css": "--btn-gap" },
+      "primaryBg": { "value": "{color.primary.default}", "type": "color", "css": "--btn-primary-bg" },
+      "primaryBgHover": { "value": "{color.primary.hover}", "type": "color", "css": "--btn-primary-bg-hover" },
+      "primaryBgActive": { "value": "{color.primary.active}", "type": "color", "css": "--btn-primary-bg-active" },
+      "primaryText": { "value": "{color.text.onPrimary}", "type": "color", "css": "--btn-primary-text" },
+      "secondaryBg": { "value": "{color.surface.surface}", "type": "color", "css": "--btn-secondary-bg" },
+      "secondaryBgHover": { "value": "{color.surface.hover}", "type": "color", "css": "--btn-secondary-bg-hover" },
+      "secondaryText": { "value": "{color.primary.default}", "type": "color", "css": "--btn-secondary-text" },
+      "secondaryBorder": { "value": "{color.border.default}", "type": "color", "css": "--btn-secondary-border" },
+      "ghostBg": { "value": "transparent", "type": "color", "css": "--btn-ghost-bg" },
+      "ghostBgHover": { "value": "{color.surface.hover}", "type": "color", "css": "--btn-ghost-bg-hover" },
+      "ghostText": { "value": "{color.text.secondary}", "type": "color", "css": "--btn-ghost-text" },
+      "accentBg": { "value": "{color.accent.default}", "type": "color", "css": "--btn-accent-bg" },
+      "accentBgHover": { "value": "{color.accent.hover}", "type": "color", "css": "--btn-accent-bg-hover" },
+      "accentText": { "value": "{color.text.onAccent}", "type": "color", "css": "--btn-accent-text" },
+      "dangerBg": { "value": "{color.danger.default}", "type": "color", "css": "--btn-danger-bg" },
+      "dangerBgHover": { "value": "{color.danger.hover}", "type": "color", "css": "--btn-danger-bg-hover" },
+      "dangerText": { "value": "{color.text.onDanger}", "type": "color", "css": "--btn-danger-text" }
+    },
+    "input": {
+      "height": { "value": "32px", "type": "dimension", "css": "--input-height" },
+      "heightLg": { "value": "40px", "type": "dimension", "css": "--input-height-lg" },
+      "paddingX": { "value": "{space.3}", "type": "dimension", "css": "--input-padding-x" },
+      "paddingY": { "value": "{space.2}", "type": "dimension", "css": "--input-padding-y" },
+      "radius": { "value": "{radius.input}", "type": "dimension", "css": "--input-radius" },
+      "bg": { "value": "{color.surface.surface}", "type": "color", "css": "--input-bg" },
+      "border": { "value": "{color.border.default}", "type": "color", "css": "--input-border" },
+      "text": { "value": "{color.text.primary}", "type": "color", "css": "--input-text" },
+      "placeholder": { "value": "{color.text.disabled}", "type": "color", "css": "--input-placeholder" },
+      "focusBorder": { "value": "{color.primary.default}", "type": "color", "css": "--input-focus-border" },
+      "focusRing": { "value": "{color.effect.focusRing}", "type": "color", "css": "--input-focus-ring" },
+      "errorBorder": { "value": "{color.danger.default}", "type": "color", "css": "--input-error-border" },
+      "errorRing": { "value": "{color.danger.soft}", "type": "color", "css": "--input-error-ring" },
+      "disabledBg": { "value": "{color.surface.sunken}", "type": "color", "css": "--input-disabled-bg" },
+      "disabledText": { "value": "{color.text.disabled}", "type": "color", "css": "--input-disabled-text" }
+    },
+    "card": {
+      "bg": { "value": "{color.surface.surface}", "type": "color", "css": "--card-bg" },
+      "borderColor": { "value": "{color.border.default}", "type": "color", "css": "--card-border-color" },
+      "radius": { "value": "{radius.card}", "type": "dimension", "css": "--card-radius" },
+      "padding": { "value": "{space.4}", "type": "dimension", "css": "--card-padding" },
+      "shadow": { "value": "{shadow.none}", "type": "shadow", "css": "--card-shadow" }
+    },
+    "badge": {
+      "radius": { "value": "{radius.sm}", "type": "dimension", "css": "--badge-radius" },
+      "fontSize": { "value": "{font.size.2xs}", "type": "dimension", "css": "--badge-font-size" },
+      "paddingX": { "value": "{space.2}", "type": "dimension", "css": "--badge-padding-x" },
+      "paddingY": { "value": "2px", "type": "dimension", "css": "--badge-padding-y" }
+    },
+    "topbar": {
+      "bg": { "value": "{color.surface.surface}", "type": "color", "css": "--topbar-bg" },
+      "borderColor": { "value": "{color.border.default}", "type": "color", "css": "--topbar-border-color" },
+      "text": { "value": "{color.text.primary}", "type": "color", "css": "--topbar-text" }
+    },
+    "statusbar": {
+      "bg": { "value": "{color.surface.sunken}", "type": "color", "css": "--statusbar-bg" },
+      "text": { "value": "{color.text.tertiary}", "type": "color", "css": "--statusbar-text" },
+      "fontSize": { "value": "{font.size.xs}", "type": "dimension", "css": "--statusbar-font-size" },
+      "chipHeight": { "value": "20px", "type": "dimension", "css": "--statusbar-chip-height" },
+      "chipGap": { "value": "{space.2}", "type": "dimension", "css": "--statusbar-chip-gap" },
+      "chipPaddingX": { "value": "{space.2}", "type": "dimension", "css": "--statusbar-chip-padding-x" },
+      "chipRadius": { "value": "{radius.sm}", "type": "dimension", "css": "--statusbar-chip-radius" },
+      "chipFontSize": { "value": "{font.size.xs}", "type": "dimension", "css": "--statusbar-chip-font-size" },
+      "chipIconSize": { "value": "{icon.sizeInline}", "type": "dimension", "css": "--statusbar-chip-icon-size" },
+      "chipGapInner": { "value": "{space.1}", "type": "dimension", "css": "--statusbar-chip-gap-inner" },
+      "chipWarnBg": { "value": "{color.warning.soft}", "type": "color", "css": "--statusbar-chip-warn-bg" },
+      "chipWarnText": { "value": "{color.warning.text}", "type": "color", "css": "--statusbar-chip-warn-text" },
+      "chipWarnBorder": { "value": "{color.warning.border}", "type": "color", "css": "--statusbar-chip-warn-border" },
+      "chipNeutralBg": { "value": "{color.surface.hover}", "type": "color", "css": "--statusbar-chip-neutral-bg" },
+      "chipNeutralText": { "value": "{color.text.secondary}", "type": "color", "css": "--statusbar-chip-neutral-text" },
+      "chipNeutralBorder": { "value": "{color.border.default}", "type": "color", "css": "--statusbar-chip-neutral-border" }
+    },
+    "chapterTree": {
+      "bg": { "value": "{color.surface.sunken}", "type": "color", "css": "--tree-bg" },
+      "borderColor": { "value": "{color.border.default}", "type": "color", "css": "--tree-border-color" },
+      "rowHeight": { "value": "30px", "type": "dimension", "css": "--tree-row-height" },
+      "rowRadius": { "value": "{radius.sm}", "type": "dimension", "css": "--tree-row-radius" },
+      "rowHoverBg": { "value": "{color.surface.hover}", "type": "color", "css": "--tree-row-hover-bg" },
+      "rowActiveBg": { "value": "{color.primary.soft}", "type": "color", "css": "--tree-row-active-bg" },
+      "rowActiveText": { "value": "{color.primary.default}", "type": "color", "css": "--tree-row-active-text" }
+    },
+    "recallPanel": {
+      "bg": { "value": "{color.surface.surface}", "type": "color", "css": "--recall-bg" },
+      "borderColor": { "value": "{color.border.default}", "type": "color", "css": "--recall-border-color" },
+      "sectionGap": { "value": "{space.1}", "type": "dimension", "css": "--recall-section-gap" },
+      "sectionHeaderHeight": { "value": "36px", "type": "dimension", "css": "--recall-section-header-height" },
+      "itemPaddingX": { "value": "{space.4}", "type": "dimension", "css": "--recall-item-padding-x" },
+      "itemPaddingY": { "value": "{space.3}", "type": "dimension", "css": "--recall-item-padding-y" },
+      "emptyMinHeight": { "value": "96px", "type": "dimension", "css": "--recall-empty-min-height" }
+    },
+    "writebackDialog": {
+      "bg": { "value": "{color.surface.raised}", "type": "color", "css": "--dialog-bg" },
+      "radius": { "value": "{radius.lg}", "type": "dimension", "css": "--dialog-radius" },
+      "shadow": { "value": "{shadow.lg}", "type": "shadow", "css": "--dialog-shadow" },
+      "headerHeight": { "value": "56px", "type": "dimension", "css": "--dialog-header-height" },
+      "footerHeight": { "value": "60px", "type": "dimension", "css": "--dialog-footer-height" }
+    },
+    "editor": {
+      "contentMax": { "value": "{layout.editorContentMax}", "type": "dimension", "css": "--editor-content-max" },
+      "fontSize": { "value": "{font.size.editorBody}", "type": "dimension", "css": "--editor-font-size" },
+      "lineHeight": { "value": "{font.lineHeight.editor}", "type": "number", "css": "--editor-line-height" },
+      "paragraphGap": { "value": "{space.4}", "type": "dimension", "css": "--editor-paragraph-gap" }
+    },
+    "skeleton": {
+      "radius": { "value": "{radius.sm}", "type": "dimension", "css": "--skeleton-radius" },
+      "shimmerDuration": { "value": "1400ms", "type": "duration", "css": "--skeleton-shimmer-duration" }
+    }
+  }
+}

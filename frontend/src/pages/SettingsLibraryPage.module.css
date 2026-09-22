@@ -1,0 +1,9 @@
+/* 设定库页容器（AI 入口 + Tab 面板留白） */
+
+.entryWrap {
+  margin-bottom: var(--space-4);
+}
+
+.tabPanel {
+  padding-top: var(--space-2);
+}

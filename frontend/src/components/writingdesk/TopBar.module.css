@@ -1,0 +1,103 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  height: var(--layout-topbar-height);
+  flex-shrink: 0;
+  padding: 0 var(--space-4);
+  background-color: var(--topbar-bg);
+  border-bottom: var(--border-width-1) solid var(--topbar-border-color);
+  z-index: var(--z-topbar);
+}
+
+.bookName {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 220px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.bookNameText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bookNameLink:hover {
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  flex-shrink: 0;
+  background-color: var(--color-border);
+}
+
+.chapterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+}
+
+.chapterSeq {
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.chapterTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--font-weight-medium);
+  max-width: 260px;
+}
+
+.counts {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: auto;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.count {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.modeTag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-tertiary);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+}
+
+.menuNote {
+  padding: var(--space-2) var(--space-3);
+  max-width: 240px;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-2xs);
+  line-height: var(--leading-relaxed);
+}

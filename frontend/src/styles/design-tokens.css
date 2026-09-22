@@ -1,0 +1,881 @@
+/* ============================================================================
+   AI 小说创作工具 — Design Tokens
+   ----------------------------------------------------------------------------
+   唯一颜色与尺寸真相源。组件样式禁止出现硬编码色值（唯一例外 #fff / #000
+   仅可用于极少数纯叠加场景，本文件内亦以 var 形式提供）。
+   同源文件：ai-novel/docs/design-tokens.json
+
+   设计师：颜好看
+   基准文档：《04-界面设计说明.md》第 6.3 节（视觉规范）+《03-技术方案.md》
+   设计契约：Product 寄存器（产品型）— 设计服务产品，克制用色，功能性动效
+   设计刻度：DESIGN_VARIANCE=3 / MOTION_INTENSITY=3 / VISUAL_DENSITY=4
+   配色原型：color-palettes.md 第 29 套「保险安全蓝绿」结构（蓝主色 + 绿强调），
+             实际色值由 04 锁定并覆盖原型示例值
+   字体原型：typography-pairings.md 第 5 套「Minimal Swiss」(Inter, UI) +
+             第 22 套「Chinese Simplified」(Noto Sans SC, 中文)
+   图标：**lucide-react==1.47.0**（严格描边 SVG，MIT，版本等号锁死 —— 架构师 ADR-004）
+         尺寸契约固定为 16px 行内 / 20px 按钮内 / 24px 独立；描边 1.75
+         （lucide 默认 strokeWidth=2，必须在 components/common/Icon 内覆盖为 1.75）
+         取色一律 currentColor；业务代码禁直接 import 图标库、禁用 icons[...] 全量对象
+
+   深色模式：M1 不实现。所有颜色已走 CSS 变量，后续只需增加
+            :root[data-theme="dark"] 覆盖块即可，无需改动组件。
+   ========================================================================= */
+
+:root {
+  /* ==========================================================================
+     0. 原始值层 Primitive（A1-identity 的调色原料）
+     命名按色相 + 明度，仅供语义层引用，组件禁止直接使用
+     ========================================================================== */
+
+  /* 蓝（主色原料，Material Blue） */
+  --color-blue-50: #e3f2fd;
+  --color-blue-100: #bbdefb;
+  --color-blue-200: #90caf9;
+  --color-blue-300: #64b5f6;
+  --color-blue-400: #42a5f5;
+  --color-blue-500: #2196f3;
+  --color-blue-600: #1e88e5;
+  --color-blue-700: #1976d2;
+  --color-blue-800: #1565c0; /* 04 主色 */
+  --color-blue-900: #0d47a1;
+
+  /* 青绿（强调色原料，Material Teal） */
+  --color-teal-50: #e0f2f1;
+  --color-teal-100: #b2dfdb;
+  --color-teal-200: #80cbc4;
+  --color-teal-400: #26a69a;
+  --color-teal-500: #009688;
+  --color-teal-600: #00897b; /* 04 强调色 */
+  --color-teal-700: #00796b;
+  --color-teal-800: #00695c;
+
+  /* 红（警示色原料，Material Red） */
+  --color-red-50: #ffebee;
+  --color-red-100: #ffcdd2;
+  --color-red-200: #ef9a9a;
+  --color-red-600: #e53935;
+  --color-red-700: #d32f2f;
+  --color-red-800: #c62828; /* 04 警示色 */
+  --color-red-900: #b71c1c;
+
+  /* 橙（"埋了很久的伏笔"专用，Material Orange） */
+  --color-orange-50: #fff3e0;
+  --color-orange-100: #ffe0b2;
+  --color-orange-400: #ffa726;
+  --color-orange-800: #ef6c00;
+  --color-orange-900: #e65100; /* 04 "橙色用于埋了很久的伏笔" */
+
+  /* 琥珀（离线提示 / AI 解析警告，Material Amber） */
+  --color-amber-50: #fff8e1;
+  --color-amber-100: #ffecb3;
+  --color-amber-400: #ffca28;
+  --color-amber-800: #ff8f00;
+
+  /* 中性灰（Material Grey + 04 正文/次要色） */
+  --color-grey-0: #ffffff;
+  --color-grey-50: #f5f6f8;
+  --color-grey-100: #edeff2;
+  --color-grey-200: #e2e6eb;
+  --color-grey-300: #c7cdd6;
+  --color-grey-400: #bdbdbd;
+  --color-grey-500: #9e9e9e;
+  --color-grey-600: #757575;
+  --color-grey-700: #616161; /* 04 次要文字 */
+  --color-grey-800: #424242;
+  --color-grey-900: #212121; /* 04 正文文字 */
+  --color-grey-1000: #000000;
+
+  /* ==========================================================================
+     1. 语义色层 Semantic（A2 / B-slot）
+     组件只引用这一层，不引用上层原始值
+     ========================================================================== */
+
+  /* --- 表面 Surface --- */
+  --color-bg: var(--color-grey-50); /* 应用底色 */
+  --color-surface: var(--color-grey-0); /* 卡片 / 编辑画布 */
+  --color-surface-sunken: var(--color-grey-100); /* 侧栏 / 凹陷区 */
+  --color-surface-hover: #f2f4f7; /* 行悬停 */
+  --color-surface-active: var(--color-grey-100); /* 行选中 */
+  --color-surface-raised: var(--color-grey-0); /* 弹窗 / 下拉 */
+
+  /* --- 文字 Foreground --- */
+  --color-text-primary: var(--color-grey-900); /* 04 正文 #212121 */
+  --color-text-secondary: var(--color-grey-700); /* 04 次要 #616161 */
+  --color-text-tertiary: var(--color-grey-600); /* 元数据 / 时间戳 */
+  --color-text-disabled: var(--color-grey-400); /* 禁用 / 占位 */
+  --color-text-inverse: var(--color-grey-0);
+  --color-text-on-primary: var(--color-grey-0);
+  --color-text-on-accent: var(--color-grey-0);
+  --color-text-on-danger: var(--color-grey-0);
+
+  /* --- 边框 Border --- */
+  --color-border: var(--color-grey-200); /* 默认边框 */
+  --color-border-strong: var(--color-grey-300); /* 强调边框 */
+  --color-border-subtle: #eff1f4; /* 内部行分隔（divide） */
+
+  /* --- 主色 Primary（深蓝 #1565C0） --- */
+  --color-primary: var(--color-blue-800); /* 04 主色 */
+  --color-primary-hover: var(--color-blue-900);
+  --color-primary-active: #0a3d91;
+  --color-primary-soft: var(--color-blue-50); /* 选中底 / 标签底 */
+  --color-primary-subtle: #f2f7fd; /* 极浅底 */
+  --color-primary-border: var(--color-blue-200); /* 淡边框 / 高亮下划线 */
+  --color-primary-focus: var(--color-blue-500);
+
+  /* --- 强调色 Accent（绿，每屏可见使用 ≤2 处） ---
+     基色由 04 的 #00897B 下调到 teal-700 #00796B：原值白字对比度只有 4.32:1，
+     低于 WCAG AA 正文阈值 4.5:1（强调按钮「完成本章」就是白字）。实测 5.32:1 达标。
+     色相不变、视觉几乎无感，纯 a11y 修正。 */
+  --color-accent: var(--color-teal-700); /* 04 强调色（对比度修正版） */
+  --color-accent-hover: var(--color-teal-800);
+  --color-accent-active: #00574d;
+  --color-accent-strong: var(--color-teal-800); /* 小号文字用（白底对比 ≥4.5:1） */
+  --color-accent-soft: var(--color-teal-50);
+  --color-accent-border: var(--color-teal-200);
+
+  /* --- 警示 Danger（红 #C62828） --- */
+  --color-danger: var(--color-red-800); /* 04 警示色 */
+  --color-danger-hover: var(--color-red-900);
+  --color-danger-active: #8e1616;
+  --color-danger-soft: var(--color-red-50);
+  --color-danger-border: var(--color-red-200);
+
+  /* --- 警告 Warning（琥珀，用于离线黄条 / AI 解析警告） --- */
+  --color-warning: #b26a00;
+  --color-warning-text: #8a6100; /* 浅底上的可读文字（对比 ≥4.5:1） */
+  --color-warning-soft: var(--color-amber-50);
+  --color-warning-border: var(--color-amber-100);
+
+  /* --- 成功 Success（已连通 / 已回收 / 已保存） --- */
+  --color-success: #2e7d32;
+  --color-success-hover: #1b5e20;
+  --color-success-soft: #e6f3e7;
+  --color-success-border: #a9d3ab;
+
+  /* --- 信息 Info（复用主色语义） --- */
+  --color-info: var(--color-primary);
+  --color-info-soft: var(--color-primary-soft);
+
+  /* --- 伏笔老化 Foreshadow Aging（橙，仅用于"埋很久的伏笔"） --- */
+  --color-foreshadow-aging: var(--color-orange-900); /* 圆点 / 图标 / 强调 */
+  --color-foreshadow-aging-soft: var(--color-orange-50); /* 徽标底 */
+  --color-foreshadow-aging-border: var(--color-orange-100);
+  --color-foreshadow-aging-strong: #a63c00; /* 小号文字（软底对比 ≥4.5:1） */
+
+  /* --- 重要度 Importance（伏笔 / 冲突共用，别名不新增色相） --- */
+  --color-importance-high: var(--color-danger);
+  --color-importance-high-soft: var(--color-danger-soft);
+  --color-importance-medium: var(--color-warning);
+  --color-importance-medium-soft: var(--color-warning-soft);
+  --color-importance-low: var(--color-text-secondary);
+  --color-importance-low-soft: var(--color-surface-sunken);
+
+  /* --- 实体状态 Status --- */
+  --color-status-alive: var(--color-success);
+  --color-status-dead: var(--color-text-tertiary);
+  --color-status-missing: var(--color-warning);
+  --color-status-unknown: var(--color-text-tertiary);
+  --color-status-draft: var(--color-text-secondary);
+  --color-status-done: var(--color-success);
+  --color-status-open: var(--color-foreshadow-aging);
+  --color-status-closed: var(--color-success);
+  --color-status-abandoned: var(--color-text-tertiary);
+
+  /* --- 遮罩 / 效果 Effect --- */
+  --color-overlay: rgba(16, 24, 40, 0.45); /* 弹窗背幕 */
+  --color-scrim: rgba(16, 24, 40, 0.08); /* 轻遮罩 */
+  --color-focus-ring: rgba(21, 101, 192, 0.3); /* 焦点环 */
+  --color-shadow-rgb: 16, 24, 40; /* 阴影基色分量 */
+
+  /* --- 编辑器专用 Editor（写作画布） --- */
+  --color-editor-bg: var(--color-surface);
+  --color-editor-text: var(--color-text-primary);
+  --color-editor-placeholder: var(--color-text-disabled);
+  --color-editor-selection: rgba(21, 101, 192, 0.18);
+  --color-editor-caret: var(--color-primary);
+  --color-editor-highlight-aging: rgba(230, 81, 0, 0.14); /* 伏笔命中高亮 */
+  --color-editor-highlight-conflict: rgba(198, 40, 40, 0.16); /* 矛盾高亮 */
+
+  /* --- 滚动条 Scrollbar --- */
+  --color-scrollbar-thumb: var(--color-grey-300);
+  --color-scrollbar-thumb-hover: var(--color-grey-400);
+  --color-scrollbar-track: transparent;
+
+  /* --- 骨架屏 Skeleton --- */
+  --color-skeleton-base: var(--color-grey-100);
+  --color-skeleton-shine: #f7f8fa;
+
+  /* ==========================================================================
+     2. 字体 Typography（A1-identity）
+     ========================================================================== */
+
+  /* UI 字体：Inter（拉丁）+ Noto Sans SC（中文）。熟悉、清晰、小字号可读 */
+  --font-ui:
+    "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Segoe UI",
+    system-ui, -apple-system, sans-serif;
+
+  /* 编辑器正文字体：中文书稿衬线体，长时阅读更省力。
+     默认 Noto Serif SC，若未安装则逐级回退；如需改为无衬线，
+     把本行改成 var(--font-ui) 即可（单点切换，无需改组件）。 */
+  --font-editor:
+    "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", "Songti SC",
+    "STSong", "SimSun", "Noto Serif", Georgia, serif;
+
+  /* 等宽：token 估算、字数、代码块、版本号 */
+  --font-mono:
+    "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Consolas,
+    "Liberation Mono", monospace;
+
+  /* 标准别名（token-standard 约定） */
+  --font-display: var(--font-ui);
+  --font-body: var(--font-ui);
+
+  /* --- 字号阶梯 Font Size（8 级 + 编辑器专用） --- */
+  --text-2xs: 11px; /* 徽标 / 标签 */
+  --text-xs: 12px; /* 辅助文字 */
+  --text-sm: 13px; /* UI 默认小号（04：UI 字号 13–14px） */
+  --text-base: 14px; /* UI 默认字号（04） */
+  --text-lg: 16px; /* 小节标题 */
+  --text-xl: 18px; /* 区块标题 */
+  --text-2xl: 20px; /* 页面标题 */
+  --text-3xl: 24px; /* 大标题 */
+  --text-4xl: 30px; /* 展示标题（书库空态） */
+  --text-editor-body: 17px; /* 编辑器正文专用（04：17px） */
+
+  /* --- 行高 Line Height --- */
+  --leading-none: 1;
+  --leading-tight: 1.25; /* 大标题 */
+  --leading-snug: 1.4; /* 标题 */
+  --leading-normal: 1.5; /* UI 正文 */
+  --leading-relaxed: 1.7; /* 长段说明 */
+  --leading-editor: 1.9; /* 编辑器正文（04：行高 1.9） */
+
+  /* --- 字重 Font Weight（三级体系） --- */
+  --font-weight-regular: 400; /* Read：正文、说明 */
+  --font-weight-medium: 500; /* Emphasize：按钮、表头、小标题 */
+  --font-weight-semibold: 600; /* Announce：大标题、强调 */
+  --font-weight-bold: 700; /* 极少数强调（编辑器加粗） */
+
+  /* --- 字距 Letter Spacing --- */
+  --tracking-tighter: -0.02em; /* ≥24px 标题 */
+  --tracking-tight: -0.01em; /* 18–20px 标题 */
+  --tracking-normal: 0; /* 正文 */
+  --tracking-wide: 0.012em; /* 11–13px 辅助文字 */
+  --tracking-caps: 0.08em; /* ALL CAPS / 拉丁标签（≥0.06em） */
+
+  /* ==========================================================================
+     3. 间距 Spacing（4px 基准网格）
+     仅允许下列档位，禁止 5/7/13/15/22/30 等非标值
+     ========================================================================== */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ==========================================================================
+     4. 圆角 Radius（04：卡片 8px / 按钮 6px）
+     ========================================================================== */
+  --radius-none: 0;
+  --radius-xs: 2px;
+  --radius-sm: 4px; /* 徽标 / 标签 */
+  --radius-button: 6px; /* 04 按钮 */
+  --radius-input: 6px;
+  --radius-card: 8px; /* 04 卡片 */
+  --radius-lg: 12px; /* 弹窗 / 抽屉 */
+  --radius-xl: 16px;
+  --radius-pill: 9999px;
+  --radius-circle: 50%;
+
+  /* ==========================================================================
+     5. 边框宽度 Border Width
+     ========================================================================== */
+  --border-width-0: 0;
+  --border-width-1: 1px;
+  --border-width-2: 2px;
+  --border-width-focus: 2px;
+
+  /* ==========================================================================
+     6. 阴影 Elevation（浅色主题，克制；深色主题后续改亮度递进）
+     ========================================================================== */
+  --shadow-none: none;
+  /* 阴影基色统一走 --color-shadow-rgb：浅色主题是冷灰蓝，深色主题换成纯黑并加大不透明度。
+     这样加主题时只改一处，不必逐条重写阴影（原实现把这四个色值写死了）。 */
+  --shadow-xs: 0 1px 2px rgba(var(--color-shadow-rgb), 0.04);
+  --shadow-sm: 0 1px 3px rgba(var(--color-shadow-rgb), 0.08), 0 1px 2px rgba(var(--color-shadow-rgb), 0.04);
+  --shadow-md: 0 4px 8px -2px rgba(var(--color-shadow-rgb), 0.1), 0 2px 4px -2px rgba(var(--color-shadow-rgb), 0.06);
+  --shadow-lg: 0 12px 24px -6px rgba(var(--color-shadow-rgb), 0.12), 0 4px 8px -4px rgba(var(--color-shadow-rgb), 0.06);
+  --shadow-focus: 0 0 0 3px var(--color-focus-ring);
+  --shadow-inset-top: inset 0 1px 0 rgba(var(--color-shadow-rgb), 0.04);
+
+  /* ==========================================================================
+     7. 层级 Z-Index
+     ========================================================================== */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 100;
+  --z-topbar: 200;
+  --z-statusbar: 300;
+  --z-dropdown: 1000;
+  --z-overlay: 1100;
+  --z-modal: 1200;
+  --z-toast: 1300;
+  --z-tooltip: 1400;
+
+  /* ==========================================================================
+     8. 动效 Motion（150ms 为收敛值；禁止弹跳/弹性缓动）
+     ========================================================================== */
+  --duration-instant: 80ms; /* 即时反馈：按下、勾选 */
+  --duration-fast: 150ms; /* 状态确认：hover、选中（收敛值） */
+  --duration-base: 200ms; /* 进入 UI：折叠展开、Toast */
+  --duration-slow: 300ms; /* 跨屏过渡：弹窗、页面切换 */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-linear: linear;
+
+  /* ==========================================================================
+     9. 布局常量 Layout（04 第 2.1 节尺寸约定，逐项落值）
+     ========================================================================== */
+  --layout-min-app-width: 900px; /* 最小可用宽度，本产品不做手机端 */
+  --layout-topbar-height: 52px;
+  --layout-statusbar-height: 28px;
+  --layout-sidebar-width: 220px; /* 左栏：章节树 */
+  --layout-sidebar-collapsed-width: 40px; /* 折叠后图标竖条 */
+  --layout-editor-min-width: 480px; /* 中栏最小宽 */
+  --layout-editor-content-max: 720px; /* 编辑区正文最大宽，居中留白 */
+  --layout-recall-panel-width: 340px; /* 右栏：召回 / 设定 */
+  --layout-recall-panel-collapsed-width: 40px;
+  --layout-right-collapse-breakpoint: 1200px; /* 小于此宽右栏自动折叠 */
+  --layout-left-collapse-breakpoint: 900px; /* 小于此宽左栏也折叠 */
+  --layout-admin-sidebar-width: 240px; /* 书库 / 设定库等二级页左侧导航 */
+  --layout-dialog-max-width: 640px; /* 回写确认弹窗 */
+  --layout-dialog-sm-max-width: 420px; /* 通用确认弹窗 */
+  --layout-content-max: 1120px; /* 二级页内容区最大宽 */
+
+  /* ==========================================================================
+     10. 图标 Icons
+     契约固定；具体图标库由架构师在 Spec 锁定后替换（占位）
+     ========================================================================== */
+  --icon-size-inline: 16px; /* 行内（文字旁） */
+  --icon-size-button: 20px; /* 按钮内 */
+  --icon-size-standalone: 24px; /* 独立图标 / 空态 / TabBar */
+  --icon-stroke-width: 1.75; /* 统一描边宽度（描边图标库契约） */
+
+  /* ==========================================================================
+     11. 交互与无障碍 Interaction / A11y
+     ========================================================================== */
+  --touch-target-min: 44px; /* WCAG 2.5.5 最小点击区 */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-color: var(--color-primary);
+  --focus-ring-shadow: 0 0 0 3px var(--color-focus-ring);
+  --disabled-opacity: 0.45;
+  --hover-overlay-opacity: 0.06; /* 中性 hover 叠加 */
+  --active-overlay-opacity: 0.1;
+
+  /* ==========================================================================
+     12. 组件令牌 Component（B-slot，组件唯一引用入口）
+     ========================================================================== */
+
+  /* --- 按钮 Button --- */
+  --btn-height-sm: 28px;
+  --btn-height-md: 32px;
+  --btn-height-lg: 40px;
+  --btn-padding-x-sm: var(--space-3);
+  --btn-padding-x-md: var(--space-4);
+  --btn-padding-x-lg: var(--space-5);
+  --btn-radius: var(--radius-button);
+  --btn-font-size: var(--text-base);
+  --btn-font-weight: var(--font-weight-medium);
+  --btn-gap: var(--space-2);
+  --btn-primary-bg: var(--color-primary);
+  --btn-primary-bg-hover: var(--color-primary-hover);
+  --btn-primary-bg-active: var(--color-primary-active);
+  --btn-primary-text: var(--color-text-on-primary);
+  --btn-secondary-bg: var(--color-surface);
+  --btn-secondary-bg-hover: var(--color-surface-hover);
+  --btn-secondary-text: var(--color-primary);
+  --btn-secondary-border: var(--color-border);
+  --btn-ghost-bg: transparent;
+  --btn-ghost-bg-hover: var(--color-surface-hover);
+  --btn-ghost-text: var(--color-text-secondary);
+  --btn-accent-bg: var(--color-accent); /* 确认并保存 / 标记已回收 */
+  --btn-accent-bg-hover: var(--color-accent-hover);
+  --btn-accent-text: var(--color-text-on-accent);
+  --btn-danger-bg: var(--color-danger);
+  --btn-danger-bg-hover: var(--color-danger-hover);
+  --btn-danger-text: var(--color-text-on-danger);
+
+  /* --- 输入框 Input / Textarea / Select --- */
+  --input-height: 32px;
+  --input-height-lg: 40px;
+  --input-padding-x: var(--space-3);
+  --input-padding-y: var(--space-2);
+  --input-radius: var(--radius-input);
+  --input-bg: var(--color-surface);
+  --input-border: var(--color-border);
+  --input-text: var(--color-text-primary);
+  --input-placeholder: var(--color-text-disabled);
+  --input-focus-border: var(--color-primary);
+  --input-focus-ring: var(--color-focus-ring);
+  --input-error-border: var(--color-danger);
+  --input-error-ring: var(--color-danger-soft);
+  --input-disabled-bg: var(--color-surface-sunken);
+  --input-disabled-text: var(--color-text-disabled);
+
+  /* --- 卡片 Card --- */
+  --card-bg: var(--color-surface);
+  --card-border-color: var(--color-border);
+  --card-radius: var(--radius-card);
+  --card-padding: var(--space-4);
+  --card-shadow: var(--shadow-none); /* 默认无阴影，靠 1px 边框分层 */
+
+  /* --- 徽标 Badge / Tag --- */
+  --badge-radius: var(--radius-sm);
+  --badge-font-size: var(--text-2xs);
+  --badge-padding-x: var(--space-2);
+  --badge-padding-y: 2px;
+
+  /* --- 顶栏 TopBar --- */
+  --topbar-bg: var(--color-surface);
+  --topbar-border-color: var(--color-border);
+  --topbar-text: var(--color-text-primary);
+
+  /* --- 状态栏 StatusBar --- */
+  --statusbar-bg: var(--color-surface-sunken);
+  --statusbar-text: var(--color-text-tertiary);
+  --statusbar-font-size: var(--text-xs);
+
+  /* --- 状态栏能力 chip（系统能力降级常驻提示，如 vector_available:false） --- */
+  --statusbar-chip-height: 20px;
+  --statusbar-chip-gap: var(--space-2);
+  --statusbar-chip-padding-x: var(--space-2);
+  --statusbar-chip-radius: var(--radius-sm);
+  --statusbar-chip-font-size: var(--text-xs);
+  --statusbar-chip-icon-size: var(--icon-size-inline); /* 16px */
+  --statusbar-chip-gap-inner: var(--space-1); /* 图标与文字间距 */
+  /* 降级（amber）：向量/FTS 能力缺失 */
+  --statusbar-chip-warn-bg: var(--color-warning-soft);
+  --statusbar-chip-warn-text: var(--color-warning-text);
+  --statusbar-chip-warn-border: var(--color-warning-border);
+  /* 中性（灰）：未配置模型等预期状态 */
+  --statusbar-chip-neutral-bg: var(--color-surface-hover);
+  --statusbar-chip-neutral-text: var(--color-text-secondary);
+  --statusbar-chip-neutral-border: var(--color-border);
+
+  /* --- 章节树 ChapterTree --- */
+  --tree-bg: var(--color-surface-sunken);
+  --tree-border-color: var(--color-border);
+  --tree-row-height: 30px;
+  --tree-row-radius: var(--radius-sm);
+  --tree-row-hover-bg: var(--color-surface-hover);
+  --tree-row-active-bg: var(--color-primary-soft);
+  --tree-row-active-text: var(--color-primary);
+
+  /* --- 召回面板 RecallPanel --- */
+  --recall-bg: var(--color-surface);
+  --recall-border-color: var(--color-border);
+  --recall-section-gap: var(--space-1);
+  --recall-section-header-height: 36px;
+  --recall-item-padding-x: var(--space-4);
+  --recall-item-padding-y: var(--space-3);
+  --recall-empty-min-height: 96px;
+
+  /* --- 回写确认弹窗 WritebackDialog --- */
+  --dialog-bg: var(--color-surface-raised);
+  --dialog-radius: var(--radius-lg);
+  --dialog-shadow: var(--shadow-lg);
+  --dialog-header-height: 56px;
+  --dialog-footer-height: 60px;
+
+  /* --- 编辑器 Editor --- */
+  --editor-content-max: var(--layout-editor-content-max);
+  --editor-font-size: var(--text-editor-body);
+  --editor-line-height: var(--leading-editor);
+  --editor-paragraph-gap: var(--space-4);
+
+  /* --- 骨架屏 Skeleton --- */
+  --skeleton-radius: var(--radius-sm);
+  --skeleton-shimmer-duration: 1400ms;
+}
+
+/* ============================================================================
+   无障碍：系统偏好减少动效时，全部时长归零（组件无需各自判断）
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0ms;
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+    --skeleton-shimmer-duration: 0ms;
+  }
+}
+
+/* ============================================================================
+   可选主题 Themes
+   ----------------------------------------------------------------------------
+   实现约定（与文件头「深色模式」注释一致）：
+     · 主题**只覆盖语义色层 + 阴影 + 编辑器画布**，不新增色相、不改组件样式。
+     · 切换方式：<html data-theme="night">，由 src/lib/theme.ts 写入并持久化。
+     · 默认主题 = 不写 data-theme（即上面的 :root），保证「不选主题」与老版本
+       渲染完全一致，零回归。
+     · 每个主题都自带 `color-scheme`，让原生控件（滚动条 / 输入框 / 下拉）
+       自动跟随，不用手工绘制。
+     · 无障碍：所有正文色对底色的对比度均 ≥ 4.5:1（小号文字按 7:1 收）。
+
+   五个主题（含默认）：
+     （默认）保险蓝   —— 白天办公，冷调、克制
+     night  夜航灯   —— 夜间写稿主推：深灰蓝底，低眩光，不刺眼
+     black  纯黑     —— OLED 屏省电 + 高对比，暗房里最舒服
+     sepia  米黄纸   —— 模拟纸质书暖色，长时间阅读眼压最低
+     pine   松林     —— 低饱和绿灰，缓解屏幕发白带来的疲劳
+   ========================================================================= */
+
+/* --- 夜航灯 night：深灰蓝，夜间写稿的默认推荐 --- */
+:root[data-theme='night'] {
+  color-scheme: dark;
+
+  --color-bg: #171a21;
+  --color-surface: #1e222b;
+  --color-surface-sunken: #14171e;
+  --color-surface-hover: #262b36;
+  --color-surface-active: #2d3340;
+  --color-surface-raised: #232833;
+
+  --color-text-primary: #e7eaf1;
+  --color-text-secondary: #a9b1c3;
+  --color-text-tertiary: #858ea4;
+  --color-text-disabled: #5d6579;
+  --color-text-inverse: #171a21;
+  --color-text-on-primary: #0e1116;
+  --color-text-on-accent: #0e1116;
+  --color-text-on-danger: #0e1116;
+
+  --color-border: #303644;
+  --color-border-strong: #3f4657;
+  --color-border-subtle: #262c38;
+
+  --color-primary: #6ea8fe;
+  --color-primary-hover: #8cbaff;
+  --color-primary-active: #5590e8;
+  --color-primary-soft: #1d2a44;
+  --color-primary-subtle: #1a2130;
+  --color-primary-border: #2f4571;
+  --color-primary-focus: #6ea8fe;
+
+  --color-accent: #4dd4ac;
+  --color-accent-hover: #6ee0bf;
+  --color-accent-active: #37b894;
+  --color-accent-strong: #5fdcb6;
+  --color-accent-soft: #14302c;
+  --color-accent-border: #235148;
+
+  --color-danger: #ff7b85;
+  --color-danger-hover: #ff9aa2;
+  --color-danger-active: #e05c67;
+  --color-danger-soft: #3a1d22;
+  --color-danger-border: #5c2b33;
+
+  --color-warning: #e8b45c;
+  --color-warning-text: #f0c477;
+  --color-warning-soft: #352a15;
+  --color-warning-border: #55411f;
+
+  --color-success: #5fc98a;
+  --color-success-hover: #7fd9a3;
+  --color-success-soft: #16301f;
+  --color-success-border: #2b543a;
+
+  --color-foreshadow-aging: #ff9d5c;
+  --color-foreshadow-aging-soft: #3a2416;
+  --color-foreshadow-aging-border: #5c3a22;
+  --color-foreshadow-aging-strong: #ffb27a;
+
+  --color-overlay: rgba(0, 0, 0, 0.62);
+  --color-scrim: rgba(0, 0, 0, 0.32);
+  --color-focus-ring: rgba(110, 168, 254, 0.45);
+  --color-shadow-rgb: 0, 0, 0;
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.34);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.55), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 24px -6px rgba(0, 0, 0, 0.62), 0 4px 8px -4px rgba(0, 0, 0, 0.46);
+  --shadow-inset-top: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+
+  --color-editor-bg: #1b1f27;
+  --color-editor-text: #dfe4ee;
+  --color-editor-placeholder: #5d6579;
+  --color-editor-selection: rgba(110, 168, 254, 0.26);
+  --color-editor-caret: #8cbaff;
+  --color-editor-highlight-aging: rgba(255, 157, 92, 0.2);
+  --color-editor-highlight-conflict: rgba(255, 123, 133, 0.22);
+
+  --color-scrollbar-thumb: #3f4657;
+  --color-scrollbar-thumb-hover: #525b6f;
+  --color-skeleton-base: #232833;
+  --color-skeleton-shine: #2c3340;
+}
+
+/* --- 纯黑 black：OLED 省电 + 高对比 --- */
+:root[data-theme='black'] {
+  color-scheme: dark;
+
+  --color-bg: #000000;
+  --color-surface: #0b0c0f;
+  --color-surface-sunken: #000000;
+  --color-surface-hover: #17181d;
+  --color-surface-active: #1f2027;
+  --color-surface-raised: #101116;
+
+  --color-text-primary: #f3f4f7;
+  --color-text-secondary: #b6bac3;
+  --color-text-tertiary: #8d929c;
+  --color-text-disabled: #5b5f68;
+  --color-text-inverse: #000000;
+  --color-text-on-primary: #05070a;
+  --color-text-on-accent: #05070a;
+  --color-text-on-danger: #05070a;
+
+  --color-border: #24252b;
+  --color-border-strong: #35363e;
+  --color-border-subtle: #1a1b20;
+
+  --color-primary: #82b4ff;
+  --color-primary-hover: #a0c6ff;
+  --color-primary-active: #649bf0;
+  --color-primary-soft: #131c2e;
+  --color-primary-subtle: #0e131c;
+  --color-primary-border: #26385c;
+  --color-primary-focus: #82b4ff;
+
+  --color-accent: #4ce0b3;
+  --color-accent-hover: #6febc5;
+  --color-accent-active: #33c49a;
+  --color-accent-strong: #5ee6bd;
+  --color-accent-soft: #0f2a26;
+  --color-accent-border: #1c4a41;
+
+  --color-danger: #ff828b;
+  --color-danger-hover: #ffa2a9;
+  --color-danger-active: #e2636d;
+  --color-danger-soft: #2e161a;
+  --color-danger-border: #4d2229;
+
+  --color-warning: #f0bc63;
+  --color-warning-text: #f7cd85;
+  --color-warning-soft: #2b2211;
+  --color-warning-border: #4a3818;
+
+  --color-success: #63d192;
+  --color-success-hover: #83dfa9;
+  --color-success-soft: #11271a;
+  --color-success-border: #234431;
+
+  --color-foreshadow-aging: #ffa366;
+  --color-foreshadow-aging-soft: #301d10;
+  --color-foreshadow-aging-border: #4d2f1a;
+  --color-foreshadow-aging-strong: #ffb884;
+
+  --color-overlay: rgba(0, 0, 0, 0.72);
+  --color-scrim: rgba(0, 0, 0, 0.4);
+  --color-focus-ring: rgba(130, 180, 255, 0.5);
+  --color-shadow-rgb: 0, 0, 0;
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.7), 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.72), 0 2px 4px -2px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 12px 24px -6px rgba(0, 0, 0, 0.8), 0 4px 8px -4px rgba(0, 0, 0, 0.6);
+  --shadow-inset-top: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  --color-editor-bg: #000000;
+  --color-editor-text: #eef0f4;
+  --color-editor-placeholder: #5b5f68;
+  --color-editor-selection: rgba(130, 180, 255, 0.28);
+  --color-editor-caret: #a0c6ff;
+  --color-editor-highlight-aging: rgba(255, 163, 102, 0.22);
+  --color-editor-highlight-conflict: rgba(255, 130, 139, 0.24);
+
+  --color-scrollbar-thumb: #35363e;
+  --color-scrollbar-thumb-hover: #4a4c57;
+  --color-skeleton-base: #14151a;
+  --color-skeleton-shine: #1d1e25;
+}
+
+/* --- 米黄纸 sepia：纸质书暖色，长时阅读眼压最低 --- */
+:root[data-theme='sepia'] {
+  color-scheme: light;
+
+  --color-bg: #f2e9d6;
+  --color-surface: #fbf6e9;
+  --color-surface-sunken: #e9dfc6;
+  --color-surface-hover: #f5eeda;
+  --color-surface-active: #ece1c9;
+  --color-surface-raised: #fdf9ef;
+
+  --color-text-primary: #3a3125;
+  --color-text-secondary: #6a5c48;
+  /* 元数据色按校验脚本实测调整：原 #86775f 在米黄底上只有 4.04:1，未过 AA */
+  --color-text-tertiary: #7d6e56;
+  --color-text-disabled: #a99a83;
+  --color-text-inverse: #fbf6e9;
+  --color-text-on-primary: #fbf6e9;
+  --color-text-on-accent: #fbf6e9;
+  --color-text-on-danger: #fbf6e9;
+
+  --color-border: #d9cbac;
+  --color-border-strong: #c2b18d;
+  --color-border-subtle: #e6dbc2;
+
+  --color-primary: #1b5a9c;
+  --color-primary-hover: #144a83;
+  --color-primary-active: #0f3c6b;
+  --color-primary-soft: #e3ebf6;
+  --color-primary-subtle: #eff3f9;
+  --color-primary-border: #b6c9e0;
+  --color-primary-focus: #2f7ac4;
+
+  --color-accent: #0f6f60;
+  --color-accent-hover: #0a5a4d;
+  --color-accent-active: #08483e;
+  --color-accent-strong: #0b5f52;
+  --color-accent-soft: #dfeeea;
+  --color-accent-border: #a8ccc3;
+
+  --color-danger: #a92a26;
+  --color-danger-hover: #8e211e;
+  --color-danger-active: #741a17;
+  --color-danger-soft: #f7e5e2;
+  --color-danger-border: #dfb3ae;
+
+  --color-warning: #8a6100;
+  --color-warning-text: #6f4e00;
+  --color-warning-soft: #f8edd6;
+  --color-warning-border: #e0cba0;
+
+  --color-success: #2c6e33;
+  --color-success-hover: #215527;
+  --color-success-soft: #e4f0e2;
+  --color-success-border: #aecfac;
+
+  --color-foreshadow-aging: #a8471b;
+  --color-foreshadow-aging-soft: #f8e7da;
+  --color-foreshadow-aging-border: #e3c1a6;
+  --color-foreshadow-aging-strong: #93401a;
+
+  --color-overlay: rgba(58, 49, 37, 0.48);
+  --color-scrim: rgba(58, 49, 37, 0.1);
+  --color-focus-ring: rgba(27, 90, 156, 0.3);
+  --color-shadow-rgb: 90, 74, 48;
+  --shadow-xs: 0 1px 2px rgba(90, 74, 48, 0.06);
+  --shadow-sm: 0 1px 3px rgba(90, 74, 48, 0.1), 0 1px 2px rgba(90, 74, 48, 0.05);
+  --shadow-md: 0 4px 8px -2px rgba(90, 74, 48, 0.12), 0 2px 4px -2px rgba(90, 74, 48, 0.07);
+  --shadow-lg: 0 12px 24px -6px rgba(90, 74, 48, 0.14), 0 4px 8px -4px rgba(90, 74, 48, 0.07);
+  --shadow-inset-top: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  --color-editor-bg: #fdf9ef;
+  --color-editor-text: #332b20;
+  --color-editor-placeholder: #a99a83;
+  --color-editor-selection: rgba(27, 90, 156, 0.18);
+  --color-editor-caret: #1b5a9c;
+  --color-editor-highlight-aging: rgba(168, 71, 27, 0.16);
+  --color-editor-highlight-conflict: rgba(169, 42, 38, 0.18);
+
+  --color-scrollbar-thumb: #c9b892;
+  --color-scrollbar-thumb-hover: #b3a07a;
+  --color-skeleton-base: #ece1c9;
+  --color-skeleton-shine: #f5eeda;
+}
+
+/* --- 松林 pine：低饱和绿灰，缓解屏幕发白导致的眼疲劳 --- */
+:root[data-theme='pine'] {
+  color-scheme: light;
+
+  --color-bg: #eef2ee;
+  --color-surface: #f8faf8;
+  --color-surface-sunken: #e3eae4;
+  --color-surface-hover: #eaf0ea;
+  --color-surface-active: #dee7df;
+  --color-surface-raised: #fbfdfb;
+
+  --color-text-primary: #1d2a23;
+  --color-text-secondary: #495a50;
+  /* 元数据色按校验脚本实测调整：原 #6c7d73 在松绿底上只有 4.15:1，未过 AA */
+  --color-text-tertiary: #616f66;
+  --color-text-disabled: #93a199;
+  --color-text-inverse: #f8faf8;
+  --color-text-on-primary: #f8faf8;
+  --color-text-on-accent: #f8faf8;
+  --color-text-on-danger: #f8faf8;
+
+  --color-border: #d0dcd2;
+  --color-border-strong: #b6c6b9;
+  --color-border-subtle: #dfe8e0;
+
+  --color-primary: #15665a;
+  --color-primary-hover: #0f544a;
+  --color-primary-active: #0a423b;
+  --color-primary-soft: #dcece9;
+  --color-primary-subtle: #eaf3f1;
+  --color-primary-border: #a5c9c3;
+  --color-primary-focus: #1f8676;
+
+  /* 强调色取橄榄绿，比松绿主色更暖一点，与主色形成「一冷一暖」的层次；
+     取值按校验脚本实测，白字对比度需 ≥4.5:1 */
+  --color-accent: #5e7024;
+  --color-accent-hover: #4c5c1c;
+  --color-accent-active: #3c4a15;
+  --color-accent-strong: #50601f;
+  --color-accent-soft: #e8eeda;
+  --color-accent-border: #c0cf9e;
+
+  --color-danger: #a8332d;
+  --color-danger-hover: #8c2723;
+  --color-danger-active: #721e1b;
+  --color-danger-soft: #f6e3e1;
+  --color-danger-border: #ddb0ac;
+
+  --color-warning: #86610a;
+  --color-warning-text: #6c4e06;
+  --color-warning-soft: #f6ecd6;
+  --color-warning-border: #ddcaa0;
+
+  --color-success: #2b6f45;
+  --color-success-hover: #205736;
+  --color-success-soft: #e2efe6;
+  --color-success-border: #abcfb8;
+
+  --color-foreshadow-aging: #a04a1e;
+  --color-foreshadow-aging-soft: #f5e6dc;
+  --color-foreshadow-aging-border: #dfbfa8;
+  --color-foreshadow-aging-strong: #8b411a;
+
+  --color-overlay: rgba(29, 42, 35, 0.46);
+  --color-scrim: rgba(29, 42, 35, 0.09);
+  --color-focus-ring: rgba(21, 102, 90, 0.3);
+  --color-shadow-rgb: 40, 60, 48;
+  --shadow-xs: 0 1px 2px rgba(40, 60, 48, 0.05);
+  --shadow-sm: 0 1px 3px rgba(40, 60, 48, 0.09), 0 1px 2px rgba(40, 60, 48, 0.05);
+  --shadow-md: 0 4px 8px -2px rgba(40, 60, 48, 0.11), 0 2px 4px -2px rgba(40, 60, 48, 0.06);
+  --shadow-lg: 0 12px 24px -6px rgba(40, 60, 48, 0.13), 0 4px 8px -4px rgba(40, 60, 48, 0.06);
+  --shadow-inset-top: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+
+  --color-editor-bg: #fbfdfb;
+  --color-editor-text: #1a261f;
+  --color-editor-placeholder: #93a199;
+  --color-editor-selection: rgba(21, 102, 90, 0.18);
+  --color-editor-caret: #15665a;
+  --color-editor-highlight-aging: rgba(160, 74, 30, 0.16);
+  --color-editor-highlight-conflict: rgba(168, 51, 45, 0.18);
+
+  --color-scrollbar-thumb: #b6c6b9;
+  --color-scrollbar-thumb-hover: #9cae9f;
+  --color-skeleton-base: #dee7df;
+  --color-skeleton-shine: #eaf0ea;
+}

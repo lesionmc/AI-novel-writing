@@ -1,0 +1,20 @@
+# AI 小说创作工具 — 后端运行依赖（版本锚定，见 Spec 第 4.2 节）
+# 原则：钉死实际版本按该版本 API 写；pre-v1 依赖等号锁死，禁浮动范围。
+# 运行时：Python 3.12.x（sqlite3 自带 FTS5 与可加载扩展）
+
+fastapi==0.141.1
+uvicorn[standard]==0.53.0
+pydantic==2.13.5
+pydantic-settings==2.15.0
+keyring==25.7.0
+httpx==0.28.1
+python-docx==1.2.0
+beautifulsoup4==4.15.0
+lxml==6.1.3
+
+# pre-v1，破坏性变更，必须等号锁死（禁 >= / ^）
+sqlite-vec==0.1.9
+
+# 测试
+pytest==9.1.1
+pytest-asyncio==1.4.0

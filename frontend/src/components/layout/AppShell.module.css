@@ -1,0 +1,176 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+}
+
+/* ---------- 顶部一级导航 ---------- */
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-topbar);
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  height: var(--layout-topbar-height);
+  padding: 0 var(--space-6);
+  background-color: var(--topbar-bg);
+  border-bottom: var(--border-width-1) solid var(--topbar-border-color);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.brand:hover {
+  text-decoration: none;
+}
+
+.brandMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-button);
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.navItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 32px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-button);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.navItem:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.navItemActive {
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.navItemDisabled {
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.bookTag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 260px;
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.bookTagName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ---------- 二级页：左导航 + 内容 ---------- */
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.subnav {
+  width: var(--layout-admin-sidebar-width);
+  flex-shrink: 0;
+  padding: var(--space-4) var(--space-3);
+  border-right: var(--border-width-1) solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.subnavTitle {
+  padding: 0 var(--space-3) var(--space-3);
+  color: var(--color-text-tertiary);
+  font-size: var(--text-2xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.subnavItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 34px;
+  padding: 0 var(--space-3);
+  margin-bottom: var(--space-1);
+  border-radius: var(--radius-button);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.subnavItem:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.subnavItemActive {
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* 左导航中的按钮项（非链接）需要显式重置按钮默认样式 */
+.subnavButton {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  overflow-x: hidden;
+}

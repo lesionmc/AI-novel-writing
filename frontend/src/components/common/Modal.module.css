@@ -1,0 +1,115 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background-color: var(--color-overlay);
+  animation: fadeIn var(--duration-fast) var(--ease-standard);
+}
+
+.dialog {
+  position: relative;
+  z-index: var(--z-modal);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--layout-dialog-sm-max-width);
+  max-height: calc(100vh - var(--space-12));
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--dialog-radius);
+  background-color: var(--dialog-bg);
+  box-shadow: var(--dialog-shadow);
+  animation: popIn var(--duration-base) var(--ease-out);
+}
+
+.lg {
+  max-width: var(--layout-dialog-max-width);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--dialog-header-height);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: var(--border-width-1) solid var(--color-border);
+}
+
+.titleWrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.subtitle {
+  margin-top: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.close:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-5);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  min-height: var(--dialog-footer-height);
+  padding: var(--space-3) var(--space-5);
+  border-top: var(--border-width-1) solid var(--color-border);
+}
+
+.footerSpread {
+  justify-content: space-between;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .dialog {
+    animation: none;
+  }
+}
