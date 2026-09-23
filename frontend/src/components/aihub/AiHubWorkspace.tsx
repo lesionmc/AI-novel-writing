@@ -290,10 +290,7 @@ function HubWorkspace({ slug }: { slug: string }) {
           onCancel={() => setDeleteTarget(null)}
           onConfirm={confirmDelete}
         >
-          <p>
-            将删除「{deleteTarget.title}」及其 {deleteTarget.messages.length} 条对话记录。
-            写进作品的人物、设定和大纲不受影响。
-          </p>
+          <p>{`将删除「${deleteTarget.title}」及其 ${deleteTarget.messages.length} 条对话记录。写进作品的人物、设定和大纲不受影响。`}</p>
         </ConfirmDialog>
       ) : null}
     </div>

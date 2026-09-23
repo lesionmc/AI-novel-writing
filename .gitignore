@@ -55,3 +55,7 @@ data/sensitive_words.txt
 /frontend/_*.*
 /frontend/src/_*.*
 /backend/_*.*
+
+# --- E2E 运行产物 ---
+frontend/test-results/
+frontend/playwright-report/

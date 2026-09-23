@@ -15,7 +15,8 @@
  */
 
 import { slugSegment } from '@/lib/slug';
-import { request, streamSse } from './request';
+import { request } from './request';
+import { streamSse } from './sse';
 import type {
   ConsistencyConflict,
   ConsistencyProgress,

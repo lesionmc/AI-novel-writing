@@ -49,7 +49,6 @@ export function HubComposer({
   // 只读的三项本来就不一定要打字（可以直接说"校对这一章"）
   const needsText = action.mode === 'chat';
   const blocked = blockedByModel || pending || needChapter || (needsText && !text.trim());
-
   const send = () => {
     const value = text.trim();
     if (blocked) return;
@@ -101,7 +100,6 @@ export function HubComposer({
           value={text}
           placeholder={action.mode === 'chat' ? PLACEHOLDER : `想补充点什么就说（也可以直接发送）${action.label}`}
           aria-label="输入你想说的话"
-          disabled={blockedByModel}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {

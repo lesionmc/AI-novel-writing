@@ -17,7 +17,8 @@
  */
 
 import { slugSegment } from '@/lib/slug';
-import { request, streamSse, type SseEvent, type StreamOptions } from './request';
+import { request } from './request';
+import { streamSse, type SseEvent, type StreamOptions } from './sse';
 import type { AiChatRequest, AiChatResponse } from '@/types/api';
 
 export const aiHubApi = {

@@ -18,7 +18,7 @@ const API_BASE = '/api';
  * 取到后 percent-encode 放进 `X-Book-Slug` —— 后端据此把 by-id 端点**限定在本作品内**，
  * 避免多标签页并发时把甲书的自动保存写进乙书（P0-2）。
  */
-function bookSlugHeader(): Record<string, string> {
+export function bookSlugHeader(): Record<string, string> {
   const match = /^\/book\/([^/]+)(?:\/|$)/.exec(window.location.pathname);
   if (!match) return {};
   const raw = match[1];
@@ -43,13 +43,20 @@ export class ApiError extends Error {
   readonly code: string;
   readonly status: number;
   readonly detail: unknown;
+  /**
+   * 后端给的中文人话 message（如"这一卷还没有挂着写完的章节"）。
+   * 以前只留 code，前端按码表映射成泛化文案 —— 后端辛苦写好的具体原因全链丢失
+   * （E2E 审查发现）。有 serverMessage 时优先展示它。
+   */
+  readonly serverMessage: string | null;
 
-  constructor(code: string, status: number, detail: unknown) {
+  constructor(code: string, status: number, detail: unknown, serverMessage?: string | null) {
     super(code);
     this.name = 'ApiError';
     this.code = code;
     this.status = status;
     this.detail = detail;
+    this.serverMessage = serverMessage ?? null;
   }
 }
 
@@ -59,7 +66,7 @@ export function isApiError(e: unknown): e is ApiError {
 
 /** 从任意异常取「可直接展示给用户」的中文文案（永不返回技术原文） */
 export function userMessageOf(e: unknown): string {
-  if (isApiError(e)) return messageForCode(e.code);
+  if (isApiError(e)) return e.serverMessage || messageForCode(e.code);
   return messageForCode('NETWORK_ERROR');
 }
 
@@ -73,7 +80,7 @@ export interface RequestOptions {
   query?: Record<string, string | number | boolean | undefined | null>;
 }
 
-function buildUrl(path: string, query?: RequestOptions['query']): string {
+export function buildUrl(path: string, query?: RequestOptions['query']): string {
   const url = `${API_BASE}${path}`;
   if (!query) return url;
   const params = new URLSearchParams();
@@ -127,9 +134,9 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
 
   if (!res.ok) {
-    const code = (parsed as { error?: { code?: string } } | null)?.error?.code ?? 'INTERNAL_ERROR';
-    const detail = (parsed as { error?: { detail?: unknown } } | null)?.error?.detail ?? null;
-    throw new ApiError(code, res.status, detail);
+    const err = (parsed as { error?: { code?: string; message?: string; detail?: unknown } } | null)
+      ?.error;
+    throw new ApiError(err?.code ?? 'INTERNAL_ERROR', res.status, err?.detail ?? null, err?.message ?? null);
   }
 
   return parsed as T;
@@ -143,18 +150,24 @@ export async function downloadFile(
   const res = await fetch(buildUrl(path, query), { headers: bookSlugHeader() });
   if (!res.ok) {
     let code = 'INTERNAL_ERROR';
+    let serverMessage: string | null = null;
     try {
-      const body = (await res.json()) as { error?: { code?: string } };
+      const body = (await res.json()) as { error?: { code?: string; message?: string } };
       code = body.error?.code ?? code;
+      serverMessage = body.error?.message ?? null;
     } catch {
       /* 忽略 */
     }
-    throw new ApiError(code, res.status, null);
+    throw new ApiError(code, res.status, null, serverMessage);
   }
   const blob = await res.blob();
   const disposition = res.headers.get('Content-Disposition') ?? '';
-  const match = /filename\*?=(?:UTF-8''|")?([^";]+)/i.exec(disposition);
-  const filename = match ? decodeURIComponent(match[1]) : 'export';
+  // 必须优先取 RFC 5987 的 filename*：后端同时给 ASCII 兜底 filename="____"，
+  // 先匹配 filename= 会让中文文件名永远变成一串下划线
+  const rfc5987 = /filename\*=UTF-8''([^;]+)/i.exec(disposition);
+  const plain = /filename="?([^";]+)"?/i.exec(disposition);
+  const rawName = rfc5987?.[1] ?? plain?.[1];
+  const filename = rawName ? decodeURIComponent(rawName) : 'export';
 
   const objectUrl = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -163,138 +176,6 @@ export async function downloadFile(
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(objectUrl);
-}
-
-/* ============================================================================
- * SSE 流式响应（目前只有「一致性审校」在用）
- * ----------------------------------------------------------------------------
- * 放在网络层而不是组件里 —— 与 `request` / `downloadFile` 同源，
- * 业务组件照样不许直连 fetch。
- * ==========================================================================*/
-
-export interface SseEvent {
-  /** 事件名（后端发 `event: xxx`；缺省为 `message`） */
-  event: string;
-  /** 事件数据（原始字符串，调用方自己 JSON.parse） */
-  data: string;
-}
-
-/** 找下一个 SSE 帧边界；同时兼容 `\n\n` 与 `\r\n\r\n`（反代可能改写换行） */
-function nextFrameBoundary(buffer: string): { index: number; length: number } {
-  const lf = buffer.indexOf('\n\n');
-  const crlf = buffer.indexOf('\r\n\r\n');
-  if (crlf !== -1 && (lf === -1 || crlf < lf)) return { index: crlf, length: 4 };
-  if (lf !== -1) return { index: lf, length: 2 };
-  return { index: -1, length: 0 };
-}
-
-/** 解析单个 SSE 帧（`event:` / `data:` 行；`:` 开头是注释/心跳，忽略） */
-export function parseSseFrame(block: string): SseEvent | null {
-  let event = 'message';
-  const dataLines: string[] = [];
-  for (const raw of block.split(/\r?\n/)) {
-    if (!raw || raw.startsWith(':')) continue;
-    const idx = raw.indexOf(':');
-    const field = idx === -1 ? raw : raw.slice(0, idx);
-    const value = idx === -1 ? '' : raw.slice(idx + 1).replace(/^ /, '');
-    if (field === 'event') event = value;
-    else if (field === 'data') dataLines.push(value);
-  }
-  if (dataLines.length === 0 && event === 'message') return null;
-  return { event, data: dataLines.join('\n') };
-}
-
-export interface StreamOptions {
-  signal?: AbortSignal;
-  /**
-   * 整体超时。审校全书要跑多次模型调用，默认给 10 分钟 ——
-   * 比单次请求的 15s 宽得多，因为这是"整条流"的预算而不是一次往返。
-   */
-  timeoutMs?: number;
-}
-
-/**
- * 发起 SSE 请求并逐帧回调。
- *
- * **关键约定**：后端在开流之前如果发现"没配模型"这类错误，会返回**普通 JSON 错误**
- * （不是 SSE）。所以这里先看 `res.ok`，非 2xx 一律按 `ApiError` 抛出 ——
- * 否则调用方只会看到"流莫名断掉"，拿不到可读原因。
- */
-export async function streamSse(
-  path: string,
-  body: unknown,
-  onEvent: (e: SseEvent) => void,
-  options: StreamOptions = {},
-): Promise<void> {
-  const { signal, timeoutMs = 600000 } = options;
-
-  const controller = new AbortController();
-  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
-  if (signal) {
-    if (signal.aborted) controller.abort();
-    else signal.addEventListener('abort', () => controller.abort(), { once: true });
-  }
-
-  let res: Response;
-  try {
-    res = await fetch(buildUrl(path), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'text/event-stream',
-        ...bookSlugHeader(),
-      },
-      body: JSON.stringify(body ?? {}),
-      signal: controller.signal,
-    });
-  } catch (e) {
-    window.clearTimeout(timer);
-    if ((e as Error)?.name === 'AbortError' && signal?.aborted) throw e;
-    throw new ApiError('TIMEOUT_ERROR', 0, null);
-  }
-
-  if (!res.ok || !res.body) {
-    window.clearTimeout(timer);
-    let code = 'INTERNAL_ERROR';
-    let detail: unknown = null;
-    try {
-      const parsed = (await res.json()) as { error?: { code?: string; detail?: unknown } };
-      code = parsed.error?.code ?? code;
-      detail = parsed.error?.detail ?? null;
-    } catch {
-      /* 非 JSON 的错误体：保留默认 code */
-    }
-    throw new ApiError(code, res.status, detail);
-  }
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder('utf-8');
-  let buffer = '';
-  try {
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-
-      for (;;) {
-        const boundary = nextFrameBoundary(buffer);
-        if (boundary.index === -1) break;
-        const block = buffer.slice(0, boundary.index);
-        buffer = buffer.slice(boundary.index + boundary.length);
-        const frame = parseSseFrame(block);
-        if (frame) onEvent(frame);
-      }
-    }
-    // 流结束时缓冲区里可能还剩最后一帧（后端没补空行）
-    const tail = parseSseFrame(buffer);
-    if (tail) onEvent(tail);
-  } finally {
-    window.clearTimeout(timer);
-    try {
-      reader.releaseLock();
-    } catch {
-      /* 已释放 */
-    }
-  }
+  // 不能同步 revoke：下载是浏览器异步消费的，点击后立刻撤销会让传输中途失败
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 30_000);
 }

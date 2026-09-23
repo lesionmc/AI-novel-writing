@@ -1,0 +1,129 @@
+"""E2E 用的假 LLM 服务（OpenAI 兼容，仅标准库实现，无第三方依赖）。
+
+用途：让自动化测试（Playwright）在**没有真实模型密钥**的情况下，
+完整走一遍 AI 对话（含 SSE 流式）、草稿确认、卷摘要、大纲展开等链路。
+仅供开发/测试：`python docs/tools/mock_llm_server.py [port]`（默认 8899）。
+
+行为：按 prompt 里的特征词分派不同"剧本"，其余一律回一句通用 mock 回复。
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8899
+
+
+def _reply_for(prompt: str) -> str:
+    if "检索规划器" in prompt:
+        return json.dumps({"need_search": False, "query": ""}, ensure_ascii=False)
+    if "卷摘要" in prompt and "各章" in prompt:
+        return json.dumps(
+            {"summary": "（mock 卷摘要）主角夜探老楼，发现楼内有人活动，留下悬念。"},
+            ensure_ascii=False,
+        )
+    if "展开" in prompt and "candidates" in prompt:
+        return json.dumps(
+            {
+                "candidates": [
+                    {"title": "（mock）第一章候选", "content": "开篇事件", "level": "chapter"},
+                    {"title": "（mock）第二章候选", "content": "冲突升级", "level": "chapter"},
+                ]
+            },
+            ensure_ascii=False,
+        )
+    # 按注入的意图行精确分派（提示词正文本来就含"人物卡"等字样，不能拿它当特征词）
+    if "他想整理人物" in prompt:
+        return json.dumps(
+            {
+                "reply": "我把这个人整理成了人物卡，你看看要不要改。",
+                "draft": {
+                    "kind": "characters",
+                    "payload": {
+                        "characters": [
+                            {
+                                "name": "（mock）白衣人",
+                                "role": "antagonist",
+                                "surface_identity": "深夜出现在老楼的人",
+                                "secret_desire": "取回楼里藏的东西",
+                                "fatal_weakness": "怕光",
+                                "contradiction": "行为像在躲谁，又像在等人",
+                            }
+                        ]
+                    },
+                },
+            },
+            ensure_ascii=False,
+        )
+    if "回写" in prompt or "状态变更" in prompt:
+        return json.dumps(
+            {
+                "chapter_summary": "（mock 摘要）陈默进入老楼。",
+                "character_states": [],
+                "plot_progress": [],
+                "new_foreshadows": [],
+                "closed_foreshadow_ids": [],
+            },
+            ensure_ascii=False,
+        )
+    return json.dumps(
+        {"reply": "（mock 回复）收到，我在。这本书的情况我都记着，直接说下一步想干什么。", "draft": None},
+        ensure_ascii=False,
+    )
+
+
+class Handler(BaseHTTPRequestHandler):
+    def log_message(self, *_args) -> None:  # 安静
+        return
+
+    def _read_body(self) -> dict:
+        length = int(self.headers.get("content-length") or 0)
+        try:
+            return json.loads(self.rfile.read(length) or b"{}")
+        except json.JSONDecodeError:
+            return {}
+
+    def do_GET(self) -> None:  # noqa: N802
+        if self.path.endswith("/models"):
+            payload = {"data": [{"id": "mock-gpt"}, {"id": "mock-embed"}]}
+            self._send(json.dumps(payload).encode())
+        else:
+            self.send_error(404)
+
+    def do_POST(self) -> None:  # noqa: N802
+        body = self._read_body()
+        messages = body.get("messages") or [{}]
+        prompt = str(messages[-1].get("content") or "")
+        content = _reply_for(prompt)
+        if body.get("stream"):
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.end_headers()
+            # 按 8 字符切片发 delta，模拟逐 token 到达
+            for i in range(0, len(content), 8):
+                chunk = {"choices": [{"delta": {"content": content[i : i + 8]}}]}
+                self.wfile.write(f"data: {json.dumps(chunk)}\n\n".encode())
+            self.wfile.write(b"data: [DONE]\n\n")
+            return
+        if "test" in self.path or body.get("max_tokens") == 1:  # 连接测试
+            content = "ok"
+        payload = {
+            "id": "mock",
+            "object": "chat.completion",
+            "choices": [{"index": 0, "message": {"role": "assistant", "content": content}}],
+        }
+        self._send(json.dumps(payload, ensure_ascii=False).encode())
+
+    def _send(self, data: bytes) -> None:
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+
+if __name__ == "__main__":
+    print(f"mock LLM listening on http://127.0.0.1:{PORT}/v1/chat/completions")
+    HTTPServer(("127.0.0.1", PORT), Handler).serve_forever()

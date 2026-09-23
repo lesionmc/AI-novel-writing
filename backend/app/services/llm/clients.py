@@ -22,6 +22,12 @@ from app.services.llm.base import ChatMessage, readable_http_error
 #   推理模型（思考写入 `reasoning_content`）本身就更慢，给足余量是必要而非奢侈。
 DEFAULT_LLM_TIMEOUT_SEC = 180.0
 
+# LLM 调用**不继承系统/注册表代理**（trust_env=False）：
+# httpx 默认会读系统代理，连 127.0.0.1 的本地端点（Ollama、自建服务）也会被
+# 代理截走 —— E2E 实测配了系统代理的机器上直接 502，本地开发工具必须直连。
+# 需要代理访问海外模型的用户，请在 VPN/系统层解决或把 base_url 指到本地转发端。
+_TRUST_ENV = False
+
 
 def default_llm_timeout() -> float:
     """解析当前生效的模型调用超时（秒）。非法值一律回落到默认，不抛异常。"""
@@ -67,6 +73,7 @@ class OpenAICompatibleClient:
                 headers=self._headers(),
                 json=payload,
                 timeout=timeout if timeout is not None else default_llm_timeout(),
+                trust_env=_TRUST_ENV,
             )
         except httpx.HTTPError as exc:
             raise LLMRequestError(detail=None) from exc
@@ -98,6 +105,7 @@ class OpenAICompatibleClient:
                 headers=self._headers(),
                 json=payload,
                 timeout=timeout if timeout is not None else default_llm_timeout(),
+                trust_env=_TRUST_ENV,
             ) as resp:
                 if resp.status_code >= 400:
                     resp.read()
@@ -128,6 +136,7 @@ class OpenAICompatibleClient:
                 headers=self._headers(),
                 json={"model": self.model, "input": texts},
                 timeout=timeout,
+                trust_env=_TRUST_ENV,
             )
         except httpx.HTTPError as exc:
             raise LLMRequestError(detail=None) from exc
@@ -170,6 +179,7 @@ class ClaudeClient:
                 },
                 json=payload,
                 timeout=timeout,
+                trust_env=_TRUST_ENV,
             )
         except httpx.HTTPError as exc:
             raise LLMRequestError(detail=None) from exc
@@ -199,7 +209,9 @@ class OllamaClient:
         if json_mode:
             payload["format"] = "json"
         try:
-            resp = httpx.post(f"{self.base_url}/api/chat", json=payload, timeout=timeout)
+            resp = httpx.post(
+                f"{self.base_url}/api/chat", json=payload, timeout=timeout, trust_env=_TRUST_ENV
+            )
         except httpx.HTTPError as exc:
             raise LLMRequestError(
                 "没能连上本地 Ollama 服务，请确认它已启动"
@@ -222,7 +234,7 @@ class OllamaClient:
             payload["format"] = "json"
         try:
             with httpx.stream(
-                "POST", f"{self.base_url}/api/chat", json=payload, timeout=timeout
+                "POST", f"{self.base_url}/api/chat", json=payload, timeout=timeout, trust_env=_TRUST_ENV
             ) as resp:
                 if resp.status_code >= 400:
                     resp.read()
@@ -252,6 +264,7 @@ class OllamaClient:
                     f"{self.base_url}/api/embeddings",
                     json={"model": self.model, "prompt": text},
                     timeout=timeout,
+                    trust_env=_TRUST_ENV,
                 )
             except httpx.HTTPError as exc:
                 raise LLMRequestError(

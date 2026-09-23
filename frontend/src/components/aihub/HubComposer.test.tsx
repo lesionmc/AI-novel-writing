@@ -38,9 +38,13 @@ describe('HubComposer（AI 助手输入区）', () => {
     expect(props.onUseWebChange).toHaveBeenCalledWith(true);
   });
 
-  it('未配模型时：输入被禁用并给出人话解释，而不是整页装死', () => {
+  it('未配模型时：输入框照常可打字（想法不该被锁），但发送被拦并给人话解释', () => {
     renderComposer({ disabled: true });
-    expect((screen.getByLabelText('输入你想说的话') as HTMLTextAreaElement).disabled).toBe(true);
+    const input = screen.getByLabelText('输入你想说的话') as HTMLTextAreaElement;
+    expect(input.disabled).toBe(false);
+    fireEvent.change(input, { target: { value: '先记个想法' } });
+    const send = screen.getByRole('button', { name: /发送/ });
+    expect((send as HTMLButtonElement).disabled).toBe(true);
     expect(screen.getByText(/现在还不能用，请先配置模型/)).toBeTruthy();
   });
 
