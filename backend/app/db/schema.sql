@@ -311,11 +311,9 @@ CREATE TABLE IF NOT EXISTS llm_provider (
 
 -- ---------------------------------------------------------------------------
 -- 15. meta — 全局库键值元信息（`@@GLOBAL` 块，同属全局库 data/app.db）
---     当前用于一次性迁移标记：`providers_migrated_v1`。
---     为什么放这里而不是"全局库有没有 provider 行"：模型配置是**可删的**，
---     「全局库为空」既可能是"从未迁移"，也可能是"用户主动删光了"——
---     用行数当判据会让用户删掉的模型在每次重启后复活。改成一次性标记后，
---     迁移只发生一次，清空后重启仍为空（文件被删则连带标记丢失，会重迁一次，属数据恢复）。
+--     历史上唯一用途是一次性迁移标记（providers_migrated_v1 等）；
+--     迁移服务已于 2026-09-23 随仓库瘦身退役（项目从未发布过旧结构库，
+--     schema.sql 即终态），本表保留为通用键值元信息。
 -- ---------------------------------------------------------------------------
 -- @@GLOBAL meta
 CREATE TABLE IF NOT EXISTS meta (
@@ -338,8 +336,6 @@ CREATE TABLE IF NOT EXISTS meta (
 --       但**不再参与路由**；路由一律以本表为准（见 `provider_repo.find_for_role`）。
 --     · 不建外键：全局库里删除 provider 时由应用层同事务清理（`provider_repo.delete`），
 --       与既有「不使用触发器、副作用显式可见」的约定一致。
---     一次性回填由 `services/provider_role_migration.py` 负责（判据 = meta 表标记
---     `provider_roles_migrated_v1`，不是"表里有没有行"）。
 -- ---------------------------------------------------------------------------
 -- @@GLOBAL provider_role
 CREATE TABLE IF NOT EXISTS provider_role (
@@ -410,9 +406,9 @@ PRAGMA user_version = 1;
 --      两字查询极其常见，所以 `search_setting_repo` 在 FTS 无结果时**必须**继续走
 --      LIKE 子串兜底 —— 那条兜底不是"老代码残留"，是 trigram 的必要补充。
 --
---   ⚠️ **存量书库需要迁移**：`CREATE VIRTUAL TABLE IF NOT EXISTS` 不会改动已存在的表，
---      所以老库仍是 unicode61。启动时由 `services/fts_migration.py` 幂等重建
---      （判据 = 表定义里有没有 `trigram`，不依赖额外标记）。
+--   书库一律以 trigram 新建（schema.sql 即终态）。曾经的 unicode61 老库
+--   幂等重建迁移（fts_migration.py）已于 2026-09-23 退役——项目未发布过
+--   旧结构的库。若手工拷入过老库，删掉该书的 *_fts 表重启即可重建索引。
 -- ============================================================================
 -- @@OPTIONAL fts
 CREATE VIRTUAL TABLE IF NOT EXISTS chapter_fts USING fts5(

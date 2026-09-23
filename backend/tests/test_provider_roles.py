@@ -5,30 +5,26 @@
 只能把上一个角色的分配抢走；本组测试锁住新的多对多语义：
 
 1. 一个模型挂 outline + content + review → 三个角色**都**取到它；
-2. 回填迁移幂等；**用户取消某分配后重启不复活**（判据 = meta 一次性标记）；
-3. 该角色无任何模型时**仍回退默认模型** —— 「一个模型全包」成立的前提；
-4. `ollama`（免密钥 provider）语义不受影响。
+2. 该角色无任何模型时**仍回退默认模型** —— 「一个模型全包」成立的前提；
+3. `ollama`（免密钥 provider）语义不受影响。
+（历史回填迁移 `provider_role_migration` 已于 2026-09-23 随仓库瘦身退役。）
 """
 
 from __future__ import annotations
 
 from app.db import global_db as global_db_mod
-from app.db.registry import now_iso
 from app.db.schema_loader import missing_global_objects
 from app.repositories import provider_repo
-from app.services import provider_role_migration
 from app.services.llm import registry as llm_registry
 from app.services.llm.clients import OllamaClient
 
-_MARKER = "provider_roles_migrated_v1"
-
 
 def test_existing_global_db_gains_provider_role_without_rebuild(client):
-    """老全局库（只有 llm_provider / meta）在下次访问时被补上 provider_role。
+    """老全局库（还没有 provider_role）在下次访问时被补上该表。
 
     这正是**线上库升级**的真实情形：`CREATE TABLE IF NOT EXISTS` 不会追加以存在的库，
     所以新表必须登记进 `_GLOBAL_TABLES`（`missing_global_objects`）才会被补建 ——
-    漏了这一步，重启后迁移会因「no such table」而静默降级（只 WARN）。
+    漏了这一步，重启后新表会因「no such table」而静默缺失。
     """
     db = global_db_mod.get_global_database()
     with db.transaction() as conn:
@@ -38,8 +34,9 @@ def test_existing_global_db_gains_provider_role_without_rebuild(client):
     global_db_mod.reset_global_database()  # 模拟重启：下次访问重新自检建库
     with global_db_mod.get_global_database().connection() as conn:
         assert missing_global_objects(conn) == []
-    # 迁移入口在新表上可用（不因缺表而失败）
-    assert provider_role_migration.migrate_provider_roles() == 0
+    # 新表补建后角色查询可用（不因缺表而失败）
+    with global_db_mod.get_global_database().connection() as c:
+        assert provider_repo.find_for_role(c, "outline") is None
 
 
 def _mk(client, model: str, roles: list[str], **extra):
@@ -59,12 +56,6 @@ def _find(role: str) -> dict | None:
 def _default() -> dict | None:
     with global_db_mod.get_global_database().connection() as conn:
         return provider_repo.find_default(conn)
-
-
-def _role_row_count() -> int:
-    with global_db_mod.get_global_database().connection() as conn:
-        row = conn.execute("SELECT COUNT(*) FROM provider_role").fetchone()
-    return int(row[0])
 
 
 # ------------------------------------------------- ① 一个模型挂多个角色
@@ -127,54 +118,7 @@ def test_legacy_task_role_field_still_works(client):
     assert _find("review")["id"] == q["id"]
 
 
-# ------------------------------------------------- ② 回填迁移：幂等 + 不复活
-
-
-def _seed_legacy_row(model: str, task_role: str) -> int:
-    """模拟升级前的库：只有 `llm_provider.task_role`，关联表里没有行。"""
-    with global_db_mod.get_global_database().transaction() as conn:
-        pid = provider_repo.create(
-            conn,
-            {"provider": "ollama", "model": model, "task_role": task_role},
-            now_iso(),
-        )
-        # 抹掉启动时已写的标记，让本次回填有机会执行（等价于"刚升级上来"）
-        conn.execute("DELETE FROM meta WHERE key = ?", (_MARKER,))
-    return pid
-
-
-def test_backfill_is_idempotent(client):
-    pid = _seed_legacy_row("legacy-model", "outline")
-    assert _find("outline") is None  # 回填前：关联表里没有它
-
-    assert provider_role_migration.migrate_provider_roles() == 1
-    assert _find("outline")["id"] == pid
-    after_first = _role_row_count()
-
-    # 再跑一次（模拟重启）：新增 0 行，总行数不变
-    assert provider_role_migration.migrate_provider_roles() == 0
-    assert _role_row_count() == after_first
-    with global_db_mod.get_global_database().connection() as conn:
-        assert conn.execute("SELECT value FROM meta WHERE key = ?", (_MARKER,)).fetchone()[0] == "1"
-
-
-def test_backfill_does_not_revive_cancelled_assignment(client):
-    """用户取消某分配 → 重启（再走迁移入口）→ 不得复活。判据是一次性标记。"""
-    _seed_legacy_row("revive-me", "outline")
-    assert provider_role_migration.migrate_provider_roles() == 1
-
-    # 用户在界面上取消这个分配（等价于 PATCH task_roles: []）
-    p = client.get("/api/providers").json()[0]
-    assert client.patch(f"/api/providers/{p['id']}", json={"task_roles": []}).status_code == 200
-    assert _find("outline") is None
-
-    # 重启：再调迁移入口。旧库里那一列还写着 'outline'，但**不能**被重新补回来
-    assert provider_role_migration.migrate_provider_roles() == 0
-    assert _find("outline") is None
-    assert _role_row_count() == 0
-
-
-# ------------------------------------------------- ③ 无角色 → 回退默认模型
+# ------------------------------------------------- ② 无角色 → 回退默认模型
 
 
 def test_role_without_model_falls_back_to_default(client, monkeypatch):
@@ -205,7 +149,7 @@ def test_disabled_provider_is_not_used_for_role(client):
     assert _find("review") is None
 
 
-# ------------------------------------------------- ④ 免密钥 provider 不受影响
+# ------------------------------------------------- ③ 免密钥 provider 不受影响
 
 
 def test_ollama_keyless_provider_unaffected(client, book):

@@ -30,10 +30,6 @@ from app.routers import (
     writing_ai,
 )
 from app.routers import settings as settings_router
-from app.services import provider_migration
-from app.services import provider_role_migration
-from app.services import fts_migration
-from app.services import chunk_migration
 
 logger = get_logger("app.main")
 
@@ -47,14 +43,6 @@ async def lifespan(app: FastAPI):
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     caps = probe_capabilities()
     logger.info("startup self-check done", **log_fields(**caps.as_dict()))
-    # 一次性把老书库里的模型配置搬到全局库（幂等、失败非致命）
-    provider_migration.migrate_providers_to_global()
-    # 把 llm_provider.task_role 一次性回填进 provider_role 关联表（幂等、失败非致命）
-    provider_role_migration.migrate_provider_roles()
-    # 把老书库的 FTS 索引从 unicode61 重建为 trigram（幂等、失败非致命）
-    fts_migration.migrate_all_book_fts()
-    # 把老书库的 chunk_meta 唯一键升级为含 chunk_index 的四列（幂等、失败非致命）
-    chunk_migration.migrate_all_book_chunks()
     yield
 
 
