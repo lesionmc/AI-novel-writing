@@ -62,6 +62,12 @@ def create_version(chapter_id: RowId, payload: ChapterVersionCreate) -> ChapterV
     return chapter_service.create_version(chapter_id, payload)
 
 
+@router.get("/api/chapters/{chapter_id}/versions/{version_id}/content")
+def get_version_content(chapter_id: RowId, version_id: RowId) -> dict:
+    """版本正文（「对比当前」功能的数据源）。只读、无副作用。"""
+    return chapter_service.get_version_content(chapter_id, version_id)
+
+
 @router.post(
     "/api/chapters/{chapter_id}/versions/{version_id}/restore",
     response_model=ChapterOut,

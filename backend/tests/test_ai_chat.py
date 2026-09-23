@@ -379,3 +379,77 @@ def test_chat_without_use_web_never_searches(client, book, fake_llm, monkeypatch
         json={"messages": [{"role": "user", "content": "最新网文行情怎么样？"}]},
     )
     assert resp.status_code == 200, resp.text
+
+
+# ------------------------------------------------------------- 流式对话
+def _collect_sse(response) -> list[tuple[str, dict]]:
+    """把 SSE 响应读成 [(event, data), ...]（TestClient 流模式）。"""
+    frames: list[tuple[str, dict]] = []
+    event = None
+    for line in response.iter_lines():
+        if line.startswith("event: "):
+            event = line[7:]
+        elif line.startswith("data: ") and event:
+            frames.append((event, json.loads(line[6:])))
+            event = None
+    return frames
+
+
+def test_chat_stream_deltas_then_final(client, book, fake_llm):
+    _add_provider(client)
+    reply_json = json.dumps(
+        {"reply": "早。今天想把哪一章往前推一推？", "draft": None}, ensure_ascii=False
+    )
+    fake = FakeLLMClient(chat_responses=[reply_json])
+    fake_llm(fake)
+
+    with client.stream(
+        "POST",
+        f"/api/books/{book}/ai/chat/stream",
+        json={"messages": [{"role": "user", "content": "你好"}]},
+    ) as resp:
+        assert resp.status_code == 200
+        assert resp.headers["content-type"].startswith("text/event-stream")
+        frames = _collect_sse(resp)
+
+    deltas = [d["text"] for e, d in frames if e == "delta"]
+    finals = [d for e, d in frames if e == "final"]
+    assert finals and finals[0]["reply"] == "早。今天想把哪一章往前推一推？"
+    # 增量拼接必须等于最终 reply 的前缀（流式显示与最终内容一致，不出现两套话）
+    assert "".join(deltas) == finals[0]["reply"]
+    assert finals[0]["draft"] is None
+
+
+def test_chat_stream_precheck_errors_keep_http_status(client, fake_llm):
+    """未配模型：4xx 在开流**之前**发生，走正常状态码而不是流内 error 帧。"""
+    resp = client.post(
+        f"/api/books/{client.post('/api/books', json={'title': '流前检查'}).json()['slug']}"
+        "/ai/chat/stream",
+        json={"messages": [{"role": "user", "content": "hi"}]},
+    )
+    assert resp.status_code == 400
+    assert resp.json()["error"]["code"] == "LLM_NOT_CONFIGURED"
+
+
+def test_chat_stream_carries_draft_and_web_fields(client, book, fake_llm):
+    _add_provider(client)
+    final_json = json.dumps(
+        {
+            "reply": "给你排了个章卡。",
+            "draft": {
+                "kind": "outline_nodes",
+                "payload": {"nodes": [{"level": "chapter", "title": "雨夜", "content": "c"}]},
+            },
+        },
+        ensure_ascii=False,
+    )
+    fake_llm(FakeLLMClient(chat_responses=[final_json]))
+    with client.stream(
+        "POST",
+        f"/api/books/{book}/ai/chat/stream",
+        json={"messages": [{"role": "user", "content": "排个大纲"}]},
+    ) as resp:
+        frames = _collect_sse(resp)
+    final = [d for e, d in frames if e == "final"][0]
+    assert final["draft"]["kind"] == "outline_nodes"
+    assert final["web_attempted"] is False

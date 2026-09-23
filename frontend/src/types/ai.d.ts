@@ -105,4 +105,6 @@ export interface AiChatResponse {
   web_sources: AiChatWebSource[];
   /** 本轮确实发起过联网检索（哪怕 0 命中）—— 用于如实提示 */
   web_attempted: boolean;
+  /** 流式路径专属：JSON 跑偏后做过一次更正重试，final 可能与已显示的片段不同 */
+  corrected?: boolean;
 }

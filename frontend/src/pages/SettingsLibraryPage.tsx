@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useCharacters, useForeshadows, useWorldEntries } from '@/hooks/queries';
 import { Button } from '@/components/common/Button';
@@ -8,6 +8,7 @@ import type { TabItem } from '@/components/settings/Tabs';
 import { CharactersTab } from '@/components/settings/CharactersTab';
 import { WorldEntriesTab } from '@/components/settings/WorldEntriesTab';
 import { ForeshadowTable } from '@/components/settings/ForeshadowTable';
+import { CharacterGraphModal } from '@/components/settings/CharacterGraphModal';
 import styles from './SettingsLibraryPage.module.css';
 import { bookPath } from '@/lib/slug';
 
@@ -38,6 +39,7 @@ export function SettingsLibraryPage() {
   const worldEntries = useWorldEntries(slug);
   const foreshadows = useForeshadows(slug);
 
+  const [graphOpen, setGraphOpen] = useState(false);
   const charCount = characters.data?.length ?? 0;
   const worldCount = worldEntries.data?.length ?? 0;
   /** 空态：一张人物卡和一条词条都没有 —— AI 入口更该突出 */
@@ -82,9 +84,14 @@ export function SettingsLibraryPage() {
             用 ghost 而不是 secondary：本页的主行动是各 Tab 里的「新建人物 / 新建词条」，
             页头这个按钮只是"离开"通道。做成带边框的次级按钮会跟主行动抢注意力，
             也和「开书清单」页头（ghost + accent 主行动）的约定不一致。 */}
-        <Button variant="ghost" icon="chevronLeft" onClick={() => navigate('/')}>
-          返回书库
-        </Button>
+        <div className={styles.headerActions}>
+          <Button variant="ghost" icon="users" onClick={() => setGraphOpen(true)}>
+            关系图谱
+          </Button>
+          <Button variant="ghost" icon="chevronLeft" onClick={() => navigate('/')}>
+            返回书库
+          </Button>
+        </div>
       </header>
 
       <div className={styles.entryWrap}>
@@ -108,6 +115,13 @@ export function SettingsLibraryPage() {
           <ForeshadowTable slug={slug} />
         )}
       </div>
+
+      <CharacterGraphModal
+        open={graphOpen}
+        slug={slug}
+        characters={characters.data ?? []}
+        onClose={() => setGraphOpen(false)}
+      />
     </main>
   );
 }

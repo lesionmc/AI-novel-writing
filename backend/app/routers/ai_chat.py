@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
+from fastapi.responses import StreamingResponse
 
 from app.models.ai_chat import AiChatRequest, AiChatResponse
 from app.services import ai_chat_service
@@ -19,5 +20,20 @@ router = APIRouter(tags=["ai"])
 
 @router.post("/api/books/{book}/ai/chat", response_model=AiChatResponse)
 def ai_chat(book: str, payload: AiChatRequest) -> AiChatResponse:
-    """一轮「有记忆」的对话。**不写库** —— 草稿必须由用户确认后才落库。"""
+    """一轮「有记忆」的对话（非流式）。**不写库** —— 草稿必须由用户确认后才落库。"""
     return ai_chat_service.chat(book, payload)
+
+
+@router.post("/api/books/{book}/ai/chat/stream")
+def ai_chat_stream(book: str, payload: AiChatRequest) -> StreamingResponse:
+    """流式对话：SSE 帧 delta（人话片段）→ final（完整结果）/ error。
+
+    前置检查（作品/章节/模型）在开流前同步完成，4xx 仍走正常状态码；
+    开流之后的异常以 error 帧送达。与审校同一套 SSE 约定。
+    """
+    frames = ai_chat_service.chat_stream(book, payload)
+    return StreamingResponse(
+        frames,
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )

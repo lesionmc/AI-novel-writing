@@ -33,6 +33,14 @@ export function useDeleteOutline(slug: string) {
   });
 }
 
+export function useSummarizeVolume(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.summarizeVolume(id),
+    onSuccess: () => invalidateOutlines(qc, slug),
+  });
+}
+
 /** AI 展开：只返回候选，**不落库**；由用户改完再保存（04 §5.3）。契约要求 body `{expand_level}` */
 export function useExpandOutline() {
   return useMutation({

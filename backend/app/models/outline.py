@@ -61,3 +61,10 @@ class OutlineExpandResponse(BaseModel):
     expand_level: ExpandLevel
     candidates: list[OutlineCandidate]
     raw_ai_output: str | None = None
+
+
+class OutlineSummarizeResponse(BaseModel):
+    """「汇总本卷」结果：卷摘要已写回节点 content（带【本卷摘要】标记）。"""
+
+    outline_id: int
+    summary: str

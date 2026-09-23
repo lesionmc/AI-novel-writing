@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ChapterVersion } from '@/types/api';
-import { useVersions } from '@/hooks/queries';
+import { api, userMessageOf } from '@/api/client';
+import { useChapter, useVersions } from '@/hooks/queries';
 import { useRestoreVersion } from '@/hooks/mutations/chapters';
 import { Button } from '@/components/common/Button';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
@@ -8,6 +9,8 @@ import { ErrorBar } from '@/components/common/ErrorBar';
 import { Modal } from '@/components/common/Modal';
 import { SkeletonRows } from '@/components/common/Skeleton';
 import { formatDateTime, formatNumber } from '@/lib/format';
+import { diffLines, diffStats, type DiffLine } from '@/lib/textDiff';
+import { htmlToPlainText } from '@/lib/wordCount';
 import { toast } from '@/stores/toastStore';
 import styles from './VersionsDialog.module.css';
 
@@ -22,13 +25,69 @@ export interface VersionsDialogProps {
  * 章节版本历史（R11 / TC-14）。
  * 快照时机仅三处：完成本章 / 手动存版本 / 回滚前 —— 由后端保证。
  * 回滚本身会先给当前内容存一次快照，因此回滚是可再找回的。
+ * 「对比当前」用行级 diff（`lib/textDiff`）展示该版与现在正文的差异。
  */
+/** 该版 vs 现在的行级差异：红=这版里有、现在没了；绿=现在新加的 */
+function DiffView({ lines }: { lines: DiffLine[] }) {
+  const { added, removed } = diffStats(lines);
+  return (
+    <div className={styles.diffBox}>
+      <div className={styles.diffHead}>
+        对比结果：新增 {added} 段 · 删除 {removed} 段（上=该版，下=现在的差异合并显示）
+      </div>
+      {lines.map((l, i) => (
+        <div
+          key={i}
+          className={[
+            styles.diffLine,
+            l.kind === 'add' ? styles.diffAdd : l.kind === 'del' ? styles.diffDel : '',
+          ].join(' ')}
+        >
+          <span className={styles.diffSign}>{l.kind === 'add' ? '+' : l.kind === 'del' ? '−' : ' '}</span>
+          {l.text || '（空行）'}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function VersionsDialog({ open, slug, chapterId, onClose }: VersionsDialogProps) {
   const query = useVersions(open ? chapterId : null);
+  const chapter = useChapter(open ? chapterId : null);
   const restore = useRestoreVersion(slug);
   const [pending, setPending] = useState<ChapterVersion | null>(null);
+  const [diffLinesShown, setDiffLinesShown] = useState<{ vid: number; lines: DiffLine[] } | null>(null);
+  const [diffBusy, setDiffBusy] = useState(false);
 
   const versions = query.data ?? [];
+
+  const compare = async (v: ChapterVersion) => {
+    if (chapterId === null) return;
+    if (diffLinesShown?.vid === v.id) {
+      setDiffLinesShown(null);
+      return;
+    }
+    setDiffBusy(true);
+    try {
+      const [version, current] = await Promise.all([
+        api.getChapterVersionContent(chapterId, v.id),
+        chapter.data
+          ? Promise.resolve(chapter.data)
+          : api.getChapter(chapterId),
+      ]);
+      setDiffLinesShown({
+        vid: v.id,
+        lines: diffLines(
+          htmlToPlainText(version.content),
+          htmlToPlainText(current.content ?? ''),
+        ),
+      });
+    } catch (e) {
+      toast.error(userMessageOf(e));
+    } finally {
+      setDiffBusy(false);
+    }
+  };
 
   return (
     <>
@@ -57,20 +116,32 @@ export function VersionsDialog({ open, slug, chapterId, onClose }: VersionsDialo
         ) : (
           <div className={styles.list}>
             {versions.map((v) => (
-              <div className={styles.row} key={v.id}>
-                <div className={styles.main}>
-                  <div className={styles.time}>{formatDateTime(v.created_at)}</div>
-                  {v.note ? <div className={styles.note}>{v.note}</div> : null}
+              <div className={styles.rowGroup} key={v.id}>
+                <div className={styles.row}>
+                  <div className={styles.main}>
+                    <div className={styles.time}>{formatDateTime(v.created_at)}</div>
+                    {v.note ? <div className={styles.note}>{v.note}</div> : null}
+                  </div>
+                  <span className={styles.words}>{formatNumber(v.word_count)} 字</span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    icon="view"
+                    loading={diffBusy && diffLinesShown?.vid !== v.id}
+                    onClick={() => void compare(v)}
+                  >
+                    {diffLinesShown?.vid === v.id ? '收起对比' : '对比当前'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    icon="history"
+                    onClick={() => setPending(v)}
+                  >
+                    回滚到该版本
+                  </Button>
                 </div>
-                <span className={styles.words}>{formatNumber(v.word_count)} 字</span>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  icon="history"
-                  onClick={() => setPending(v)}
-                >
-                  回滚到该版本
-                </Button>
+                {diffLinesShown?.vid === v.id ? <DiffView lines={diffLinesShown.lines} /> : null}
               </div>
             ))}
           </div>

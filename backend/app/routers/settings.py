@@ -9,6 +9,8 @@ from app.models.character import (
     AffectedChapter,
     CharacterInput,
     CharacterOut,
+    CharacterRelationInput,
+    CharacterRelationOut,
     CharacterUpdate,
 )
 from app.models.foreshadow import ForeshadowInput, ForeshadowOut, ForeshadowUpdate
@@ -16,6 +18,26 @@ from app.models.world_entry import WorldEntryInput, WorldEntryOut, WorldEntryUpd
 from app.services import setting_service
 
 router = APIRouter(tags=["settings"])
+
+
+# ------------------------------------------------------- character relations（图谱）
+@router.get("/api/books/{book}/character-relations", response_model=list[CharacterRelationOut])
+def list_character_relations(book: str) -> list[CharacterRelationOut]:
+    return setting_service.list_character_relations(book)
+
+
+@router.post(
+    "/api/books/{book}/character-relations",
+    response_model=CharacterRelationOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_character_relation(book: str, payload: CharacterRelationInput) -> CharacterRelationOut:
+    return setting_service.create_character_relation(book, payload)
+
+
+@router.delete("/api/books/{book}/character-relations/{relation_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_character_relation(book: str, relation_id: RowId) -> None:
+    setting_service.delete_character_relation(book, relation_id)
 
 
 # --------------------------------------------------------------- characters

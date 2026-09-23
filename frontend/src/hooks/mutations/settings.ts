@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client';
 import { queryKeys } from '@/api/queryKeys';
-import type {
+import type { CharacterRelationInput,
   CharacterWriteRequest,
   ForeshadowWriteRequest,
   WorldEntryWriteRequest,
@@ -92,6 +92,28 @@ export function useUpdateForeshadow(slug: string) {
       api.updateForeshadow(id, payload),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['foreshadows', slug] });
+    },
+  });
+}
+
+/* ---------------- 人物关系（图谱） ---------------- */
+
+export function useCreateCharacterRelation(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CharacterRelationInput) => api.createCharacterRelation(slug, payload),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.characterRelations(slug) });
+    },
+  });
+}
+
+export function useDeleteCharacterRelation(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteCharacterRelation(slug, id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.characterRelations(slug) });
     },
   });
 }

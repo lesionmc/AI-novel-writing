@@ -81,6 +81,16 @@ export function useChapterBriefs(slug: string | undefined) {
   });
 }
 
+/** 人物关系边（图谱数据源）。传 null 不发请求（弹窗打开才拉） */
+export function useCharacterRelations(slug: string | null) {
+  return useQuery({
+    queryKey: queryKeys.characterRelations(slug ?? ''),
+    queryFn: () => api.listCharacterRelations(slug as string),
+    enabled: slug !== null,
+    staleTime: STALE.content,
+  });
+}
+
 export function useChapter(id: number | null) {
   return useQuery({
     queryKey: queryKeys.chapter(id ?? -1),

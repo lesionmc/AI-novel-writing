@@ -7,6 +7,7 @@ export const queryKeys = {
   book: (slug: string) => ['book', slug] as const,
 
   characters: (slug: string) => ['characters', slug] as const,
+  characterRelations: (slug: string) => ['character-relations', slug] as const,
   worldEntries: (slug: string) => ['world-entries', slug] as const,
   foreshadows: (slug: string, filter?: string) => ['foreshadows', slug, filter ?? 'all'] as const,
 

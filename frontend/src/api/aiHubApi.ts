@@ -17,7 +17,7 @@
  */
 
 import { slugSegment } from '@/lib/slug';
-import { request } from './request';
+import { request, streamSse, type SseEvent, type StreamOptions } from './request';
 import type { AiChatRequest, AiChatResponse } from '@/types/api';
 
 export const aiHubApi = {
@@ -31,4 +31,22 @@ export const aiHubApi = {
       body: payload,
       timeoutMs: 120000,
     }),
+
+  /**
+   * 流式对话（SSE）：`delta`（reply 人话片段）→ `final`（完整 AiChatResponse 形状）
+   * / `error`。前置错误（未配模型等）在开流前以普通 JSON 4xx 返回，
+   * `streamSse` 会将其抛成 `ApiError`，调用方无需感知两套错误通道。
+   */
+  aiChatStream: (
+    book: string,
+    payload: AiChatRequest,
+    onEvent: (e: SseEvent) => void,
+    options?: StreamOptions,
+  ) =>
+    streamSse(
+      `/books/${slugSegment(book)}/ai/chat/stream`,
+      payload,
+      onEvent,
+      { timeoutMs: 300000, ...options },
+    ),
 };

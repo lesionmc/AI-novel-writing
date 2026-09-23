@@ -8,6 +8,7 @@ from app.routers._params import RowId
 from app.models.outline import (
     OutlineExpandRequest,
     OutlineExpandResponse,
+    OutlineSummarizeResponse,
     OutlineInput,
     OutlineOut,
     OutlineUpdate,
@@ -48,3 +49,12 @@ def delete_outline(outline_id: RowId) -> None:
 @router.post("/api/outlines/{outline_id}/expand", response_model=OutlineExpandResponse)
 def expand_outline(outline_id: RowId, payload: OutlineExpandRequest) -> OutlineExpandResponse:
     return outline_service.expand_outline(outline_id, payload)
+
+
+@router.post(
+    "/api/outlines/{outline_id}/summarize-volume",
+    response_model=OutlineSummarizeResponse,
+)
+def summarize_volume(outline_id: RowId) -> OutlineSummarizeResponse:
+    """AI 把本卷各章摘要压成卷摘要并写回节点（记忆金字塔；重跑只替换标记段）。"""
+    return OutlineSummarizeResponse(**outline_service.summarize_volume(outline_id))

@@ -60,3 +60,24 @@ def test_llm_configured_false_when_secret_slot_emptied(client, secrets_backend):
     secrets_backend.delete(created["key_ref"])  # 模拟密钥环里的密钥失效/被清空
     assert client.get("/api/providers").json()[0]["enabled"] == 1  # 配置行未动
     assert client.get("/api/system/capabilities").json()["llm_configured"] is False
+
+
+# ------------------------------------------------------------- 联网搜索配置
+def test_web_search_settings_roundtrip(client):
+    assert client.get("/api/system/web-search").json() == {"endpoint": None, "proxy": None}
+    resp = client.put(
+        "/api/system/web-search",
+        json={"endpoint": "https://search.local/api", "proxy": "http://127.0.0.1:7890"},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["endpoint"] == "https://search.local/api"
+    assert client.get("/api/system/web-search").json()["proxy"] == "http://127.0.0.1:7890"
+    # 清空 = 恢复默认（GET 回 null，而不是把默认 DDG 端点暴露给用户）
+    assert client.put("/api/system/web-search", json={}).json() == {"endpoint": None, "proxy": None}
+
+
+def test_web_search_settings_validates_scheme(client):
+    bad = client.put("/api/system/web-search", json={"endpoint": "ftp://x"})
+    assert bad.status_code == 400
+    bad_proxy = client.put("/api/system/web-search", json={"proxy": "127.0.0.1:7890"})
+    assert bad_proxy.status_code == 400

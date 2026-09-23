@@ -127,3 +127,31 @@ def count(conn: sqlite3.Connection) -> int:
 
 def all_rows(conn: sqlite3.Connection) -> list[dict]:
     return fetch_all(conn, "SELECT * FROM character ORDER BY id ASC")
+
+
+# ------------------------------------------------------------- 人物关系（图谱）
+def list_relations(conn) -> list[dict]:
+    return [
+        dict(r)
+        for r in conn.execute(
+            "SELECT cr.id, cr.from_char_id, f.name AS from_name, cr.to_char_id, t.name AS to_name,"
+            " cr.relation_type, cr.note"
+            " FROM character_relation cr"
+            " JOIN character f ON f.id = cr.from_char_id"
+            " JOIN character t ON t.id = cr.to_char_id"
+            " ORDER BY cr.id"
+        ).fetchall()
+    ]
+
+
+def create_relation(conn, from_id: int, to_id: int, relation_type: str, note: str | None, now: str) -> int:
+    cur = conn.execute(
+        "INSERT INTO character_relation (from_char_id, to_char_id, relation_type, note, created_at)"
+        " VALUES (?, ?, ?, ?, ?)",
+        (from_id, to_id, relation_type, note, now),
+    )
+    return int(cur.lastrowid or 0)
+
+
+def delete_relation(conn, relation_id: int) -> bool:
+    return conn.execute("DELETE FROM character_relation WHERE id = ?", (relation_id,)).rowcount > 0

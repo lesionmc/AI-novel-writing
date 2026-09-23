@@ -158,3 +158,85 @@ def test_outline_expand_parse_failure_readable(client, book, fake_llm):
     assert err["code"] == "JSON_PARSE_FAILED"
     assert "Traceback" not in resp.text
     assert err["detail"]["raw_ai_output"] == "仍然不是 JSON"
+
+
+# ------------------------------------------------------------- 汇总本卷（记忆金字塔）
+def test_summarize_volume_writes_marked_section(client, book, fake_llm):
+    import json as _json
+
+    from tests.fakes import FakeLLMClient
+
+    client.post("/api/providers", json={"provider": "ollama", "model": "fake-model"})
+    ch = client.post(f"/api/books/{book}/chapters", json={"title": "第一章"}).json()
+    client.patch(f"/api/chapters/{ch['id']}", json={"content": "陈默进了老楼。"})
+    client.post(
+        f"/api/chapters/{ch['id']}/finalize/confirm",
+        json={"chapter_summary": "陈默深夜进入空置两年的老楼。", "character_states": []},
+    )
+    vol = client.post(
+        f"/api/books/{book}/outlines", json={"level": "volume", "title": "第一卷·楼影"}
+    ).json()
+    client.post(
+        f"/api/books/{book}/outlines",
+        json={"level": "chapter", "title": "第一章", "parent_id": vol["id"], "chapter_id": ch["id"]},
+    )
+
+    fake_llm(
+        FakeLLMClient(
+            chat_responses=[_json.dumps({"summary": "陈默夜探老楼，发现楼内有人活动。"}, ensure_ascii=False)]
+        )
+    )
+    resp = client.post(f"/api/outlines/{vol['id']}/summarize-volume")
+    assert resp.status_code == 200, resp.text
+    assert "夜探老楼" in resp.json()["summary"]
+
+    node = next(o for o in client.get(f"/api/books/{book}/outlines").json() if o["id"] == vol["id"])
+    assert "【本卷摘要】" in node["content"] and "陈默夜探老楼" in node["content"]
+    assert "【本卷摘要完】" in node["content"]
+
+    # 用户在摘要后面补了卷末备注 —— 重跑只替换标记对内，备注必须活着
+    client.patch(f"/api/outlines/{vol['id']}", json={"content": node["content"] + "\n备注：第三卷要回收楼里的钟。"})
+    fake_llm(
+        FakeLLMClient(
+            chat_responses=[_json.dumps({"summary": "（修订版）陈默夜探老楼。"}, ensure_ascii=False)]
+        )
+    )
+    assert client.post(f"/api/outlines/{vol['id']}/summarize-volume").status_code == 200
+    node = next(o for o in client.get(f"/api/books/{book}/outlines").json() if o["id"] == vol["id"])
+    assert node["content"].count("【本卷摘要】") == 1
+    assert "修订版" in node["content"] and "陈默夜探老楼，发现" not in node["content"]
+    assert "第三卷要回收楼里的钟" in node["content"]
+
+
+def test_summarize_volume_rejects_non_string_summary(client, book, fake_llm):
+    """模型把 summary 给成数组 → 不能把 Python repr 写进用户卷纲（审查发现的坑）。"""
+    import json as _json
+
+    from tests.fakes import FakeLLMClient
+
+    client.post("/api/providers", json={"provider": "ollama", "model": "fake-model"})
+    ch = client.post(f"/api/books/{book}/chapters", json={"title": "第一章"}).json()
+    client.post(
+        f"/api/chapters/{ch['id']}/finalize/confirm",
+        json={"chapter_summary": "摘要内容。", "character_states": []},
+    )
+    vol = client.post(f"/api/books/{book}/outlines", json={"level": "volume", "title": "卷一"}).json()
+    client.post(
+        f"/api/books/{book}/outlines",
+        json={"level": "chapter", "parent_id": vol["id"], "chapter_id": ch["id"]},
+    )
+    fake_llm(FakeLLMClient(chat_responses=[_json.dumps({"summary": ["要点一", "要点二"]})]))
+    resp = client.post(f"/api/outlines/{vol['id']}/summarize-volume")
+    assert resp.status_code == 400
+    node = next(o for o in client.get(f"/api/books/{book}/outlines").json() if o["id"] == vol["id"])
+    assert "【本卷摘要】" not in (node.get("content") or "")
+
+
+def test_summarize_volume_rejects_non_volume_and_empty(client, book, fake_llm):
+    client.post("/api/providers", json={"provider": "ollama", "model": "fake-model"})
+    total = client.post(f"/api/books/{book}/outlines", json={"level": "total", "title": "总纲"}).json()
+    assert client.post(f"/api/outlines/{total['id']}/summarize-volume").status_code == 400
+    vol = client.post(f"/api/books/{book}/outlines", json={"level": "volume", "title": "空卷"}).json()
+    bad = client.post(f"/api/outlines/{vol['id']}/summarize-volume")
+    assert bad.status_code == 400
+    assert "还没有" in bad.json()["error"]["message"]

@@ -18,8 +18,12 @@ DuckDuckGo 检索并把结果注入最终提示词。搜索失败一律降级为
 
 from __future__ import annotations
 
+import json
+from collections.abc import Iterator
+from dataclasses import dataclass
+
 from app.db.registry import get_registry
-from app.errors import ChapterNotFoundError, JSONParseFailedError
+from app.errors import AppError, ChapterNotFoundError, JSONParseFailedError
 from app.logging_config import get_logger, log_fields
 from app.models.ai_chat import (
     AiChatContextUsed,
@@ -34,8 +38,10 @@ from app.models.ai_chat import (
 from app.repositories import chapter_repo
 from app.services import web_search, writing_context
 from app.services.llm import registry as llm_registry
-from app.services.llm.json_chat import chat_json
+from app.services.llm.json_chat import chat_json, retry_prompt, stream_chat
 from app.services.llm.prompts import build_prompt
+from app.utils.json_parse import parse_json_loose
+from app.utils.reply_stream import ReplyStreamExtractor
 
 logger = get_logger(__name__)
 
@@ -211,8 +217,22 @@ def _plan_web_search(client: object, question: str, slug: str) -> str | None:
     return None
 
 
-def chat(book: str, payload: AiChatRequest) -> AiChatResponse:
-    """一轮对话。**无写入副作用**；记忆包在服务端组装。"""
+@dataclass
+class _Prepared:
+    """一次对话的全部前置成果（4xx 全部在开流**之前**发生）。"""
+
+    prompt: str
+    context_used: AiChatContextUsed
+    client: object
+    sources: list[dict]
+    web_attempted: bool
+    intent: str
+    turns: int
+    chapter_id: int | None
+    book: str
+
+
+def _prepare(book: str, payload: AiChatRequest) -> _Prepared:
     registry = get_registry()
     registry.require(book)  # 作品不存在 → 404 BOOK_NOT_FOUND
 
@@ -247,31 +267,119 @@ def chat(book: str, payload: AiChatRequest) -> AiChatResponse:
         "web_results": _format_web_sources(sources),
     }
     prompt = build_prompt("ai_chat", variables, provider=client.provider)
-    data, raw = chat_json(client, prompt)
+    return _Prepared(
+        prompt=prompt,
+        context_used=context_used,
+        client=client,
+        sources=sources,
+        web_attempted=web_attempted,
+        intent=intent,
+        turns=len(payload.messages),
+        chapter_id=payload.chapter_id,
+        book=book,
+    )
 
+
+def _resolve(prep: _Prepared, data: dict, raw: str) -> tuple[str, AiChatDraft | None]:
     reply = _text(data.get("reply"))
     if not reply:
         # 连话都没得说 → 不是可用的回复，按解析失败处理（给前端可读原因）
         raise JSONParseFailedError(detail={"raw_ai_output": raw})
+    return reply, _draft_from(data.get("draft"))
 
-    draft = _draft_from(data.get("draft"))
+
+def chat(book: str, payload: AiChatRequest) -> AiChatResponse:
+    """一轮对话（非流式）。**无写入副作用**；记忆包在服务端组装。"""
+    prep = _prepare(book, payload)
+    data, raw = chat_json(prep.client, prep.prompt)  # type: ignore[arg-type]
+    reply, draft = _resolve(prep, data, raw)
     logger.info(
         "ai chat turn",
         **log_fields(
             slug=book,
-            chapter_id=payload.chapter_id,
-            intent=intent,
-            turns=len(payload.messages),
+            chapter_id=prep.chapter_id,
+            intent=prep.intent,
+            turns=prep.turns,
             has_draft=draft is not None,
             draft_kind=draft.kind if draft else None,
-            web_hits=len(sources),
+            web_hits=len(prep.sources),
             chars=len(reply),
         ),
     )
     return AiChatResponse(
         reply=reply,
         draft=draft,
-        context_used=context_used,
-        web_sources=[WebSource(**s) for s in sources],
-        web_attempted=web_attempted,
+        context_used=prep.context_used,
+        web_sources=[WebSource(**s) for s in prep.sources],
+        web_attempted=prep.web_attempted,
     )
+
+
+def _frame(event: str, data: object) -> str:
+    payload = json.dumps(data, ensure_ascii=False)
+    return f"event: {event}\ndata: {payload}\n\n"
+
+
+def chat_stream(book: str, payload: AiChatRequest) -> Iterator[str]:
+    """流式对话：SSE 帧 `delta`（reply 片段）→ `final`（完整结果）/ `error`。
+
+    注意本函数**不是生成器**：前置检查（作品/章节/模型）在返回流之前同步执行完，
+    这样 4xx 还能走正常 HTTP 状态码 —— 一旦开流就改不了状态码了（与审校同一约定）。
+    """
+    prep = _prepare(book, payload)
+    return _stream_frames(prep)
+
+
+def _stream_frames(prep: _Prepared) -> Iterator[str]:
+    extractor = ReplyStreamExtractor()
+    parts: list[str] = []
+    corrected = False
+    try:
+        for chunk in stream_chat(prep.client, prep.prompt):  # type: ignore[arg-type]
+            parts.append(chunk)
+            piece = extractor.feed(chunk)
+            if piece:
+                yield _frame("delta", {"text": piece})
+        raw = "".join(parts)
+        try:
+            data = parse_json_loose(raw)
+        except json.JSONDecodeError as first_err:
+            # 流式输出没凑成合法 JSON（模型中途跑偏）→ **单次**非流式重试。
+            # 刻意不走 chat_json 的内部重试：否则最坏 3 段 120s 串烧，前端 300s 预算必被截杀。
+            # 代价：重试是另一次生成，final 可能与已显示的 delta 不同 → corrected 如实标注。
+            logger.warning("stream json broken, single retry", **log_fields(slug=prep.book))
+            retry_raw = prep.client.chat(  # type: ignore[attr-defined]
+                [{"role": "user", "content": retry_prompt(prep.prompt, first_err)}],
+                json_mode=True,
+            )
+            data = parse_json_loose(retry_raw)  # 再失败冒到下面的兜底 except
+            corrected = True
+        reply, draft = _resolve(prep, data, raw)
+        # 提取器没吐出过片段（模型格式跑偏/转义失败）时，delta 全程为空 ——
+        # 前端一直显示"在想"，到 final 才出全文，宁慢不花。
+        yield _frame(
+            "final",
+            {
+                "reply": reply,
+                "draft": draft.model_dump() if draft else None,
+                "context_used": prep.context_used.model_dump(),
+                "web_sources": [WebSource(**s).model_dump() for s in prep.sources],
+                "web_attempted": prep.web_attempted,
+                "corrected": corrected,
+            },
+        )
+        logger.info(
+            "ai chat turn (stream)",
+            **log_fields(slug=prep.book, intent=prep.intent, web_hits=len(prep.sources)),
+        )
+    except AppError as exc:
+        # 开流后无法改状态码：错误以帧形式如实送达，前端按 code 映射人话
+        yield _frame("error", {"code": exc.code, "message": exc.message})
+    except json.JSONDecodeError:
+        yield _frame(
+            "error",
+            {"code": "JSON_PARSE_FAILED", "message": "AI 回复格式异常，请重发一次试试"},
+        )
+    except Exception:  # noqa: BLE001 —— 流一旦烂尾用户就永远转圈，任何异常都必须发终帧
+        logger.exception("stream chat crashed", **log_fields(slug=prep.book))
+        yield _frame("error", {"code": "INTERNAL_ERROR", "message": "这轮回复出了意外，请重试"})

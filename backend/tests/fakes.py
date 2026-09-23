@@ -42,6 +42,11 @@ class FakeLLMClient:
             raise item
         return item
 
+    def chat_stream(self, messages, *, json_mode: bool = False, timeout: float = 60.0):
+        """流式假实现：把预设响应按 2 字符切片吐出，模拟真实逐 token 到达。"""
+        text = self.chat(messages, json_mode=json_mode, timeout=timeout)
+        return iter([text[i : i + 2] for i in range(0, len(text), 2)])
+
     def embed(self, texts, *, timeout: float = 60.0) -> list[list[float]]:
         self.embed_calls.append(list(texts))
         return [self._vector(text) for text in texts]

@@ -82,6 +82,8 @@ class WritingContext:
     recent_text: str
     chapter_text: str
     character_states_history: str = ""
+    # 记忆金字塔：已完成卷的卷摘要（超长篇的"远期记忆"，没有就是空串）
+    volume_summaries: str = ""
     # 「这次到底喂了什么」的计数（对话工作台要把它**显示给用户看**）。
     # 计数与上面几块文本由**同一批查询**得出，故不会出现"显示 3 个人物、实际喂了 5 个"。
     ctx_characters: int = 0
@@ -122,7 +124,32 @@ class WritingContext:
             "prev_summary": self.prev_summary or "（第一章，没有上一章）",
             "recent_text": self.recent_text or "（本章正文还是空的，属于开篇）",
             "character_states_history": self.character_states_history or "（暂无状态变更记录）",
+            "volume_summaries": self.volume_summaries or "（还没有卷摘要；写到第一卷末尾时可在大纲页「汇总本卷」）",
         }
+
+
+_VOLUME_SUMMARY_MARK = "【本卷摘要】"
+_VOLUME_SUMMARY_END = "【本卷摘要完】"
+
+
+def _volume_summaries(conn: sqlite3.Connection) -> str:
+    """收集各卷纲节点里的卷摘要段（按卷 seq 顺序），给 AI 当远期记忆。"""
+    from app.repositories import outline_repo
+
+    parts: list[str] = []
+    for node in outline_repo.list_all(conn, "volume"):
+        content = node.get("content") or ""
+        idx = content.find(_VOLUME_SUMMARY_MARK)
+        if idx == -1:
+            continue
+        body = content[idx + len(_VOLUME_SUMMARY_MARK):]
+        end = body.find(_VOLUME_SUMMARY_END)
+        if end != -1:  # 只取标记对之间的摘要段，卷纲里用户后写的备注不混进记忆
+            body = body[:end]
+        digest = body.strip()[:300]
+        if digest:
+            parts.append(f"《{node.get('title') or '未命名卷'}》：{digest}")
+    return "\n".join(parts)[:1500]
 
 
 def _settings_text(conn: sqlite3.Connection) -> str:
@@ -154,6 +181,18 @@ def _settings_text(conn: sqlite3.Connection) -> str:
             content = (row.get("content") or "").strip()
             lines.append(f"- [{row.get('category') or 'other'}] {row['name']}"
                          + (f"：{content}" if content else ""))
+
+    # 人物关系（图谱里维护的边）：AI 搞反"谁是谁的师父"就是新一类吃书，必须进记忆包
+    relations = character_repo.list_relations(conn)
+    if relations:
+        lines.append("")
+        lines.append("【人物关系】")
+        for rel in relations:
+            note = (rel.get("note") or "").strip()
+            lines.append(
+                f"- {rel['from_name']} → {rel['to_name']}：{rel['relation_type']}"
+                + (f"（{note}）" if note else "")
+            )
 
     return clip_text("\n".join(lines), MAX_SETTINGS_CHARS)
 
@@ -276,6 +315,7 @@ def load(conn: sqlite3.Connection, slug: str, chapter: dict) -> WritingContext:
         recent_text=_recent_text(chapter_text),
         chapter_text=chapter_text,
         character_states_history=_states_history(conn, seq),
+        volume_summaries=_volume_summaries(conn),
         ctx_characters=char_count,
         ctx_foreshadows=fs_count,
         ctx_outlines=outline_count,

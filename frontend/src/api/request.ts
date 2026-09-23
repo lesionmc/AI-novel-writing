@@ -64,7 +64,7 @@ export function userMessageOf(e: unknown): string {
 }
 
 export interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   /** 毫秒；AI 相关调用需放宽 */
   timeoutMs?: number;

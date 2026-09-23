@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 
 from app.errors import JSONParseFailedError
 from app.services.llm.base import LLMClient
@@ -21,6 +22,24 @@ _RETRY_SUFFIX = (
 # 这两个 AI 功能要一次生成**长结构化 JSON**（3–5 条推荐 + 理由 / 完整设定草稿），
 # 慢模型常常超过默认 60s；60s 会让用户看到「模型请求失败」而其实只是没等完。
 DEFAULT_GENERATE_TIMEOUT = 120.0
+
+
+def retry_prompt(prompt: str, err: object) -> str:
+    """解析失败后的重试提示（供流式路径做**单次**重试，不再叠加内部重试）。"""
+    return prompt + _RETRY_SUFFIX.format(err=err)
+
+
+def stream_chat(
+    client: LLMClient, prompt: str, *, timeout: float = DEFAULT_GENERATE_TIMEOUT
+) -> Iterator[str]:
+    """流式产出模型原始输出片段。客户端没实现 `chat_stream`（如 Claude）
+    就退回一次性 `chat` 单块发出 —— 调用方无需感知差异。"""
+    messages = [{"role": "user", "content": prompt}]
+    stream = getattr(client, "chat_stream", None)
+    if callable(stream):
+        yield from stream(messages, json_mode=True, timeout=timeout)  # type: ignore[attr-defined]
+        return
+    yield client.chat(messages, json_mode=True, timeout=timeout)
 
 
 def chat_json(

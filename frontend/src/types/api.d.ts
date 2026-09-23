@@ -35,6 +35,7 @@ export * from './topics';
 export * from './ai';
 export * from './audit';
 export * from './writing';
+export * from './relations';
 
 /* ============================ books（R15） ============================ */
 

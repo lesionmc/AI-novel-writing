@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 CharacterRole = Literal["protagonist", "supporting", "antagonist", "minor"]
 CharacterStatus = Literal["alive", "dead", "missing", "unknown"]
@@ -56,3 +56,32 @@ class AffectedChapter(BaseModel):
     chapter_seq: int
     chapter_title: str | None = None
     matched_in: str  # content / chapter_summary
+
+
+class CharacterRelationOut(BaseModel):
+    """人物关系边（关系图谱数据源）。"""
+
+    id: int
+    from_char_id: int
+    from_name: str = ""
+    to_char_id: int
+    to_name: str = ""
+    relation_type: str
+    note: str | None = None
+
+
+class CharacterRelationInput(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    from_char_id: int
+    to_char_id: int
+    relation_type: str = Field(min_length=1, max_length=40)
+    note: str | None = Field(default=None, max_length=200)
+
+    @field_validator("relation_type")
+    @classmethod
+    def _type_not_blank(cls, v: str) -> str:
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("关系类型不能是空白")
+        return stripped

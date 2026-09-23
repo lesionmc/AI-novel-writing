@@ -3,9 +3,14 @@
 from __future__ import annotations
 
 from app.db.registry import get_registry, now_iso
+import sqlite3
+
 from app.errors import (
     CharacterNotFoundError,
+    ConflictError,
     ForeshadowNotFoundError,
+    NotFoundError,
+    ValidationError,
     WorldEntryNotFoundError,
 )
 from app.logging_config import get_logger
@@ -13,6 +18,8 @@ from app.models.character import (
     AffectedChapter,
     CharacterInput,
     CharacterOut,
+    CharacterRelationInput,
+    CharacterRelationOut,
     CharacterUpdate,
 )
 from app.models.foreshadow import ForeshadowInput, ForeshadowOut, ForeshadowUpdate
@@ -221,3 +228,49 @@ def update_foreshadow(fs_id: int, payload: ForeshadowUpdate) -> ForeshadowOut:
         if row is None:
             raise ForeshadowNotFoundError()
     return ForeshadowOut(**row)
+
+
+# ------------------------------------------------------------- 人物关系（图谱）
+def list_character_relations(slug: str) -> list[CharacterRelationOut]:
+    registry = get_registry()
+    registry.require(slug)
+    workspace.set_active(slug)
+    with registry.database(slug).connection() as conn:
+        return [CharacterRelationOut(**r) for r in character_repo.list_relations(conn)]
+
+
+def create_character_relation(slug: str, payload: CharacterRelationInput) -> CharacterRelationOut:
+    """建一条关系边。两端必须是本书人物且不相同；重复边由 UNIQUE 挡下（409）。"""
+    registry = get_registry()
+    registry.require(slug)
+    workspace.set_active(slug)
+    if payload.from_char_id == payload.to_char_id:
+        raise ValidationError("不能和自己是关系")
+    now = now_iso()
+    with registry.database(slug).transaction() as conn:
+        if character_repo.get(conn, payload.from_char_id) is None:
+            raise CharacterNotFoundError()
+        if character_repo.get(conn, payload.to_char_id) is None:
+            raise CharacterNotFoundError()
+        try:
+            rid = character_repo.create_relation(
+                conn,
+                payload.from_char_id,
+                payload.to_char_id,
+                payload.relation_type.strip(),
+                payload.note,
+                now,
+            )
+        except sqlite3.IntegrityError:
+            raise ConflictError("这两个人物之间已经有同一条关系了") from None
+        row = next(r for r in character_repo.list_relations(conn) if r["id"] == rid)
+    return CharacterRelationOut(**row)
+
+
+def delete_character_relation(slug: str, relation_id: int) -> None:
+    registry = get_registry()
+    registry.require(slug)
+    workspace.set_active(slug)
+    with registry.database(slug).transaction() as conn:
+        if not character_repo.delete_relation(conn, relation_id):
+            raise NotFoundError("这条关系不存在")

@@ -8,6 +8,7 @@ import { TaskRoleMapping } from '@/components/config/TaskRoleMapping';
 import { WritingModeSwitch } from '@/components/config/WritingModeSwitch';
 import { ProviderList } from '@/components/config/ProviderList';
 import { ExportPanel } from '@/components/config/ExportPanel';
+import { WebSearchPanel } from '@/components/config/WebSearchPanel';
 import { ThemeSwitcher } from '@/components/config/ThemeSwitcher';
 import { WordlistStatusCard } from '@/components/audit/WordlistStatusCard';
 import styles from '@/components/config/config.module.css';
@@ -149,6 +150,24 @@ export function ConfigPage() {
         </div>
         <div className={styles.sectionBody}>
           <WordlistStatusCard />
+        </div>
+      </section>
+
+      {/* 联网搜索的后端配置：默认 DDG，国内网络填代理或自建端点（AI 助手「联网」开关用） */}
+      <section className={styles.section}>
+        <div className={styles.sectionHead}>
+          <div className={styles.sectionTitleWrap}>
+            <span className={styles.sectionTitle}>
+              <Icon name="world" size={20} /> 联网搜索
+            </span>
+            <span className={styles.sectionHint}>
+              AI 助手打开「联网」开关时从这里查外部实时资料。默认直连 DuckDuckGo，
+              国内网络不通时填代理地址或自建搜索端点。
+            </span>
+          </div>
+        </div>
+        <div className={styles.sectionBody}>
+          <WebSearchPanel />
         </div>
       </section>
 

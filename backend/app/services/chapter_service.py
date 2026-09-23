@@ -173,6 +173,24 @@ def create_version(chapter_id: int, payload: ChapterVersionCreate) -> ChapterVer
     )
 
 
+def get_version_content(chapter_id: int, version_id: int) -> dict:
+    """单个版本的正文（diff 对比用）。只读。"""
+    slug = workspace.resolve_slug(locate_repo.has_chapter, chapter_id, ChapterNotFoundError())
+    with get_registry().database(slug).connection() as conn:
+        _require_chapter(conn, chapter_id)
+        version = chapter_repo.get_version(conn, version_id)
+        if version is None or version["chapter_id"] != chapter_id:
+            raise VersionNotFoundError()
+    return {
+        "id": version["id"],
+        "chapter_id": chapter_id,
+        "content": version.get("content") or "",
+        "word_count": version.get("word_count") or 0,
+        "note": version.get("note"),
+        "created_at": version["created_at"],
+    }
+
+
 def restore_version(chapter_id: int, version_id: int) -> ChapterOut:
     slug = workspace.resolve_slug(locate_repo.has_chapter, chapter_id, ChapterNotFoundError())
     registry = get_registry()

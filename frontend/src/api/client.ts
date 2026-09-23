@@ -12,6 +12,7 @@
 import { slugSegment } from '@/lib/slug';
 import { downloadFile, request } from './request';
 import { aiHubApi } from './aiHubApi';
+import { settingsApi } from './settingsApi';
 import { writingApi } from './writingApi';
 import type {
   AffectedChapter,
@@ -51,6 +52,7 @@ import type {
   SearchHit,
   SensitiveAuditResult,
   SystemCapabilities,
+  WebSearchSettings,
   TestDraftRequest,
   TestDraftResponse,
   TopicAdviceRequest,
@@ -74,6 +76,7 @@ export const api = {
   // 正文辅助 AI + 一致性审校（M2-batch2）：在 `./writingApi` 里分组维护，
   // 展开进同一个 `api` 对象 —— 调用方仍写 `api.plotDirections(...)`，且主 client 不超行数门禁。
   ...writingApi,
+  ...settingsApi,
 
   // AI 对话工作台（M2-batch3）：同上，分组在 `./aiHubApi`（`api.aiChat(...)`）。
   ...aiHubApi,
@@ -150,6 +153,12 @@ export const api = {
       body: payload,
       timeoutMs: 60000,
     }),
+  /** 汇总本卷：AI 压卷摘要并写回卷纲节点（服务端更新，重跑幂等） */
+  summarizeVolume: (id: number) =>
+    request<{ outline_id: number; summary: string }>(`/outlines/${id}/summarize-volume`, {
+      method: 'POST',
+      timeoutMs: 120000,
+    }),
 
   /* --- 5.4 chapters（R2 / R11） --- */
   listChapters: (book: string) =>
@@ -160,6 +169,11 @@ export const api = {
       body: payload,
     }),
   getChapter: (id: number) => request<Chapter>(`/chapters/${id}`),
+  /** 版本正文（「对比当前」数据源）。只读 */
+  getChapterVersionContent: (id: number, vid: number) =>
+    request<{ id: number; content: string; word_count: number; note: string | null; created_at: string }>(
+      `/chapters/${id}/versions/${vid}/content`,
+    ),
   /** 契约响应**仅 3 字段** `{id, word_count, updated_at}`，非 Chapter → 调用方勿整体写缓存 */
   updateChapter: (id: number, payload: UpdateChapterRequest) =>
     request<SaveChapterResponse>(`/chapters/${id}`, { method: 'PATCH', body: payload }),
@@ -234,6 +248,11 @@ export const api = {
   /* --- 5.8 system（能力探测，Spec §12） --- */
   /** 只读无副作用；M1 无 `?refresh`，返回值恒为启动自检缓存 */
   getCapabilities: () => request<SystemCapabilities>('/system/capabilities'),
+
+  /** 联网搜索配置（端点/代理）。留空 = 默认直连 DuckDuckGo。 */
+  getWebSearchSettings: () => request<WebSearchSettings>('/system/web-search'),
+  putWebSearchSettings: (payload: WebSearchSettings) =>
+    request<WebSearchSettings>('/system/web-search', { method: 'PUT', body: payload }),
 
   /* --- 5.9 topics（选题向导，M1 增项） --- */
   /**

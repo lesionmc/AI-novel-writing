@@ -155,3 +155,113 @@ def _book_context(conn: sqlite3.Connection) -> dict:
     from app.repositories import book_repo
 
     return book_repo.get_row(conn) or {}
+
+
+# ------------------------------------------------------------- 卷摘要（记忆金字塔）
+_VOLUME_SUMMARY_MARK = "【本卷摘要】"
+_VOLUME_SUMMARY_END = "【本卷摘要完】"
+
+
+def _volume_chapter_rows(conn: sqlite3.Connection, volume_id: int) -> list[dict]:
+    """卷纲子树里挂着的已写章节（按 seq 升序）。"""
+    from app.repositories import chapter_repo
+
+    children: dict[int, list[dict]] = {}
+    for node in outline_repo.list_all(conn):
+        parent = node.get("parent_id")
+        if parent is not None:
+            children.setdefault(int(parent), []).append(node)
+
+    chapter_ids: list[int] = []
+    stack = [volume_id]
+    while stack:
+        pid = stack.pop()
+        for child in children.get(pid, []):
+            if child["level"] == "chapter" and child.get("chapter_id"):
+                chapter_ids.append(int(child["chapter_id"]))
+            else:
+                stack.append(int(child["id"]))
+
+    rows = [chapter_repo.get(conn, cid) for cid in dict.fromkeys(chapter_ids)]
+    return sorted((r for r in rows if r), key=lambda r: int(r["seq"]))
+
+
+def _volume_summary_lines(chapters: list[dict]) -> str:
+    from app.utils.text import strip_html
+
+    lines: list[str] = []
+    for ch in chapters:
+        digest = (ch.get("chapter_summary") or "").strip()
+        if not digest:
+            digest = "…" + strip_html(ch.get("content") or "")[-120:]
+        lines.append(f"- 第{ch['seq']}章｜{ch.get('title') or '未命名'}｜{digest or '（无内容）'}")
+    return "\n".join(lines)
+
+
+def _merge_volume_content(old_content: str, summary: str) -> str:
+    """卷摘要作为**成对标记**的独立段合并进卷纲正文：重跑只替换标记对内的内容。
+
+    没有结束标记的旧段（上一版格式）视为"到文末"，本次重跑会补上结束标记；
+    此后用户在标记对之外写的卷末备注永远不受影响。
+    """
+    block = f"{_VOLUME_SUMMARY_MARK}\n{summary}\n{_VOLUME_SUMMARY_END}"
+    start = old_content.find(_VOLUME_SUMMARY_MARK)
+    if start == -1:
+        base = old_content.rstrip()
+        return f"{base}\n\n{block}" if base else block
+    end = old_content.find(_VOLUME_SUMMARY_END, start)
+    if end == -1:  # 旧格式：没有结束标记，替换到文末（此后升级为带尾标记的成对格式）
+        head = old_content[:start].rstrip()
+    else:
+        head = (old_content[:start] + old_content[end + len(_VOLUME_SUMMARY_END):]).rstrip()
+    return f"{head}\n\n{block}" if head else block
+
+
+def summarize_volume(outline_id: int) -> dict:
+    """AI 把本卷各章摘要压成一段卷摘要，写回卷纲节点（带标记、可重跑）。"""
+    slug = workspace.resolve_slug(locate_repo.has_outline, outline_id, OutlineNotFoundError())
+    registry = get_registry()
+    workspace.set_active(slug)
+    with registry.database(slug).connection() as conn:
+        node = outline_repo.get(conn, outline_id)
+        if node is None:
+            raise OutlineNotFoundError()
+        if node["level"] != "volume":
+            raise ValidationError("只有卷纲节点能「汇总本卷」")
+        chapters = _volume_chapter_rows(conn, outline_id)
+        if not chapters:
+            raise ValidationError("这一卷还没有挂着写完的章节 —— 先完成几章再回来汇总")
+        client = llm_registry.require_client("content")
+        book = _book_context(conn)
+        prompt = build_prompt(
+            "volume_summarize",
+            {
+                "book_title": book.get("title") or "（未命名）",
+                "genre": book.get("genre") or "（未指定）",
+                "volume_title": node.get("title") or "（未命名）",
+                "volume_content": (node.get("content") or "（无）")[:800],
+                "chapters": _volume_summary_lines(chapters),
+            },
+            provider=client.provider,
+        )
+
+    from app.services.llm.json_chat import chat_json
+
+    data, raw = chat_json(client, prompt)
+    raw_summary = data.get("summary")
+    # 只接受字符串：模型给数组/对象时 str() 会把 Python repr 永久写进用户卷纲（审查发现）
+    summary = raw_summary.strip() if isinstance(raw_summary, str) else ""
+    if not summary:
+        raise JSONParseFailedError(detail={"raw_ai_output": raw})
+
+    with registry.database(slug).transaction() as conn:
+        current = outline_repo.get(conn, outline_id) or {}
+        outline_repo.update(
+            conn,
+            outline_id,
+            {"content": _merge_volume_content(current.get("content") or "", summary),
+             "updated_at": now_iso()},
+            now_iso(),
+        )
+    logger.info("volume summarized", **log_fields(slug=slug, outline_id=outline_id, chapters=len(chapters)))
+    return {"outline_id": outline_id, "summary": summary}

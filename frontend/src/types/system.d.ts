@@ -140,3 +140,9 @@ export interface BookStats {
   done_chapters: number;
   daily: { date: string; words_added: number }[];
 }
+
+/** 联网搜索配置（`GET/PUT /api/system/web-search`）。两者留空 = 默认直连 DuckDuckGo。 */
+export interface WebSearchSettings {
+  endpoint: string | null;
+  proxy: string | null;
+}

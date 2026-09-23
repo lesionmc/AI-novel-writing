@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { userMessageOf } from '@/api/client';
 import { useChapterBriefs } from '@/hooks/queries';
 import { useCapabilities } from '@/hooks/useCapabilities';
-import { useAiChat, useWriteHubDraft } from '@/hooks/mutations/aiHub';
+import { useHubChat, useWriteHubDraft } from '@/hooks/mutations/aiHub';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { toast } from '@/stores/toastStore';
 import { ChatHead } from './ChatHead';
@@ -63,7 +63,7 @@ function HubWorkspace({ slug }: { slug: string }) {
   const chapters = useChapterBriefs(slug);
   const capabilities = useCapabilities();
   const noModel = capabilities.data?.llm_configured === false;
-  const chat = useAiChat(slug);
+  const chat = useHubChat(slug);
   const writeDraft = useWriteHubDraft(slug);
 
   const [archive, setArchive] = useState<HubArchive>(() => initialArchive(slug));
@@ -163,7 +163,7 @@ function HubWorkspace({ slug }: { slug: string }) {
       updatedAt: now,
     }));
 
-    chat.mutate(
+    chat.run(
       {
         messages: history.map((m) => ({ role: m.role, content: m.content })),
         chapter_id: chapterId,
@@ -171,7 +171,8 @@ function HubWorkspace({ slug }: { slug: string }) {
         use_web: useWeb,
       },
       {
-        onSuccess: (res) => {
+        onFinal: (res) => {
+          if (res.corrected) toast.info('刚才的回复中途跑偏了，已按完整重写的版本更正');
           const at = Date.now();
           patchSession(sessionId, (s) => ({
             ...s,
@@ -256,8 +257,8 @@ function HubWorkspace({ slug }: { slug: string }) {
           slug={slug}
           messages={messages}
           opening={HUB_WELCOME}
-          pending={chat.isPending || readings.busy}
-          pendingText={readings.busy ? readings.busyText : undefined}
+          pending={chat.busy || readings.busy}
+          pendingText={readings.busy ? readings.busyText : chat.streamText || undefined}
           busyIndex={writingIndex}
           streamIndex={readings.streamIndex}
           onConfirmDraft={(i) => void confirmDraft(i)}
@@ -271,7 +272,7 @@ function HubWorkspace({ slug }: { slug: string }) {
           useWeb={useWeb}
           onUseWebChange={setUseWeb}
           onSend={send}
-          pending={chat.isPending || readings.busy}
+          pending={chat.busy || readings.busy}
           disabled={noModel}
           disabledHint="还没配好 AI 模型，配了就能对话、校对和审校。"
           needChapter={needChapter}

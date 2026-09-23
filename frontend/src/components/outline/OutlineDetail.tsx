@@ -8,6 +8,7 @@ import { Input } from '@/components/common/Input';
 import { Textarea } from '@/components/common/Textarea';
 import { AiExpandButton } from './AiExpandButton';
 import { ChapterCardList } from './ChapterCardList';
+import { SummarizeVolumeButton } from './SummarizeVolumeButton';
 import { defaultNodeLabel } from './outlineModel';
 import styles from './outline.module.css';
 
@@ -99,6 +100,13 @@ export function OutlineDetail({
               outlineId={node.id}
               level={node.level}
               onCandidates={onCandidates}
+              disabled={aiDisabled}
+              disabledHint={aiDisabledHint}
+            />
+          ) : null}
+          {node.level === 'volume' ? (
+            <SummarizeVolumeButton
+              outlineId={node.id}
               disabled={aiDisabled}
               disabledHint={aiDisabledHint}
             />

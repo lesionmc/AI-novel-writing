@@ -1,0 +1,7229 @@
+{
+  "components": {
+    "schemas": {
+      "AffectedChapter": {
+        "properties": {
+          "chapter_seq": {
+            "title": "Chapter Seq",
+            "type": "integer"
+          },
+          "chapter_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Title"
+          },
+          "matched_in": {
+            "title": "Matched In",
+            "type": "string"
+          }
+        },
+        "required": [
+          "chapter_seq",
+          "matched_in"
+        ],
+        "title": "AffectedChapter",
+        "type": "object"
+      },
+      "AiChatContextUsed": {
+        "description": "「这次 AI 读了什么」—— 让\"有记忆\"这件事对用户**看得见**。",
+        "properties": {
+          "characters": {
+            "default": 0,
+            "title": "Characters",
+            "type": "integer"
+          },
+          "foreshadows": {
+            "default": 0,
+            "title": "Foreshadows",
+            "type": "integer"
+          },
+          "has_prev_summary": {
+            "default": false,
+            "title": "Has Prev Summary",
+            "type": "boolean"
+          },
+          "injected_chars": {
+            "default": 0,
+            "title": "Injected Chars",
+            "type": "integer"
+          },
+          "outlines": {
+            "default": 0,
+            "title": "Outlines",
+            "type": "integer"
+          }
+        },
+        "title": "AiChatContextUsed",
+        "type": "object"
+      },
+      "AiChatDraft": {
+        "description": "结构化草稿：`kind` 决定 `payload` 形状（形状与对应写入端点对齐）。",
+        "properties": {
+          "kind": {
+            "enum": [
+              "characters",
+              "world_entries",
+              "outline_nodes",
+              "prose"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "AiChatDraft",
+        "type": "object"
+      },
+      "AiChatRequest": {
+        "properties": {
+          "chapter_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Id"
+          },
+          "intent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intent"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/ChatMessageIn"
+            },
+            "minItems": 1,
+            "title": "Messages",
+            "type": "array"
+          },
+          "use_web": {
+            "default": false,
+            "title": "Use Web",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "messages"
+        ],
+        "title": "AiChatRequest",
+        "type": "object"
+      },
+      "AiChatResponse": {
+        "properties": {
+          "context_used": {
+            "$ref": "#/components/schemas/AiChatContextUsed"
+          },
+          "draft": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AiChatDraft"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reply": {
+            "title": "Reply",
+            "type": "string"
+          },
+          "web_attempted": {
+            "default": false,
+            "title": "Web Attempted",
+            "type": "boolean"
+          },
+          "web_sources": {
+            "items": {
+              "$ref": "#/components/schemas/WebSource"
+            },
+            "title": "Web Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "reply"
+        ],
+        "title": "AiChatResponse",
+        "type": "object"
+      },
+      "AiFlavorResult": {
+        "description": "去 AI 味检测结果。`score` 越高表示 AI 味越重（0-100）。",
+        "properties": {
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/FlavorHitOut"
+            },
+            "title": "Hits",
+            "type": "array"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "score",
+          "hits"
+        ],
+        "title": "AiFlavorResult",
+        "type": "object"
+      },
+      "AvoidDirection": {
+        "properties": {
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "direction",
+          "reason"
+        ],
+        "title": "AvoidDirection",
+        "type": "object"
+      },
+      "BookBrief": {
+        "properties": {
+          "chapter_count": {
+            "default": 0,
+            "title": "Chapter Count",
+            "type": "integer"
+          },
+          "genre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Genre"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "total_words": {
+            "default": 0,
+            "title": "Total Words",
+            "type": "integer"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "slug",
+          "title"
+        ],
+        "title": "BookBrief",
+        "type": "object"
+      },
+      "BookCreate": {
+        "properties": {
+          "genre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Genre"
+          },
+          "premise": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Premise"
+          },
+          "target_words": {
+            "default": 0,
+            "title": "Target Words",
+            "type": "integer"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "BookCreate",
+        "type": "object"
+      },
+      "BookOut": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "genre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Genre"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "premise": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Premise"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "target_words": {
+            "default": 0,
+            "title": "Target Words",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          },
+          "writing_mode": {
+            "default": "assist",
+            "enum": [
+              "manual",
+              "assist",
+              "semi"
+            ],
+            "title": "Writing Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "BookOut",
+        "type": "object"
+      },
+      "BookStats": {
+        "properties": {
+          "chapter_count": {
+            "default": 0,
+            "title": "Chapter Count",
+            "type": "integer"
+          },
+          "daily": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DailyEntry"
+            },
+            "title": "Daily",
+            "type": "array"
+          },
+          "done_chapters": {
+            "default": 0,
+            "title": "Done Chapters",
+            "type": "integer"
+          },
+          "total_words": {
+            "default": 0,
+            "title": "Total Words",
+            "type": "integer"
+          }
+        },
+        "title": "BookStats",
+        "type": "object"
+      },
+      "BookUpdate": {
+        "properties": {
+          "genre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Genre"
+          },
+          "premise": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Premise"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "target_words": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Words"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "writing_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "manual",
+                  "assist",
+                  "semi"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Writing Mode"
+          }
+        },
+        "title": "BookUpdate",
+        "type": "object"
+      },
+      "ChapterBrief": {
+        "description": "章节列表项：**不含正文**（坑 11，TC-13）。",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "status": {
+            "default": "draft",
+            "enum": [
+              "draft",
+              "done"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          },
+          "word_count": {
+            "default": 0,
+            "title": "Word Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "seq",
+          "updated_at"
+        ],
+        "title": "ChapterBrief",
+        "type": "object"
+      },
+      "ChapterCreate": {
+        "properties": {
+          "seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seq"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "ChapterCreate",
+        "type": "object"
+      },
+      "ChapterOut": {
+        "properties": {
+          "chapter_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Summary"
+          },
+          "content": {
+            "default": "",
+            "title": "Content",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "finalized_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finalized At"
+          },
+          "hook": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hook"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "status": {
+            "default": "draft",
+            "enum": [
+              "draft",
+              "done"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          },
+          "word_count": {
+            "default": 0,
+            "title": "Word Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "seq",
+          "updated_at",
+          "created_at"
+        ],
+        "title": "ChapterOut",
+        "type": "object"
+      },
+      "ChapterPatch": {
+        "properties": {
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content"
+          },
+          "hook": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hook"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "ChapterPatch",
+        "type": "object"
+      },
+      "ChapterSaveResult": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "word_count",
+          "updated_at"
+        ],
+        "title": "ChapterSaveResult",
+        "type": "object"
+      },
+      "ChapterVersionCreate": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "title": "ChapterVersionCreate",
+        "type": "object"
+      },
+      "ChapterVersionOut": {
+        "properties": {
+          "chapter_id": {
+            "title": "Chapter Id",
+            "type": "integer"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "chapter_id",
+          "word_count",
+          "created_at"
+        ],
+        "title": "ChapterVersionOut",
+        "type": "object"
+      },
+      "CharacterInput": {
+        "properties": {
+          "alias": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alias"
+          },
+          "appearance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Appearance"
+          },
+          "background": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Background"
+          },
+          "contradiction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contradiction"
+          },
+          "fatal_weakness": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fatal Weakness"
+          },
+          "first_chapter_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Chapter Seq"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "default": "supporting",
+            "enum": [
+              "protagonist",
+              "supporting",
+              "antagonist",
+              "minor"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "secret_desire": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secret Desire"
+          },
+          "status": {
+            "default": "alive",
+            "enum": [
+              "alive",
+              "dead",
+              "missing",
+              "unknown"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "surface_identity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Surface Identity"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "CharacterInput",
+        "type": "object"
+      },
+      "CharacterOut": {
+        "properties": {
+          "alias": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alias"
+          },
+          "appearance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Appearance"
+          },
+          "background": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Background"
+          },
+          "contradiction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contradiction"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "fatal_weakness": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fatal Weakness"
+          },
+          "first_chapter_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Chapter Seq"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "default": "supporting",
+            "enum": [
+              "protagonist",
+              "supporting",
+              "antagonist",
+              "minor"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "secret_desire": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secret Desire"
+          },
+          "status": {
+            "default": "alive",
+            "enum": [
+              "alive",
+              "dead",
+              "missing",
+              "unknown"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "surface_identity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Surface Identity"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CharacterOut",
+        "type": "object"
+      },
+      "CharacterRelationInput": {
+        "properties": {
+          "from_char_id": {
+            "title": "From Char Id",
+            "type": "integer"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "relation_type": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Relation Type",
+            "type": "string"
+          },
+          "to_char_id": {
+            "title": "To Char Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "from_char_id",
+          "to_char_id",
+          "relation_type"
+        ],
+        "title": "CharacterRelationInput",
+        "type": "object"
+      },
+      "CharacterRelationOut": {
+        "description": "人物关系边（关系图谱数据源）。",
+        "properties": {
+          "from_char_id": {
+            "title": "From Char Id",
+            "type": "integer"
+          },
+          "from_name": {
+            "default": "",
+            "title": "From Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "relation_type": {
+            "title": "Relation Type",
+            "type": "string"
+          },
+          "to_char_id": {
+            "title": "To Char Id",
+            "type": "integer"
+          },
+          "to_name": {
+            "default": "",
+            "title": "To Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "from_char_id",
+          "to_char_id",
+          "relation_type"
+        ],
+        "title": "CharacterRelationOut",
+        "type": "object"
+      },
+      "CharacterStateView": {
+        "properties": {
+          "chapter_seq": {
+            "title": "Chapter Seq",
+            "type": "integer"
+          },
+          "character_id": {
+            "title": "Character Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "character_id",
+          "name",
+          "role",
+          "chapter_seq",
+          "state",
+          "source"
+        ],
+        "title": "CharacterStateView",
+        "type": "object"
+      },
+      "CharacterUpdate": {
+        "description": "PATCH 部分更新：所有字段可选，未提供者保持原值。",
+        "properties": {
+          "alias": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alias"
+          },
+          "appearance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Appearance"
+          },
+          "background": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Background"
+          },
+          "contradiction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contradiction"
+          },
+          "fatal_weakness": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fatal Weakness"
+          },
+          "first_chapter_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Chapter Seq"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "enum": [
+                  "protagonist",
+                  "supporting",
+                  "antagonist",
+                  "minor"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "secret_desire": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secret Desire"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "alive",
+                  "dead",
+                  "missing",
+                  "unknown"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "surface_identity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Surface Identity"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          }
+        },
+        "title": "CharacterUpdate",
+        "type": "object"
+      },
+      "CharacterUpdateItem": {
+        "properties": {
+          "accepted": {
+            "default": true,
+            "title": "Accepted",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "state"
+        ],
+        "title": "CharacterUpdateItem",
+        "type": "object"
+      },
+      "ChatMessageIn": {
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatMessageIn",
+        "type": "object"
+      },
+      "ConfirmResult": {
+        "properties": {
+          "character_states_written": {
+            "default": 0,
+            "title": "Character States Written",
+            "type": "integer"
+          },
+          "chunks_indexed": {
+            "default": 0,
+            "title": "Chunks Indexed",
+            "type": "integer"
+          },
+          "foreshadows_closed": {
+            "default": 0,
+            "title": "Foreshadows Closed",
+            "type": "integer"
+          },
+          "foreshadows_created": {
+            "default": 0,
+            "title": "Foreshadows Created",
+            "type": "integer"
+          },
+          "plot_arcs_updated": {
+            "default": 0,
+            "title": "Plot Arcs Updated",
+            "type": "integer"
+          }
+        },
+        "title": "ConfirmResult",
+        "type": "object"
+      },
+      "ConsistencyRequest": {
+        "properties": {
+          "scope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope"
+          }
+        },
+        "title": "ConsistencyRequest",
+        "type": "object"
+      },
+      "ContinueRequest": {
+        "properties": {
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          },
+          "target_chars": {
+            "default": 800,
+            "maximum": 3000.0,
+            "minimum": 200.0,
+            "title": "Target Chars",
+            "type": "integer"
+          }
+        },
+        "title": "ContinueRequest",
+        "type": "object"
+      },
+      "DailyEntry": {
+        "properties": {
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "words_added": {
+            "default": 0,
+            "title": "Words Added",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "title": "DailyEntry",
+        "type": "object"
+      },
+      "DiscoverModelsRequest": {
+        "description": "拉取平台可用模型列表（不落库、不写密钥环）。",
+        "properties": {
+          "api_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Key"
+          },
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "provider": {
+            "minLength": 1,
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider"
+        ],
+        "title": "DiscoverModelsRequest",
+        "type": "object"
+      },
+      "DiscoverModelsResult": {
+        "properties": {
+          "count": {
+            "default": 0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "models": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Models",
+            "type": "array"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "title": "DiscoverModelsResult",
+        "type": "object"
+      },
+      "DraftTestRequest": {
+        "description": "保存前测试草稿配置（不落库、不写密钥环）。",
+        "properties": {
+          "api_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Key"
+          },
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "model": {
+            "minLength": 1,
+            "title": "Model",
+            "type": "string"
+          },
+          "provider": {
+            "minLength": 1,
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "model"
+        ],
+        "title": "DraftTestRequest",
+        "type": "object"
+      },
+      "DraftTextResponse": {
+        "description": "续写 / 扩写共用：只回草稿正文，调用方负责把它放进编辑器让作者删改。",
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "DraftTextResponse",
+        "type": "object"
+      },
+      "ExpandRequest": {
+        "properties": {
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          },
+          "target_chars": {
+            "default": 400,
+            "maximum": 2000.0,
+            "minimum": 100.0,
+            "title": "Target Chars",
+            "type": "integer"
+          },
+          "text": {
+            "description": "要扩写的选中文本",
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "ExpandRequest",
+        "type": "object"
+      },
+      "FlavorHitOut": {
+        "description": "去 AI 味的一条命中。`position` 为去 HTML 后纯文本中的起始字符偏移。",
+        "properties": {
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "suggestion": {
+            "title": "Suggestion",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "cliche",
+              "emotion_label",
+              "adjective_density"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "text",
+          "position",
+          "suggestion"
+        ],
+        "title": "FlavorHitOut",
+        "type": "object"
+      },
+      "ForeshadowInput": {
+        "properties": {
+          "actual_payoff_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Payoff Seq"
+          },
+          "importance": {
+            "default": "medium",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ],
+            "title": "Importance",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "planned_payoff_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Payoff Seq"
+          },
+          "planted_chapter_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planted Chapter Seq"
+          },
+          "status": {
+            "default": "open",
+            "enum": [
+              "open",
+              "closed",
+              "abandoned"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "ForeshadowInput",
+        "type": "object"
+      },
+      "ForeshadowOut": {
+        "properties": {
+          "actual_payoff_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Payoff Seq"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "importance": {
+            "default": "medium",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ],
+            "title": "Importance",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "planned_payoff_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Payoff Seq"
+          },
+          "planted_chapter_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planted Chapter Seq"
+          },
+          "status": {
+            "default": "open",
+            "enum": [
+              "open",
+              "closed",
+              "abandoned"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ForeshadowOut",
+        "type": "object"
+      },
+      "ForeshadowUpdate": {
+        "description": "PATCH 部分更新（如仅标记已回收）。",
+        "properties": {
+          "actual_payoff_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Payoff Seq"
+          },
+          "importance": {
+            "anyOf": [
+              {
+                "enum": [
+                  "high",
+                  "medium",
+                  "low"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Importance"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "planned_payoff_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Payoff Seq"
+          },
+          "planted_chapter_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planted Chapter Seq"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "open",
+                  "closed",
+                  "abandoned"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "ForeshadowUpdate",
+        "type": "object"
+      },
+      "GenreInfo": {
+        "properties": {
+          "benchmarks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Benchmarks",
+            "type": "array"
+          },
+          "blue_ocean_score": {
+            "default": 0,
+            "title": "Blue Ocean Score",
+            "type": "integer"
+          },
+          "category": {
+            "default": "",
+            "title": "Category",
+            "type": "string"
+          },
+          "competition": {
+            "default": 0,
+            "title": "Competition",
+            "type": "integer"
+          },
+          "core_experience": {
+            "default": "",
+            "title": "Core Experience",
+            "type": "string"
+          },
+          "heat": {
+            "default": 0,
+            "title": "Heat",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "typical_tropes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Typical Tropes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "GenreInfo",
+        "type": "object"
+      },
+      "GenresResponse": {
+        "description": "题材库读取结果。缺文件或坏文件时返回空列表 + 可读提示，**不报错**。",
+        "properties": {
+          "genres": {
+            "items": {
+              "$ref": "#/components/schemas/GenreInfo"
+            },
+            "title": "Genres",
+            "type": "array"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "title": "GenresResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "LLMProviderOut": {
+        "properties": {
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "enabled": {
+            "default": 1,
+            "title": "Enabled",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "is_default": {
+            "default": 0,
+            "title": "Is Default",
+            "type": "integer"
+          },
+          "key_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Ref"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "task_role": {
+            "default": "content",
+            "title": "Task Role",
+            "type": "string"
+          },
+          "task_roles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Task Roles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "model"
+        ],
+        "title": "LLMProviderOut",
+        "type": "object"
+      },
+      "NewForeshadowItem": {
+        "properties": {
+          "accepted": {
+            "default": true,
+            "title": "Accepted",
+            "type": "boolean"
+          },
+          "importance": {
+            "default": "medium",
+            "title": "Importance",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "NewForeshadowItem",
+        "type": "object"
+      },
+      "OutlineCandidate": {
+        "properties": {
+          "content": {
+            "default": "",
+            "title": "Content",
+            "type": "string"
+          },
+          "level": {
+            "enum": [
+              "volume",
+              "chapter"
+            ],
+            "title": "Level",
+            "type": "string"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          },
+          "seq": {
+            "default": 1,
+            "title": "Seq",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "level",
+          "title"
+        ],
+        "title": "OutlineCandidate",
+        "type": "object"
+      },
+      "OutlineExpandRequest": {
+        "properties": {
+          "context": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "expand_level": {
+            "enum": [
+              "volume",
+              "chapter"
+            ],
+            "title": "Expand Level",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expand_level"
+        ],
+        "title": "OutlineExpandRequest",
+        "type": "object"
+      },
+      "OutlineExpandResponse": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/OutlineCandidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "expand_level": {
+            "enum": [
+              "volume",
+              "chapter"
+            ],
+            "title": "Expand Level",
+            "type": "string"
+          },
+          "parent_id": {
+            "title": "Parent Id",
+            "type": "integer"
+          },
+          "raw_ai_output": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Ai Output"
+          }
+        },
+        "required": [
+          "parent_id",
+          "expand_level",
+          "candidates"
+        ],
+        "title": "OutlineExpandResponse",
+        "type": "object"
+      },
+      "OutlineInput": {
+        "properties": {
+          "chapter_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Id"
+          },
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content"
+          },
+          "level": {
+            "enum": [
+              "total",
+              "volume",
+              "chapter"
+            ],
+            "title": "Level",
+            "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "seq": {
+            "default": 0,
+            "title": "Seq",
+            "type": "integer"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "level"
+        ],
+        "title": "OutlineInput",
+        "type": "object"
+      },
+      "OutlineOut": {
+        "properties": {
+          "chapter_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Id"
+          },
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "level": {
+            "enum": [
+              "total",
+              "volume",
+              "chapter"
+            ],
+            "title": "Level",
+            "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "seq": {
+            "default": 0,
+            "title": "Seq",
+            "type": "integer"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "level",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "OutlineOut",
+        "type": "object"
+      },
+      "OutlineSummarizeResponse": {
+        "description": "「汇总本卷」结果：卷摘要已写回节点 content（带【本卷摘要】标记）。",
+        "properties": {
+          "outline_id": {
+            "title": "Outline Id",
+            "type": "integer"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "outline_id",
+          "summary"
+        ],
+        "title": "OutlineSummarizeResponse",
+        "type": "object"
+      },
+      "OutlineUpdate": {
+        "description": "PATCH 部分更新。",
+        "properties": {
+          "chapter_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Id"
+          },
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "enum": [
+                  "total",
+                  "volume",
+                  "chapter"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seq"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "OutlineUpdate",
+        "type": "object"
+      },
+      "PlotDirection": {
+        "properties": {
+          "payoff": {
+            "default": "",
+            "title": "Payoff",
+            "type": "string"
+          },
+          "risk": {
+            "default": "",
+            "title": "Risk",
+            "type": "string"
+          },
+          "summary": {
+            "default": "",
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "PlotDirection",
+        "type": "object"
+      },
+      "PlotDirectionsRequest": {
+        "properties": {
+          "count": {
+            "default": 3,
+            "description": "要几条方向",
+            "maximum": 5.0,
+            "minimum": 2.0,
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "title": "PlotDirectionsRequest",
+        "type": "object"
+      },
+      "PlotDirectionsResponse": {
+        "properties": {
+          "directions": {
+            "items": {
+              "$ref": "#/components/schemas/PlotDirection"
+            },
+            "title": "Directions",
+            "type": "array"
+          }
+        },
+        "title": "PlotDirectionsResponse",
+        "type": "object"
+      },
+      "PlotProgressItem": {
+        "properties": {
+          "accepted": {
+            "default": true,
+            "title": "Accepted",
+            "type": "boolean"
+          },
+          "arc": {
+            "title": "Arc",
+            "type": "string"
+          },
+          "progress": {
+            "title": "Progress",
+            "type": "string"
+          }
+        },
+        "required": [
+          "arc",
+          "progress"
+        ],
+        "title": "PlotProgressItem",
+        "type": "object"
+      },
+      "ProofreadIssue": {
+        "properties": {
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          },
+          "problem": {
+            "default": "",
+            "title": "Problem",
+            "type": "string"
+          },
+          "suggestion": {
+            "default": "",
+            "title": "Suggestion",
+            "type": "string"
+          },
+          "type": {
+            "default": "grammar",
+            "enum": [
+              "typo",
+              "punctuation",
+              "grammar",
+              "name",
+              "setting",
+              "repeat"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "excerpt"
+        ],
+        "title": "ProofreadIssue",
+        "type": "object"
+      },
+      "ProofreadRequest": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "title": "ProofreadRequest",
+        "type": "object"
+      },
+      "ProofreadResponse": {
+        "properties": {
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/ProofreadIssue"
+            },
+            "title": "Issues",
+            "type": "array"
+          }
+        },
+        "title": "ProofreadResponse",
+        "type": "object"
+      },
+      "ProviderCreate": {
+        "properties": {
+          "api_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Key"
+          },
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "is_default": {
+            "default": false,
+            "title": "Is Default",
+            "type": "boolean"
+          },
+          "model": {
+            "minLength": 1,
+            "title": "Model",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "task_role": {
+            "default": "content",
+            "enum": [
+              "outline",
+              "content",
+              "review",
+              "embedding"
+            ],
+            "title": "Task Role",
+            "type": "string"
+          },
+          "task_roles": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "outline",
+                    "content",
+                    "review",
+                    "embedding"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Roles"
+          }
+        },
+        "required": [
+          "provider",
+          "model"
+        ],
+        "title": "ProviderCreate",
+        "type": "object"
+      },
+      "ProviderTestResult": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "latency_ms": {
+            "title": "Latency Ms",
+            "type": "integer"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "latency_ms"
+        ],
+        "title": "ProviderTestResult",
+        "type": "object"
+      },
+      "ProviderUpdate": {
+        "properties": {
+          "api_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Key"
+          },
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "is_default": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Default"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "task_role": {
+            "anyOf": [
+              {
+                "enum": [
+                  "outline",
+                  "content",
+                  "review",
+                  "embedding"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Role"
+          },
+          "task_roles": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "outline",
+                    "content",
+                    "review",
+                    "embedding"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Roles"
+          }
+        },
+        "title": "ProviderUpdate",
+        "type": "object"
+      },
+      "ProviderUsage": {
+        "properties": {
+          "calls": {
+            "default": 0,
+            "title": "Calls",
+            "type": "integer"
+          },
+          "completion_tokens": {
+            "default": 0,
+            "title": "Completion Tokens",
+            "type": "integer"
+          },
+          "currency": {
+            "default": "CNY",
+            "title": "Currency",
+            "type": "string"
+          },
+          "estimated": {
+            "default": true,
+            "title": "Estimated",
+            "type": "boolean"
+          },
+          "estimated_cost": {
+            "default": 0.0,
+            "title": "Estimated Cost",
+            "type": "number"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "period": {
+            "$ref": "#/components/schemas/UsagePeriod"
+          },
+          "prompt_tokens": {
+            "default": 0,
+            "title": "Prompt Tokens",
+            "type": "integer"
+          },
+          "provider_id": {
+            "title": "Provider Id",
+            "type": "integer"
+          },
+          "total_tokens": {
+            "default": 0,
+            "title": "Total Tokens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "provider_id",
+          "model",
+          "period"
+        ],
+        "title": "ProviderUsage",
+        "type": "object"
+      },
+      "RecallBudget": {
+        "properties": {
+          "injected_chars": {
+            "default": 0,
+            "title": "Injected Chars",
+            "type": "integer"
+          },
+          "injected_tokens_est": {
+            "default": 0,
+            "title": "Injected Tokens Est",
+            "type": "integer"
+          },
+          "semantic_available": {
+            "default": false,
+            "title": "Semantic Available",
+            "type": "boolean"
+          },
+          "truncated": {
+            "default": false,
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "title": "RecallBudget",
+        "type": "object"
+      },
+      "RecallCharacter": {
+        "properties": {
+          "character_id": {
+            "title": "Character Id",
+            "type": "integer"
+          },
+          "current_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current State"
+          },
+          "last_seen_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Seen Seq"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "relation_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relation Notes"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "character_id",
+          "name",
+          "role"
+        ],
+        "title": "RecallCharacter",
+        "type": "object"
+      },
+      "RecallChunk": {
+        "properties": {
+          "chapter_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Seq"
+          },
+          "chunk_id": {
+            "title": "Chunk Id",
+            "type": "integer"
+          },
+          "score": {
+            "default": 0.0,
+            "title": "Score",
+            "type": "number"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "chunk_id",
+          "text"
+        ],
+        "title": "RecallChunk",
+        "type": "object"
+      },
+      "RecallForeshadow": {
+        "properties": {
+          "age": {
+            "default": 0,
+            "title": "Age",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "importance": {
+            "title": "Importance",
+            "type": "string"
+          },
+          "planted_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planted Seq"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "importance"
+        ],
+        "title": "RecallForeshadow",
+        "type": "object"
+      },
+      "RecallLogOut": {
+        "properties": {
+          "chapter_seq": {
+            "title": "Chapter Seq",
+            "type": "integer"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "injected_chars": {
+            "default": 0,
+            "title": "Injected Chars",
+            "type": "integer"
+          },
+          "injected_tokens_est": {
+            "default": 0,
+            "title": "Injected Tokens Est",
+            "type": "integer"
+          },
+          "query_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query Text"
+          },
+          "semantic_hits": {
+            "default": 0,
+            "title": "Semantic Hits",
+            "type": "integer"
+          },
+          "structured_hits": {
+            "default": 0,
+            "title": "Structured Hits",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "chapter_seq",
+          "created_at"
+        ],
+        "title": "RecallLogOut",
+        "type": "object"
+      },
+      "RecallResult": {
+        "properties": {
+          "budget": {
+            "$ref": "#/components/schemas/RecallBudget"
+          },
+          "chapter_seq": {
+            "title": "Chapter Seq",
+            "type": "integer"
+          },
+          "characters": {
+            "items": {
+              "$ref": "#/components/schemas/RecallCharacter"
+            },
+            "title": "Characters",
+            "type": "array"
+          },
+          "open_foreshadows": {
+            "items": {
+              "$ref": "#/components/schemas/RecallForeshadow"
+            },
+            "title": "Open Foreshadows",
+            "type": "array"
+          },
+          "plot_arcs": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Plot Arcs",
+            "type": "array"
+          },
+          "recalled_chunks": {
+            "items": {
+              "$ref": "#/components/schemas/RecallChunk"
+            },
+            "title": "Recalled Chunks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "chapter_seq"
+        ],
+        "title": "RecallResult",
+        "type": "object"
+      },
+      "SearchHit": {
+        "properties": {
+          "chapter_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Seq"
+          },
+          "snippet": {
+            "default": "",
+            "title": "Snippet",
+            "type": "string"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "integer"
+          },
+          "source_type": {
+            "title": "Source Type",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "source_type",
+          "source_id"
+        ],
+        "title": "SearchHit",
+        "type": "object"
+      },
+      "SensitiveHitOut": {
+        "description": "敏感词命中项，按「词条 × 章节」聚合。",
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "chapter_seq": {
+            "title": "Chapter Seq",
+            "type": "integer"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "word": {
+            "title": "Word",
+            "type": "string"
+          }
+        },
+        "required": [
+          "word",
+          "category",
+          "chapter_seq",
+          "count"
+        ],
+        "title": "SensitiveHitOut",
+        "type": "object"
+      },
+      "SensitiveResult": {
+        "description": "敏感词自查结果。`total_hits` 为全部命中次数之和。\n\n`wordlist_available` 必须透出：词库为空时 `total_hits=0` 会被用户误读成\n「稿子没问题」，而实际上**什么都没检查**（项目红线：禁止假安全感，见\n`11-敏感词库说明.md`）。前端据此显示醒目提示。",
+        "properties": {
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/SensitiveHitOut"
+            },
+            "title": "Hits",
+            "type": "array"
+          },
+          "total_hits": {
+            "title": "Total Hits",
+            "type": "integer"
+          },
+          "wordlist_available": {
+            "title": "Wordlist Available",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "total_hits",
+          "wordlist_available",
+          "hits"
+        ],
+        "title": "SensitiveResult",
+        "type": "object"
+      },
+      "SystemCapabilities": {
+        "description": "本机能力自检状态：只读、无副作用、不联网。",
+        "properties": {
+          "fts_available": {
+            "title": "Fts Available",
+            "type": "boolean"
+          },
+          "llm_configured": {
+            "title": "Llm Configured",
+            "type": "boolean"
+          },
+          "vector_available": {
+            "title": "Vector Available",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "vector_available",
+          "fts_available",
+          "llm_configured"
+        ],
+        "title": "SystemCapabilities",
+        "type": "object"
+      },
+      "TopicAdviceRequest": {
+        "description": "对应指南的「四问」。",
+        "properties": {
+          "daily_words": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Daily Words"
+          },
+          "favorite_genres": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Favorite Genres",
+            "type": "array"
+          },
+          "target_length": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Length"
+          },
+          "unique_background": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unique Background"
+          }
+        },
+        "required": [
+          "favorite_genres"
+        ],
+        "title": "TopicAdviceRequest",
+        "type": "object"
+      },
+      "TopicAdviceResponse": {
+        "properties": {
+          "avoid": {
+            "items": {
+              "$ref": "#/components/schemas/AvoidDirection"
+            },
+            "title": "Avoid",
+            "type": "array"
+          },
+          "recommendations": {
+            "items": {
+              "$ref": "#/components/schemas/TopicRecommendation"
+            },
+            "title": "Recommendations",
+            "type": "array"
+          }
+        },
+        "title": "TopicAdviceResponse",
+        "type": "object"
+      },
+      "TopicRecommendation": {
+        "properties": {
+          "benchmarks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Benchmarks",
+            "type": "array"
+          },
+          "niche": {
+            "title": "Niche",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "sample_premise": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample Premise"
+          }
+        },
+        "required": [
+          "niche",
+          "reason"
+        ],
+        "title": "TopicRecommendation",
+        "type": "object"
+      },
+      "UsagePeriod": {
+        "properties": {
+          "from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From"
+          },
+          "to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To"
+          }
+        },
+        "title": "UsagePeriod",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "WebSearchSettings": {
+        "description": "联网搜索配置。两者都留空 = 用默认 DuckDuckGo 直连（大陆网络需代理）。\n\nendpoint 约定：自建/第三方 JSON 端点，`GET {endpoint}?q=...` 返回\n`{\"results\": [{\"title\",\"url\",\"snippet\"}]}`。",
+        "properties": {
+          "endpoint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endpoint"
+          },
+          "proxy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proxy"
+          }
+        },
+        "title": "WebSearchSettings",
+        "type": "object"
+      },
+      "WebSource": {
+        "description": "一条联网检索结果（标题 / 地址 / 摘要），前端展示为可点开的来源。",
+        "properties": {
+          "snippet": {
+            "default": "",
+            "title": "Snippet",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "url"
+        ],
+        "title": "WebSource",
+        "type": "object"
+      },
+      "WordlistStatus": {
+        "additionalProperties": false,
+        "description": "敏感词库状态（设置页展示用）。",
+        "properties": {
+          "configured": {
+            "title": "Configured",
+            "type": "boolean"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "configured",
+          "count",
+          "path"
+        ],
+        "title": "WordlistStatus",
+        "type": "object"
+      },
+      "WorldEntryInput": {
+        "properties": {
+          "category": {
+            "default": "other",
+            "enum": [
+              "force",
+              "place",
+              "rule",
+              "item",
+              "other"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "WorldEntryInput",
+        "type": "object"
+      },
+      "WorldEntryOut": {
+        "properties": {
+          "category": {
+            "default": "other",
+            "enum": [
+              "force",
+              "place",
+              "rule",
+              "item",
+              "other"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "WorldEntryOut",
+        "type": "object"
+      },
+      "WorldEntryUpdate": {
+        "description": "PATCH 部分更新。",
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "enum": [
+                  "force",
+                  "place",
+                  "rule",
+                  "item",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          }
+        },
+        "title": "WorldEntryUpdate",
+        "type": "object"
+      },
+      "WritebackSuggestion": {
+        "description": "finalize 返回、用户可改、confirm 落库，三处共用同一结构。",
+        "properties": {
+          "chapter_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Summary"
+          },
+          "character_updates": {
+            "items": {
+              "$ref": "#/components/schemas/CharacterUpdateItem"
+            },
+            "title": "Character Updates",
+            "type": "array"
+          },
+          "closed_foreshadow_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Closed Foreshadow Ids",
+            "type": "array"
+          },
+          "hook": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hook"
+          },
+          "new_foreshadows": {
+            "items": {
+              "$ref": "#/components/schemas/NewForeshadowItem"
+            },
+            "title": "New Foreshadows",
+            "type": "array"
+          },
+          "plot_progress": {
+            "items": {
+              "$ref": "#/components/schemas/PlotProgressItem"
+            },
+            "title": "Plot Progress",
+            "type": "array"
+          },
+          "raw_ai_output": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Ai Output"
+          }
+        },
+        "title": "WritebackSuggestion",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "AI 小说创作工具",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/audit/wordlist-status": {
+      "get": {
+        "operationId": "wordlist_status_api_audit_wordlist_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordlistStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Wordlist Status",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/books": {
+      "get": {
+        "operationId": "list_books_api_books_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BookBrief"
+                  },
+                  "title": "Response List Books Api Books Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Books",
+        "tags": [
+          "books"
+        ]
+      },
+      "post": {
+        "operationId": "create_book_api_books_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Book",
+        "tags": [
+          "books"
+        ]
+      }
+    },
+    "/api/books/{book}": {
+      "delete": {
+        "operationId": "delete_book_api_books__book__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Book",
+        "tags": [
+          "books"
+        ]
+      },
+      "get": {
+        "operationId": "get_book_api_books__book__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Book",
+        "tags": [
+          "books"
+        ]
+      },
+      "patch": {
+        "operationId": "update_book_api_books__book__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Book",
+        "tags": [
+          "books"
+        ]
+      }
+    },
+    "/api/books/{book}/ai/chat": {
+      "post": {
+        "description": "一轮「有记忆」的对话（非流式）。**不写库** —— 草稿必须由用户确认后才落库。",
+        "operationId": "ai_chat_api_books__book__ai_chat_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiChatResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ai Chat",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/books/{book}/ai/chat/stream": {
+      "post": {
+        "description": "流式对话：SSE 帧 delta（人话片段）→ final（完整结果）/ error。\n\n前置检查（作品/章节/模型）在开流前同步完成，4xx 仍走正常状态码；\n开流之后的异常以 error 帧送达。与审校同一套 SSE 约定。",
+        "operationId": "ai_chat_stream_api_books__book__ai_chat_stream_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ai Chat Stream",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/books/{book}/audit/consistency/stream": {
+      "post": {
+        "description": "一致性审校（SSE）。\n\n事件类型与契约一致：`progress` / `conflict` / `done`。\n\n**所有 4xx 类前置检查必须在这里就做完**（`ensure_ready(book)`：作品存在 + 模型可用）——\n一旦开始流式响应，HTTP 状态码就定型了，之后再抛异常只会让客户端看到\n「莫名断掉的流」（实测会变成 `RuntimeError: ... response already started`）。",
+        "operationId": "audit_consistency_stream_api_books__book__audit_consistency_stream_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ConsistencyRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Audit Consistency Stream",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/books/{book}/audit/sensitive": {
+      "post": {
+        "operationId": "audit_sensitive_api_books__book__audit_sensitive_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SensitiveResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Audit Sensitive",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/books/{book}/backup": {
+      "get": {
+        "description": "整本 zip 备份（库 + meta + 导出件），下载即得一份完整一致的迁移包。",
+        "operationId": "backup_book_api_books__book__backup_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Backup Book",
+        "tags": [
+          "export"
+        ]
+      }
+    },
+    "/api/books/{book}/chapters": {
+      "get": {
+        "operationId": "list_chapters_api_books__book__chapters_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ChapterBrief"
+                  },
+                  "title": "Response List Chapters Api Books  Book  Chapters Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Chapters",
+        "tags": [
+          "chapters"
+        ]
+      },
+      "post": {
+        "operationId": "create_chapter_api_books__book__chapters_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChapterCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Chapter",
+        "tags": [
+          "chapters"
+        ]
+      }
+    },
+    "/api/books/{book}/character-relations": {
+      "get": {
+        "operationId": "list_character_relations_api_books__book__character_relations_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CharacterRelationOut"
+                  },
+                  "title": "Response List Character Relations Api Books  Book  Character Relations Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Character Relations",
+        "tags": [
+          "settings"
+        ]
+      },
+      "post": {
+        "operationId": "create_character_relation_api_books__book__character_relations_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CharacterRelationInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterRelationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Character Relation",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/books/{book}/character-relations/{relation_id}": {
+      "delete": {
+        "operationId": "delete_character_relation_api_books__book__character_relations__relation_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          },
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "relation_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Relation Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Character Relation",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/books/{book}/characters": {
+      "get": {
+        "operationId": "list_characters_api_books__book__characters_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "role",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Role"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CharacterOut"
+                  },
+                  "title": "Response List Characters Api Books  Book  Characters Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Characters",
+        "tags": [
+          "settings"
+        ]
+      },
+      "post": {
+        "operationId": "create_character_api_books__book__characters_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CharacterInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Character",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/books/{book}/export": {
+      "get": {
+        "operationId": "export_book_api_books__book__export_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": true,
+            "schema": {
+              "title": "Format",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "range",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Range"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Book",
+        "tags": [
+          "export"
+        ]
+      }
+    },
+    "/api/books/{book}/foreshadows": {
+      "get": {
+        "operationId": "list_foreshadows_api_books__book__foreshadows_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "open",
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ForeshadowOut"
+                  },
+                  "title": "Response List Foreshadows Api Books  Book  Foreshadows Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Foreshadows",
+        "tags": [
+          "settings"
+        ]
+      },
+      "post": {
+        "operationId": "create_foreshadow_api_books__book__foreshadows_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForeshadowInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForeshadowOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Foreshadow",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/books/{book}/memory/character-states": {
+      "get": {
+        "operationId": "get_character_states_api_books__book__memory_character_states_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "upto_seq",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Upto Seq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CharacterStateView"
+                  },
+                  "title": "Response Get Character States Api Books  Book  Memory Character States Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Character States",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/books/{book}/memory/plot-arcs": {
+      "get": {
+        "operationId": "get_plot_arcs_api_books__book__memory_plot_arcs_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response Get Plot Arcs Api Books  Book  Memory Plot Arcs Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Plot Arcs",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/books/{book}/memory/summary": {
+      "get": {
+        "operationId": "get_summary_api_books__book__memory_summary_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Summary Api Books  Book  Memory Summary Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Summary",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/books/{book}/outlines": {
+      "get": {
+        "operationId": "list_outlines_api_books__book__outlines_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "level",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Parent Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OutlineOut"
+                  },
+                  "title": "Response List Outlines Api Books  Book  Outlines Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Outlines",
+        "tags": [
+          "outlines"
+        ]
+      },
+      "post": {
+        "operationId": "create_outline_api_books__book__outlines_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OutlineInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutlineOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Outline",
+        "tags": [
+          "outlines"
+        ]
+      }
+    },
+    "/api/books/{book}/recall-logs": {
+      "get": {
+        "operationId": "list_recall_logs_api_books__book__recall_logs_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RecallLogOut"
+                  },
+                  "title": "Response List Recall Logs Api Books  Book  Recall Logs Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Recall Logs",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/books/{book}/search": {
+      "get": {
+        "description": "M1 仅覆盖设定库范围（character / world_entry）；全书级检索留 M3。",
+        "operationId": "search_book_api_books__book__search_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SearchHit"
+                  },
+                  "title": "Response Search Book Api Books  Book  Search Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Book",
+        "tags": [
+          "export"
+        ]
+      }
+    },
+    "/api/books/{book}/stats": {
+      "get": {
+        "operationId": "get_stats_api_books__book__stats_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookStats"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Stats",
+        "tags": [
+          "export"
+        ]
+      }
+    },
+    "/api/books/{book}/world-entries": {
+      "get": {
+        "operationId": "list_world_entries_api_books__book__world_entries_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Parent Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WorldEntryOut"
+                  },
+                  "title": "Response List World Entries Api Books  Book  World Entries Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List World Entries",
+        "tags": [
+          "settings"
+        ]
+      },
+      "post": {
+        "operationId": "create_world_entry_api_books__book__world_entries_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorldEntryInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorldEntryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create World Entry",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/chapters/{chapter_id}": {
+      "delete": {
+        "operationId": "delete_chapter_api_chapters__chapter_id__delete",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Chapter",
+        "tags": [
+          "chapters"
+        ]
+      },
+      "get": {
+        "operationId": "get_chapter_api_chapters__chapter_id__get",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Chapter",
+        "tags": [
+          "chapters"
+        ]
+      },
+      "patch": {
+        "operationId": "save_chapter_api_chapters__chapter_id__patch",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChapterPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterSaveResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save Chapter",
+        "tags": [
+          "chapters"
+        ]
+      }
+    },
+    "/api/chapters/{chapter_id}/audit/ai-flavor": {
+      "post": {
+        "operationId": "audit_ai_flavor_api_chapters__chapter_id__audit_ai_flavor_post",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiFlavorResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Audit Ai Flavor",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/chapters/{chapter_id}/continue": {
+      "post": {
+        "description": "续写草稿。**不写库** —— 由前端插入编辑器，作者自己删改。",
+        "operationId": "continue_writing_api_chapters__chapter_id__continue_post",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ContinueRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftTextResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Continue Writing",
+        "tags": [
+          "writing"
+        ]
+      }
+    },
+    "/api/chapters/{chapter_id}/expand": {
+      "post": {
+        "description": "扩写草稿（必须有选中文本）。**不写库。**",
+        "operationId": "expand_api_chapters__chapter_id__expand_post",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftTextResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Expand",
+        "tags": [
+          "writing"
+        ]
+      }
+    },
+    "/api/chapters/{chapter_id}/finalize": {
+      "post": {
+        "operationId": "finalize_chapter_api_chapters__chapter_id__finalize_post",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WritebackSuggestion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Finalize Chapter",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/chapters/{chapter_id}/finalize/confirm": {
+      "post": {
+        "operationId": "confirm_chapter_api_chapters__chapter_id__finalize_confirm_post",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WritebackSuggestion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm Chapter",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/chapters/{chapter_id}/plot-directions": {
+      "post": {
+        "description": "给几条可选剧情走向。**不产出正文。**",
+        "operationId": "plot_directions_api_chapters__chapter_id__plot_directions_post",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/PlotDirectionsRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlotDirectionsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Plot Directions",
+        "tags": [
+          "writing"
+        ]
+      }
+    },
+    "/api/chapters/{chapter_id}/proofread": {
+      "post": {
+        "description": "挑错 + 给修改建议。**只报问题，不返回改写后的正文。**",
+        "operationId": "proofread_api_chapters__chapter_id__proofread_post",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ProofreadRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProofreadResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Proofread",
+        "tags": [
+          "writing"
+        ]
+      }
+    },
+    "/api/chapters/{chapter_id}/recall": {
+      "get": {
+        "description": "写前召回：**有写 recall_log 副作用，前端须禁缓存、禁并发重复触发**。",
+        "operationId": "get_recall_api_chapters__chapter_id__recall_get",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecallResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Recall",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/chapters/{chapter_id}/versions": {
+      "get": {
+        "operationId": "list_versions_api_chapters__chapter_id__versions_get",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ChapterVersionOut"
+                  },
+                  "title": "Response List Versions Api Chapters  Chapter Id  Versions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Versions",
+        "tags": [
+          "chapters"
+        ]
+      },
+      "post": {
+        "operationId": "create_version_api_chapters__chapter_id__versions_post",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChapterVersionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterVersionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Version",
+        "tags": [
+          "chapters"
+        ]
+      }
+    },
+    "/api/chapters/{chapter_id}/versions/{version_id}/content": {
+      "get": {
+        "description": "版本正文（「对比当前」功能的数据源）。只读、无副作用。",
+        "operationId": "get_version_content_api_chapters__chapter_id__versions__version_id__content_get",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Version Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Version Content Api Chapters  Chapter Id  Versions  Version Id  Content Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Version Content",
+        "tags": [
+          "chapters"
+        ]
+      }
+    },
+    "/api/chapters/{chapter_id}/versions/{version_id}/restore": {
+      "post": {
+        "operationId": "restore_version_api_chapters__chapter_id__versions__version_id__restore_post",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Version Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Version",
+        "tags": [
+          "chapters"
+        ]
+      }
+    },
+    "/api/characters/{char_id}": {
+      "delete": {
+        "operationId": "delete_character_api_characters__char_id__delete",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "char_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Char Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Character",
+        "tags": [
+          "settings"
+        ]
+      },
+      "get": {
+        "operationId": "get_character_api_characters__char_id__get",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "char_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Char Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Character",
+        "tags": [
+          "settings"
+        ]
+      },
+      "patch": {
+        "operationId": "update_character_api_characters__char_id__patch",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "char_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Char Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CharacterUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Character",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/characters/{char_id}/affected-chapters": {
+      "get": {
+        "operationId": "affected_chapters_api_characters__char_id__affected_chapters_get",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "char_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Char Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AffectedChapter"
+                  },
+                  "title": "Response Affected Chapters Api Characters  Char Id  Affected Chapters Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Affected Chapters",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/foreshadows/{fs_id}": {
+      "patch": {
+        "operationId": "update_foreshadow_api_foreshadows__fs_id__patch",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "fs_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Fs Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForeshadowUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForeshadowOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Foreshadow",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/outlines/{outline_id}": {
+      "delete": {
+        "operationId": "delete_outline_api_outlines__outline_id__delete",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "outline_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Outline Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Outline",
+        "tags": [
+          "outlines"
+        ]
+      },
+      "patch": {
+        "operationId": "update_outline_api_outlines__outline_id__patch",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "outline_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Outline Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OutlineUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutlineOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Outline",
+        "tags": [
+          "outlines"
+        ]
+      }
+    },
+    "/api/outlines/{outline_id}/expand": {
+      "post": {
+        "operationId": "expand_outline_api_outlines__outline_id__expand_post",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "outline_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Outline Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OutlineExpandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutlineExpandResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Expand Outline",
+        "tags": [
+          "outlines"
+        ]
+      }
+    },
+    "/api/outlines/{outline_id}/summarize-volume": {
+      "post": {
+        "description": "AI 把本卷各章摘要压成卷摘要并写回节点（记忆金字塔；重跑只替换标记段）。",
+        "operationId": "summarize_volume_api_outlines__outline_id__summarize_volume_post",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "outline_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Outline Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutlineSummarizeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Summarize Volume",
+        "tags": [
+          "outlines"
+        ]
+      }
+    },
+    "/api/providers": {
+      "get": {
+        "operationId": "list_providers_api_providers_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LLMProviderOut"
+                  },
+                  "title": "Response List Providers Api Providers Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Providers",
+        "tags": [
+          "providers"
+        ]
+      },
+      "post": {
+        "operationId": "create_provider_api_providers_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMProviderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Provider",
+        "tags": [
+          "providers"
+        ]
+      }
+    },
+    "/api/providers/discover-models": {
+      "post": {
+        "operationId": "discover_models_api_providers_discover_models_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscoverModelsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoverModelsResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Discover Models",
+        "tags": [
+          "providers"
+        ]
+      }
+    },
+    "/api/providers/test-draft": {
+      "post": {
+        "operationId": "test_draft_api_providers_test_draft_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DraftTestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderTestResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Test Draft",
+        "tags": [
+          "providers"
+        ]
+      }
+    },
+    "/api/providers/{provider_id}": {
+      "delete": {
+        "operationId": "delete_provider_api_providers__provider_id__delete",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Provider Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Provider",
+        "tags": [
+          "providers"
+        ]
+      },
+      "patch": {
+        "operationId": "update_provider_api_providers__provider_id__patch",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Provider Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMProviderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Provider",
+        "tags": [
+          "providers"
+        ]
+      }
+    },
+    "/api/providers/{provider_id}/test": {
+      "post": {
+        "operationId": "test_provider_api_providers__provider_id__test_post",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Provider Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderTestResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Test Provider",
+        "tags": [
+          "providers"
+        ]
+      }
+    },
+    "/api/providers/{provider_id}/usage": {
+      "get": {
+        "operationId": "get_usage_api_providers__provider_id__usage_get",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Provider Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderUsage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Usage",
+        "tags": [
+          "providers"
+        ]
+      }
+    },
+    "/api/system/capabilities": {
+      "get": {
+        "operationId": "get_capabilities_api_system_capabilities_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemCapabilities"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Capabilities",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/api/system/web-search": {
+      "get": {
+        "operationId": "get_web_search_api_system_web_search_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebSearchSettings"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Web Search",
+        "tags": [
+          "system"
+        ]
+      },
+      "put": {
+        "operationId": "put_web_search_api_system_web_search_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebSearchSettings"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebSearchSettings"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Web Search",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/api/topics/advice": {
+      "post": {
+        "description": "选题建议（同步生成，**不落库**）。",
+        "operationId": "topic_advice_api_topics_advice_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TopicAdviceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TopicAdviceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Topic Advice",
+        "tags": [
+          "topics"
+        ]
+      }
+    },
+    "/api/topics/genres": {
+      "get": {
+        "description": "题材知识库（只读本地文件，无副作用、不调模型）。",
+        "operationId": "list_genres_api_topics_genres_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenresResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Genres",
+        "tags": [
+          "topics"
+        ]
+      }
+    },
+    "/api/world-entries/{entry_id}": {
+      "delete": {
+        "operationId": "delete_world_entry_api_world_entries__entry_id__delete",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Entry Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete World Entry",
+        "tags": [
+          "settings"
+        ]
+      },
+      "patch": {
+        "operationId": "update_world_entry_api_world_entries__entry_id__patch",
+        "parameters": [
+          {
+            "description": "资源 id（int64 正整数）",
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "description": "资源 id（int64 正整数）",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Entry Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorldEntryUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorldEntryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update World Entry",
+        "tags": [
+          "settings"
+        ]
+      }
+    }
+  }
+}

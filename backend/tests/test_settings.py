@@ -90,3 +90,52 @@ def test_character_delete_cascades_state(client, book):
     resp = client.get(f"/api/characters/{char['id']}")
     assert resp.status_code == 404
     assert resp.json()["error"]["code"] == "CHARACTER_NOT_FOUND"
+
+
+# ------------------------------------------------------------- 人物关系（图谱）
+def test_character_relations_crud_and_guards(client, book):
+    a = client.post(f"/api/books/{book}/characters", json={"name": "陈默"}).json()
+    b = client.post(f"/api/books/{book}/characters", json={"name": "老周"}).json()
+    rel = client.post(
+        f"/api/books/{book}/character-relations",
+        json={"from_char_id": a["id"], "to_char_id": b["id"], "relation_type": "师徒", "note": "暗面师徒"},
+    )
+    assert rel.status_code == 201, rel.text
+    row = rel.json()
+    assert row["from_name"] == "陈默" and row["to_name"] == "老周" and row["relation_type"] == "师徒"
+    assert [r["id"] for r in client.get(f"/api/books/{book}/character-relations").json()] == [row["id"]]
+
+    dup = client.post(
+        f"/api/books/{book}/character-relations",
+        json={"from_char_id": a["id"], "to_char_id": b["id"], "relation_type": "师徒"},
+    )
+    assert dup.status_code == 409  # UNIQUE 挡重复边
+
+    self_rel = client.post(
+        f"/api/books/{book}/character-relations",
+        json={"from_char_id": a["id"], "to_char_id": a["id"], "relation_type": "心魔"},
+    )
+    assert self_rel.status_code == 400
+
+    ghost = client.post(
+        f"/api/books/{book}/character-relations",
+        json={"from_char_id": a["id"], "to_char_id": 9999, "relation_type": "宿敌"},
+    )
+    assert ghost.status_code == 404
+
+    assert client.delete(f"/api/books/{book}/character-relations/{row['id']}").status_code == 204
+    assert client.get(f"/api/books/{book}/character-relations").json() == []
+
+
+def test_character_relations_empty_book_ok(client, book):
+    assert client.get(f"/api/books/{book}/character-relations").json() == []
+
+
+def test_relation_type_blank_rejected(client, book):
+    a = client.post(f"/api/books/{book}/characters", json={"name": "甲"}).json()
+    b = client.post(f"/api/books/{book}/characters", json={"name": "乙"}).json()
+    blank = client.post(
+        f"/api/books/{book}/character-relations",
+        json={"from_char_id": a["id"], "to_char_id": b["id"], "relation_type": "   "},
+    )
+    assert blank.status_code == 400  # 纯空白不能当关系类型（strip 后校验）

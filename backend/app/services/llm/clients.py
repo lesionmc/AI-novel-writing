@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import os
+from collections.abc import Iterator
 
 import httpx
 
@@ -76,6 +78,48 @@ class OpenAICompatibleClient:
         # 掩盖真实原因。统一成空串，交给调用方的 JSON 容错给出可读错误。
         content = data["choices"][0]["message"].get("content")
         return content if isinstance(content, str) else ""
+
+    def chat_stream(
+        self,
+        messages: list[ChatMessage],
+        *,
+        json_mode: bool = False,
+        timeout: float | None = None,
+    ) -> Iterator[str]:
+        """OpenAI 兼容流式（SSE `data:` 行）。不支持流的平台会在解析层拿不到
+        delta 而自然输出空串——final 帧仍由完整 JSON 解析兜底。"""
+        payload: dict = {"model": self.model, "messages": messages, "stream": True}
+        if json_mode:
+            payload["response_format"] = {"type": "json_object"}
+        try:
+            with httpx.stream(
+                "POST",
+                f"{self.base_url}/chat/completions",
+                headers=self._headers(),
+                json=payload,
+                timeout=timeout if timeout is not None else default_llm_timeout(),
+            ) as resp:
+                if resp.status_code >= 400:
+                    resp.read()
+                    raise LLMRequestError(
+                        readable_http_error(resp.status_code, self.provider)
+                    )
+                for line in resp.iter_lines():
+                    if not line or not line.startswith("data:"):
+                        continue
+                    body = line[5:].strip()
+                    if body == "[DONE]":
+                        return
+                    try:
+                        obj = json.loads(body)
+                    except json.JSONDecodeError:
+                        continue
+                    choices = obj.get("choices") or [{}]
+                    delta = (choices[0].get("delta") or {}).get("content")
+                    if isinstance(delta, str) and delta:
+                        yield delta
+        except httpx.HTTPError as exc:
+            raise LLMRequestError(detail=None) from exc
 
     def embed(self, texts: list[str], *, timeout: float = 60.0) -> list[list[float]]:
         try:
@@ -164,6 +208,41 @@ class OllamaClient:
             raise LLMRequestError(readable_http_error(resp.status_code, self.provider))
         data = resp.json()
         return str(data.get("message", {}).get("content", ""))
+
+    def chat_stream(
+        self,
+        messages: list[ChatMessage],
+        *,
+        json_mode: bool = False,
+        timeout: float = 120.0,
+    ) -> Iterator[str]:
+        """Ollama 流式是 NDJSON（每行一个完整 JSON），不是 SSE。"""
+        payload: dict = {"model": self.model, "messages": messages, "stream": True}
+        if json_mode:
+            payload["format"] = "json"
+        try:
+            with httpx.stream(
+                "POST", f"{self.base_url}/api/chat", json=payload, timeout=timeout
+            ) as resp:
+                if resp.status_code >= 400:
+                    resp.read()
+                    raise LLMRequestError(
+                        readable_http_error(resp.status_code, self.provider)
+                    )
+                for line in resp.iter_lines():
+                    if not line:
+                        continue
+                    try:
+                        obj = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    piece = (obj.get("message") or {}).get("content")
+                    if isinstance(piece, str) and piece:
+                        yield piece
+                    if obj.get("done"):
+                        return
+        except httpx.HTTPError as exc:
+            raise LLMRequestError("没能连上本地 Ollama 服务，请确认它已启动") from exc
 
     def embed(self, texts: list[str], *, timeout: float = 120.0) -> list[list[float]]:
         vectors: list[list[float]] = []

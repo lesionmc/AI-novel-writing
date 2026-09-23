@@ -101,8 +101,9 @@ export function ChatStream({
                 <div className={styles.webSources}>
                   <Icon name="world" size={16} />
                   <span>
-                    联网检索没有命中 —— 可能是本机网络到不了搜索引擎（可给后端配
-                    HTTP(S)_PROXY 后重试）、搜索引擎限流，或确实没有结果；也可以关掉「联网」直接问。
+                    联网检索没有命中 —— 可能是本机网络到不了搜索引擎（可在「设置 →
+                    联网搜索」填代理或自建端点）、搜索引擎限流，或确实没有结果；
+                    也可以关掉「联网」直接问。
                   </span>
                 </div>
               ) : null}
