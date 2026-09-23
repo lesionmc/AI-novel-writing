@@ -223,7 +223,7 @@ export function WritebackDialog({
           ) : null}
 
           {model.closedForeshadows.length > 0 ? (
-            <WritebackSection icon="recover" title="已交代的线索" countLabel={ratio(model.closedForeshadows)}>
+            <WritebackSection icon="recover" title="本章回收的线索" countLabel={ratio(model.closedForeshadows)}>
               <WritebackItemList>
                 {model.closedForeshadows.map((f) => (
                   <ClosedForeshadowItem

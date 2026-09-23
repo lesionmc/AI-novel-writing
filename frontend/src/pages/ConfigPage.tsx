@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useBook, useChapterBriefs, useProviders } from '@/hooks/queries';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ErrorBar } from '@/components/common/ErrorBar';
@@ -21,6 +21,7 @@ import styles from '@/components/config/config.module.css';
  */
 export function ConfigPage() {
   const { slug = '' } = useParams();
+  const navigate = useNavigate();
   const bookScoped = Boolean(slug);
   const bookQuery = useBook(slug);
   const providersQuery = useProviders();
@@ -37,6 +38,9 @@ export function ConfigPage() {
           icon="error"
           title="打不开这部作品"
           description="它可能已被移入回收目录。回到书库看看当前有哪些作品。"
+          actionLabel="返回书库"
+          actionIcon="book"
+          onAction={() => navigate('/')}
         />
       </main>
     );

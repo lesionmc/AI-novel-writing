@@ -139,6 +139,59 @@
   font-size: var(--text-xs);
 }
 
+/* 「一个模型全包」快捷条 —— 一个模型同时干四件事，不用逐项点四次 */
+.roleToolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-1);
+  border-bottom: var(--border-width-1) solid var(--color-border-subtle);
+}
+
+.roleToolbarHint {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+  max-width: 60ch;
+}
+
+/* ---------- 表单里的「任务角色」多选组 ---------- */
+.roleFieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.roleChecks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-2) 0;
+}
+
+@media (max-width: 900px) {
+  .roleChecks {
+    grid-template-columns: 1fr;
+  }
+}
+
+.roleCheck {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+
+.roleCheck input {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
 /* ---------- 模型卡片 ---------- */
 .providerList {
   display: flex;
@@ -252,6 +305,13 @@
 .keyToggle:hover {
   background-color: var(--color-surface-hover);
   color: var(--color-text-primary);
+}
+
+/* 视觉仍是 28×28，热区扩到 44×44（28 + 8×2，WCAG 2.5.5）—— 同 Toast 关闭按钮的做法 */
+.keyToggle::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
 }
 
 .keyRef {

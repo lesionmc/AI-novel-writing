@@ -34,7 +34,7 @@ from app.services.llm.secrets import delete_secret, load_secret, new_key_ref, st
 logger = get_logger(__name__)
 
 
-def _to_out(row: dict) -> LLMProviderOut:
+def _to_out(row: dict, roles: list[str] | None = None) -> LLMProviderOut:
     return LLMProviderOut(
         id=row["id"],
         provider=row["provider"],
@@ -42,6 +42,7 @@ def _to_out(row: dict) -> LLMProviderOut:
         base_url=row.get("base_url"),
         key_ref=row.get("key_ref"),
         task_role=row.get("task_role") or "content",
+        task_roles=list(roles or []),
         is_default=int(row.get("is_default") or 0),
         enabled=int(row.get("enabled") or 0),
     )
@@ -50,7 +51,8 @@ def _to_out(row: dict) -> LLMProviderOut:
 def list_providers() -> list[LLMProviderOut]:
     with get_global_database().connection() as conn:
         rows = provider_repo.list_all(conn)
-    return [_to_out(r) for r in rows]
+        grouped = provider_repo.roles_map(conn)  # 一次取全，避免 N+1
+    return [_to_out(r, grouped.get(int(r["id"]), [])) for r in rows]
 
 
 def create_provider(payload: ProviderCreate) -> LLMProviderOut:
@@ -59,6 +61,8 @@ def create_provider(payload: ProviderCreate) -> LLMProviderOut:
     if payload.api_key:
         key_ref = new_key_ref()
         store_secret(key_ref, payload.api_key)
+    # 角色集合：新字段优先；省略时沿用单值 `task_role`（老客户端语义不变）。
+    roles = payload.task_roles if payload.task_roles is not None else [payload.task_role or "content"]
     try:
         with get_global_database().transaction() as conn:
             if payload.is_default:
@@ -76,7 +80,9 @@ def create_provider(payload: ProviderCreate) -> LLMProviderOut:
                 },
                 now,
             )
+            provider_repo.set_roles(conn, provider_id, roles, now)
             row = provider_repo.get(conn, provider_id)
+            roles_now = provider_repo.roles_of(conn, provider_id)
     except Exception:
         delete_secret(key_ref)
         raise
@@ -84,15 +90,18 @@ def create_provider(payload: ProviderCreate) -> LLMProviderOut:
         "provider created",
         **log_fields(provider=payload.provider, model=payload.model),
     )
-    return _to_out(row)
+    return _to_out(row, roles_now)
 
 
 def update_provider(provider_id: int, payload: ProviderUpdate) -> LLMProviderOut:
     fields = payload.model_dump(exclude_unset=True)
     new_secret = fields.pop("api_key", None)
+    roles_provided = "task_roles" in fields
+    roles = fields.pop("task_roles", None)
     # `task_role` 在库里是 `NOT NULL DEFAULT 'content'`，写 null 会触发约束违约 → 500。
     # 契约语义定为：传 null = **不修改**该字段（不是"清空"）。
-    # 若用户想表达"这条只作备用、不参与任务分配"，用 `enabled: false` 停用。
+    # 真正要表达"不再承担某角色"请用 `task_roles`（传 `[]` 即解除全部分配）。
+    legacy_role = fields.get("task_role")
     if "task_role" in fields and fields["task_role"] is None:
         fields.pop("task_role")
     for flag in ("is_default", "enabled"):
@@ -109,8 +118,14 @@ def update_provider(provider_id: int, payload: ProviderUpdate) -> LLMProviderOut
             store_secret(key_ref, new_secret)
             fields["key_ref"] = key_ref
         provider_repo.update(conn, provider_id, fields)
+        if roles_provided:
+            provider_repo.set_roles(conn, provider_id, roles or [], now_iso())
+        elif legacy_role:
+            # 老客户端只发单值 `task_role` → 等价于"该模型只承担这一个角色"
+            provider_repo.set_roles(conn, provider_id, [legacy_role], now_iso())
         row = provider_repo.get(conn, provider_id)
-    return _to_out(row)
+        roles_now = provider_repo.roles_of(conn, provider_id)
+    return _to_out(row, roles_now)
 
 
 def delete_provider(provider_id: int) -> None:
@@ -125,6 +140,9 @@ def delete_provider(provider_id: int) -> None:
 def test_provider(provider_id: int) -> ProviderTestResult:
     with get_global_database().connection() as conn:
         row = provider_repo.get(conn, provider_id)
+        # 业务规则改为看**关联表**：只要该模型承担 `embedding`（哪怕同时还挂着别的角色），
+        # 就用嵌入接口探测 —— 与 `roles` 的多角色语义保持一致。
+        is_embedding = row is not None and "embedding" in provider_repo.roles_of(conn, provider_id)
     if row is None:
         raise ProviderNotFoundError()
     try:
@@ -133,7 +151,7 @@ def test_provider(provider_id: int) -> ProviderTestResult:
         return ProviderTestResult(ok=False, latency_ms=0, error=exc.message)
     start = perf_counter()
     try:
-        if row.get("task_role") == "embedding":
+        if is_embedding:
             client.embed(["连通性测试"])
         else:
             # 超时给 60s（原为 20s）：实测 `step-3.5-flash` 对 "ping" 的响应在

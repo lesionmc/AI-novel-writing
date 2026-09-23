@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { OutlineCandidate, OutlineNode } from '@/types/api';
 import { useOutlines, useProviders } from '@/hooks/queries';
@@ -23,15 +23,25 @@ import {
 } from '@/components/outline/outlineModel';
 import { OutlineDetail } from '@/components/outline/OutlineDetail';
 import type { OutlineDraft } from '@/components/outline/OutlineDetail';
+import { loadOutlineDrafts, saveOutlineDrafts } from '@/components/outline/outlineDrafts';
+import type { OutlineDraftMap } from '@/components/outline/outlineDrafts';
 import { toast } from '@/stores/toastStore';
 import styles from '@/components/outline/outline.module.css';
 
 /**
  * 大纲 `/book/:slug/outline`（R7）。
  * 三级树（总纲 → 卷纲 → 章节卡）+ 右详情。AI 展开只出候选，**填入编辑框，用户改完再保存**。
+ *
+ * 用 `key={slug}` 把工作区**按作品分段**：换作品时整块重挂载，
+ * 未保存草稿的 state 与它的 localStorage 存档因此天然按作品隔离 ——
+ * 既不会把上一本的草稿带到下一本，也不会拿新 slug 的键去覆盖旧内容。
  */
 export function OutlinePage() {
   const { slug = '' } = useParams();
+  return <OutlineWorkspace key={slug} slug={slug} />;
+}
+
+function OutlineWorkspace({ slug }: { slug: string }) {
   const query = useOutlines(slug);
   const providers = useProviders();
   const create = useCreateOutline(slug);
@@ -39,10 +49,19 @@ export function OutlinePage() {
   const remove = useDeleteOutline(slug);
 
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [draft, setDraft] = useState<OutlineDraft>({ title: '', content: '' });
+  /**
+   * 未保存的本地草稿，按节点 id 存。
+   * 切换节点**不再丢弃**已填内容 —— 原先切走即被服务端内容覆盖、且没有任何提示，
+   * 实测表现为「填完总纲点一下别的节点，刚写的内容凭空消失」（库里 title/content 仍为空）。
+   *
+   * 初始值从 localStorage 读回（同一作品刷新/关标签页也不丢，见 outlineDrafts.ts）。
+   * 刻意**不新增任何写请求**：大纲更新走的是按 id 定位的 `PATCH /api/outlines/{id}`，
+   * 而该端点存在「靠全局当前作品指针定归属」的未修复 P0，自动保存有把内容写进
+   * 别的作品的风险。本地草稿 + 本地落盘刚好绕开它。
+   */
+  const [drafts, setDrafts] = useState<OutlineDraftMap>(() => loadOutlineDrafts(slug));
   const [candidates, setCandidates] = useState<OutlineCandidate[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<OutlineNode | null>(null);
-  const syncRef = useRef('');
 
   const nodes = useMemo(() => query.data ?? [], [query.data]);
   const node = selectedId !== null ? findOutlineNode(nodes, selectedId) : null;
@@ -54,15 +73,48 @@ export function OutlinePage() {
     if (first) setSelectedId(first.id);
   }, [nodes, selectedId]);
 
-  // 选中节点 / 保存回填时同步草稿（用 updated_at 去重，避免打字被覆盖）
+  // 当前编辑缓冲：有本地草稿就用手里的（**切回来会自动恢复**），否则用服务端内容
+  const draft: OutlineDraft = useMemo(() => {
+    if (!node) return { title: '', content: '' };
+    return drafts[node.id] ?? { title: node.title ?? '', content: node.content ?? '' };
+  }, [node, drafts]);
+
+  // 切节点丢掉上一个节点的 AI 候选（草稿不受影响，按 id 留在 drafts 里）
   useEffect(() => {
-    if (!node) return;
-    const key = `${node.id}:${node.updated_at}`;
-    if (syncRef.current === key) return;
-    syncRef.current = key;
-    setDraft({ title: node.title ?? '', content: node.content ?? '' });
     setCandidates([]);
-  }, [node]);
+  }, [selectedId]);
+
+  /**
+   * 「与服务器不一致」的草稿子集 —— 一个判据同时服务三处：
+   *   ① 左树的未保存圆点、② 详情里的「未保存」小标、③ 落盘内容。
+   * 只把真正没保存的落盘，所以**保存成功后该条会自然从存档里消失**；
+   * 同时只认当前存在的节点，历史遗留/已删节点的条目会在下一次落盘时被清掉。
+   */
+  const dirtyDrafts = useMemo(() => {
+    const out: OutlineDraftMap = {};
+    for (const n of nodes) {
+      const d = drafts[n.id];
+      if (d && (d.title !== (n.title ?? '') || d.content !== (n.content ?? ''))) out[n.id] = d;
+    }
+    return out;
+  }, [nodes, drafts]);
+
+  const dirtyIds = useMemo(() => new Set(Object.keys(dirtyDrafts).map(Number)), [dirtyDrafts]);
+  const dirty = selectedId !== null && dirtyIds.has(selectedId);
+
+  // 落盘。**必须等查询结束**：首屏 nodes 还是空的，此时写空表会把刚读到的存档冲掉。
+  useEffect(() => {
+    if (query.isPending) return;
+    saveOutlineDrafts(slug, dirtyDrafts);
+  }, [slug, query.isPending, dirtyDrafts]);
+
+  /** 编辑当前节点：写进按 id 的草稿表（函数式合并，避免同一批事件互相覆盖） */
+  const changeDraft = (patch: Partial<OutlineDraft>) => {
+    if (!node) return;
+    const id = node.id;
+    const saved: OutlineDraft = { title: node.title ?? '', content: node.content ?? '' };
+    setDrafts((m) => ({ ...m, [id]: { ...(m[id] ?? saved), ...patch } }));
+  };
 
   const hasModel = (providers.data ?? []).some((p) => p.enabled);
 
@@ -70,9 +122,19 @@ export function OutlinePage() {
 
   const handleSave = () => {
     if (!node) return;
+    const id = node.id;
+    const title = draft.title.trim() || null;
+    const content = draft.content.trim() || null;
     update.mutate(
-      { id: node.id, payload: { title: draft.title.trim() || null, content: draft.content.trim() || null } },
-      { onSuccess: () => toast.success('大纲已保存') },
+      { id, payload: { title, content } },
+      {
+        onSuccess: () => {
+          toast.success('大纲已保存');
+          // 草稿对齐成「实际发出去的值」（已 trim），否则尾随空格会让它一直被当作未保存
+          setDrafts((m) => ({ ...m, [id]: { title: title ?? '', content: content ?? '' } }));
+          setCandidates([]);
+        },
+      },
     );
   };
 
@@ -108,6 +170,11 @@ export function OutlinePage() {
     remove.mutate(id, {
       onSuccess: () => {
         toast.success('已删除');
+        setDrafts((m) => {
+          const next = { ...m };
+          delete next[id];
+          return next;
+        });
         if (selectedId === id) setSelectedId(null);
         setDeleteTarget(null);
       },
@@ -149,7 +216,7 @@ export function OutlinePage() {
             <div className={styles.treePaneHead}>
               <span className={styles.treePaneTitle}>结构</span>
             </div>
-            <OutlineTree nodes={nodes} selectedId={selectedId} onSelect={select} />
+            <OutlineTree nodes={nodes} selectedId={selectedId} onSelect={select} dirtyIds={dirtyIds} />
           </aside>
 
           <section className={styles.detailPane}>
@@ -158,7 +225,8 @@ export function OutlinePage() {
                 node={node}
                 children={childrenOf(nodes, node.id)}
                 draft={draft}
-                onChange={(patch) => setDraft((d) => ({ ...d, ...patch }))}
+                dirty={dirty}
+                onChange={changeDraft}
                 saving={update.isPending}
                 saveError={update.error}
                 onSave={handleSave}

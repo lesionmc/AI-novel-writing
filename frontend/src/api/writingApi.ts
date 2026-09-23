@@ -14,6 +14,7 @@
  * 所以这里没有任何"保存"语义。
  */
 
+import { slugSegment } from '@/lib/slug';
 import { request, streamSse } from './request';
 import type {
   ConsistencyConflict,
@@ -81,7 +82,7 @@ export const writingApi = {
     options: { scope?: string; signal?: AbortSignal } = {},
   ): Promise<void> =>
     streamSse(
-      `/books/${encodeURIComponent(book)}/audit/consistency/stream`,
+      `/books/${slugSegment(book)}/audit/consistency/stream`,
       { scope: options.scope ?? null },
       (frame) => {
         try {

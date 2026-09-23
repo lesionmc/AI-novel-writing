@@ -35,9 +35,15 @@ class SensitiveHitOut(BaseModel):
 
 
 class SensitiveResult(BaseModel):
-    """敏感词自查结果。`total_hits` 为全部命中次数之和。"""
+    """敏感词自查结果。`total_hits` 为全部命中次数之和。
+
+    `wordlist_available` 必须透出：词库为空时 `total_hits=0` 会被用户误读成
+    「稿子没问题」，而实际上**什么都没检查**（项目红线：禁止假安全感，见
+    `11-敏感词库说明.md`）。前端据此显示醒目提示。
+    """
 
     total_hits: int
+    wordlist_available: bool
     hits: list[SensitiveHitOut]
 
 

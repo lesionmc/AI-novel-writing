@@ -79,6 +79,19 @@ class NoActiveBookError(AppError):
     message = "当前没有打开的作品，请先进入一部作品"
 
 
+class DatabaseBusyError(AppError):
+    """数据库忙锁（暂时性、可重试）。
+
+    选 **503** 而不是 409 的理由：这是**服务端暂时不可用**（资源争用），
+    语义上是「稍后重试即可」，与 503 的标准含义一致；且 409 在本项目已被
+    「资源归属歧义」（`ConflictError`）占用，复用会让客户端分不清两种情况。
+    """
+
+    code = "DB_BUSY"
+    http_status = 503
+    message = "数据库正忙，请稍后重试"
+
+
 class BookExistsError(ConflictError):
     code = "BOOK_EXISTS"
     message = "同名作品已存在"

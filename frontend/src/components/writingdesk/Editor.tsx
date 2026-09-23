@@ -1,18 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import type { EditorView } from '@tiptap/pm/view';
 import { ErrorBar } from '@/components/common/ErrorBar';
 import { Icon } from '@/components/common/Icon';
 import { countWords, htmlToPlainText } from '@/lib/wordCount';
-import { buildDocTextIndex, mapMatchToPositions } from '@/lib/proseMirrorTextIndex';
-import { findPrefixMatch } from '@/lib/chunkLocate';
 import { useAutosave } from '@/hooks/useAutosave';
 import { useDeskStore } from '@/stores/deskStore';
 import { toast } from '@/stores/toastStore';
 import { EditorToolbar } from './EditorToolbar';
 import { FindBar } from './FindBar';
 import { createChunkHighlightExtension, setChunkHighlight } from './chunkHighlight';
+import { HIGHLIGHT_TTL_MS, highlightTextInEditor } from './editorHighlight';
 import { useDraftInsert } from './useDraftInsert';
 import styles from './Editor.module.css';
 
@@ -37,24 +35,6 @@ export interface EditorProps {
   onSave: (doc: EditorDoc) => Promise<void>;
   onFinalize: () => void;
   readOnly?: boolean;
-}
-
-/** 片段高亮自动消退时长（TC-33） */
-const HIGHLIGHT_TTL_MS = 4000;
-
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
-  );
-}
-
-/** 把某位置滚动到可视区居中（不改动文档 / 不移动光标） */
-function scrollPositionIntoView(view: EditorView, from: number): void {
-  const domAt = view.domAtPos(from);
-  const domNode = domAt.node;
-  const el = domNode.nodeType === Node.TEXT_NODE ? domNode.parentElement : (domNode as HTMLElement);
-  el?.scrollIntoView({ block: 'center', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
 }
 
 /**
@@ -137,32 +117,13 @@ export function Editor({
 
   /**
    * TC-33：在目标章正文里定位召回片段并高亮。
-   *  - 渐进前缀匹配（80→60→40→24→12），命中即用 Decoration 高亮
+   *  - 定位/映射/高亮/DEV 断言都在 `editorHighlight.ts`（保持本文件精简）
    *  - 失配**优雅降级**：中性提示，不抛错、不白屏
-   *  - DEV 断言探针：装饰前后 `getHTML()` 必须逐字节一致（高亮不污染正文）
    */
   const applyChunkHighlight = useCallback(
     (text: string) => {
       if (!editor || editor.isDestroyed) return;
-      const index = buildDocTextIndex(editor.state.doc);
-      const match = findPrefixMatch(index.text, text);
-      const mapped = match ? mapMatchToPositions(index, match) : null;
-
-      const beforeHtml = import.meta.env.DEV ? editor.getHTML() : '';
-      let applied = false;
-      if (mapped) {
-        try {
-          setChunkHighlight(editor.view, mapped);
-          scrollPositionIntoView(editor.view, mapped.from);
-          applied = true;
-        } catch {
-          applied = false;
-        }
-      }
-
-      if (import.meta.env.DEV && applied && editor.getHTML() !== beforeHtml) {
-        console.error('[TC-33] 高亮污染了正文：装饰前后 editor.getHTML() 不一致');
-      }
+      const applied = highlightTextInEditor(editor, text);
 
       if (!applied) {
         toast.info(`已跳到第 ${seq} 章，未能精确定位该片段`);

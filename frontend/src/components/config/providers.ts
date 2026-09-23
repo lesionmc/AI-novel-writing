@@ -1,4 +1,10 @@
-import type { ProviderName, ProviderTestResponse, TaskRole } from '@/types/api';
+import type { Provider, ProviderName, ProviderTestResponse, TaskRole } from '@/types/api';
+
+/** 该模型承担的角色集合：**新字段 `task_roles` 为准**，缺省时回落到旧单值 `task_role`。 */
+export function rolesOf(p: Pick<Provider, 'task_roles' | 'task_role'>): TaskRole[] {
+  if (p.task_roles) return p.task_roles;
+  return p.task_role ? [p.task_role] : [];
+}
 
 /**
  * 模型配置表单的可编辑值（**前端本地模型**）。
@@ -10,7 +16,10 @@ export interface ProviderFormValue {
   model: string;
   base_url: string;
   api_key: string;
+  /** 旧单值字段（提交时不再使用，仅保留读取以兼容旧数据/旧缓存） */
   task_role: TaskRole | null;
+  /** 该模型承担的角色集合（可空 = 不分配，仅作默认回退候选） */
+  task_roles: TaskRole[];
   is_default: boolean;
   enabled: boolean;
 }

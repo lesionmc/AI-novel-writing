@@ -4,6 +4,7 @@ import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
 import { Icon } from '@/components/common/Icon';
 import { ConnectionTestBadge } from './ConnectionTestBadge';
+import { rolesOf } from './providers';
 import styles from './config.module.css';
 
 export interface ProviderCardProps {
@@ -42,11 +43,12 @@ export function ProviderCard({
           <span className={styles.providerName}>{providerLabel(provider.provider)}</span>
           <span className={styles.providerModel}>{provider.model}</span>
           {isDefault ? <Badge variant="accent">默认</Badge> : null}
-          {provider.task_role ? (
-            <Badge variant="primary" icon="target">
-              {TASK_ROLE_LABELS[provider.task_role]}
+          {/* 角色以 `task_roles`（可多个）为准；一个模型干几件事就挂几个徽标 */}
+          {rolesOf(provider).map((role) => (
+            <Badge key={role} variant="primary" icon="target">
+              {TASK_ROLE_LABELS[role]}
             </Badge>
-          ) : null}
+          ))}
           {!enabled ? <Badge variant="neutral">已停用</Badge> : null}
         </div>
         <ConnectionTestBadge
@@ -63,7 +65,11 @@ export function ProviderCard({
         </span>
         <span className={styles.providerMetaItem}>
           <Icon name="key" size={16} />
-          {provider.key_ref ? `密钥：${provider.key_ref}` : '未设置密钥'}
+          {/* 这里显示的是**密钥环里的引用名**，不是密钥本身。
+              原先写成「密钥：ai-novel-1477cbf6…」，那串十六进制长得就像密钥，
+              新手会以为自己填的 Key 就是这个（真实浏览器快照里能直接看到这个误解风险）。
+              改成明确说"已保存 + 内部标识"，既不误导又能留一点排查线索。 */}
+          {provider.key_ref ? `密钥已保存（内部标识 ${provider.key_ref}）` : '未设置密钥'}
         </span>
       </div>
 

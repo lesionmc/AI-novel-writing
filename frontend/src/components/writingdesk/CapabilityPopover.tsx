@@ -72,7 +72,7 @@ export function CapabilityPopover({
           <div className={styles.actions}>
             {def.key === 'llm_configured' ? (
               <Button variant="primary" size="sm" onClick={onOpenConfig}>
-                去设置
+                去配置模型
               </Button>
             ) : (
               <>
@@ -100,7 +100,7 @@ export function CapabilityPopover({
         </div>
       ))}
 
-      {detected ? <p className={styles.note}>已重新检测（能力状态取自启动自检）。</p> : null}
+      {detected ? <p className={styles.note}>已重新检测（以程序启动时的结果为准）。</p> : null}
     </div>
   );
 }

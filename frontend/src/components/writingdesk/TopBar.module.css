@@ -10,26 +10,9 @@
   z-index: var(--z-topbar);
 }
 
-.bookName {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  max-width: 220px;
-  flex-shrink: 0;
-  color: var(--color-text-secondary);
-  font-size: var(--text-sm);
-}
-
-.bookNameText {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.bookNameLink:hover {
-  color: var(--color-text-primary);
-  text-decoration: none;
-}
+/* 说明：`.bookName / .bookNameText / .bookNameLink` 已删除 ——
+   书名入口统一收敛到全局导航条右侧的作品选择器（BookSwitcher），
+   本顶栏再显示一次书名会与上一行重复。 */
 
 .divider {
   width: 1px;

@@ -14,12 +14,16 @@ from dataclasses import dataclass
 
 import httpx
 
-from app.errors import LLMRequestError
+from app.errors import LLMNotConfiguredError, LLMRequestError
 from app.services.llm.base import readable_http_error
 
 DEFAULT_TIMEOUT = 18.0
 CHAT_TIMEOUT = 20.0
 CLAUDE_NOTE = "该平台未提供公开的模型列表接口，请手动填写模型名"
+
+# 不需要 API Key 的平台：Ollama 本地服务无鉴权；Claude 走「无公开模型列表端点」的
+# 本地短路（根本不发请求）。其余平台（含任意 OpenAI 兼容端点）一律需要密钥。
+_KEYLESS_PROVIDERS = frozenset({"ollama"})
 
 
 @dataclass(frozen=True)
@@ -67,11 +71,23 @@ def _require_base(base_url: str | None, provider: str) -> str:
 def list_models(
     provider: str, base_url: str | None, api_key: str | None, *, timeout: float = DEFAULT_TIMEOUT
 ) -> ModelList:
-    """拉取平台可用模型 id 列表（去重 + 排序）。"""
+    """拉取平台可用模型 id 列表（去重 + 排序）。
+
+    三种情形各自给**正确**的错误语义（P1-2）：
+      · **没有密钥** → `LLM_NOT_CONFIGURED`（400），文案指向「设置 → 模型配置」；
+        没有密钥 ≠ 密钥无效，把它报成 502「密钥无效或已过期」会把用户引到错误的排查方向。
+      · **密钥存在但平台拒绝**（401/403）→ `LLM_REQUEST_FAILED`（502），文案「密钥无效或已过期」。
+      · **网络不通 / 超时** → `LLM_REQUEST_FAILED`（502），文案由 `_request` 给出。
+    """
     if provider == "claude":
         return ModelList(models=[], note=CLAUDE_NOTE)
 
     base = _require_base(base_url, provider)
+    if provider not in _KEYLESS_PROVIDERS and not api_key:
+        raise LLMNotConfiguredError(
+            f"还没有配置「{provider}」的 API Key，请先到「设置 → 模型配置」填写并保存，"
+            "再回来拉取模型列表"
+        )
     if provider == "ollama":
         status, body = _request("GET", f"{base}/api/tags", headers={}, json_body=None, timeout=timeout)
         if status >= 400:

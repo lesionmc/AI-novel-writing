@@ -127,7 +127,12 @@ def insert_recall_log(
     )
 
 
+# 与路由层 `Query(ge=1, le=200)` 对齐的兜底上界（SQLite 的 `LIMIT -1` = 无上限）。
+_MAX_LIMIT = 200
+
+
 def list_recall_logs(conn: sqlite3.Connection, limit: int = 50) -> list[dict]:
+    limit = min(max(limit, 1), _MAX_LIMIT)
     rows = conn.execute(
         "SELECT * FROM recall_log ORDER BY id DESC LIMIT ?", (limit,)
     ).fetchall()

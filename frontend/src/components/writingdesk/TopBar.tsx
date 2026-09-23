@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import type { WritingMode } from '@/types/api';
 import { formatNumber, formatWordCount } from '@/lib/format';
 import { WRITING_MODE_LABELS } from '@/lib/labels';
@@ -8,15 +8,14 @@ import { useDeskStore } from '@/stores/deskStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
-import { Icon } from '@/components/common/Icon';
 import { Menu } from '@/components/common/Menu';
 import { toast } from '@/stores/toastStore';
 import { WritingAiDialog, type WritingAiMode } from './WritingAiDialog';
 import styles from './TopBar.module.css';
+import { slugSegment } from '@/lib/slug';
 
 export interface TopBarProps {
   slug: string;
-  bookTitle: string;
   seq: number | null;
   chapterTitle: string;
   /** 本章字数（编辑器实时上报） */
@@ -36,13 +35,13 @@ export interface TopBarProps {
 }
 
 /**
- * 写作台顶栏（52px）：书名 / 当前章 / 字数 / AI 菜单 / 完成本章 / 设置。
+ * 写作台页面级顶栏（52px，位于全局导航条之下）：返回书库 / 当前章 / 字数 / AI 菜单 / 完成本章 / 设置。
+ * 换书与跨页面跳转由全局导航（`GlobalNav`）承担，这里不再重复一套。
  * 写作模式（04 §2.4）：
  *   manual → **不出现任何 AI 入口**；assist → 显示 AI 菜单；semi → 自动触发召回与回写（仍保留人工确认）。
  */
 export function TopBar({
   slug,
-  bookTitle,
   seq,
   chapterTitle,
   wordCount,
@@ -99,8 +98,10 @@ export function TopBar({
   return (
     <>
     <header className={styles.bar}>
-      {/* 写作台是全屏布局（刻意不套全局导航，避免写作时被干扰），
-          但没有出口会让用户找不到回书库的路 —— 这里必须有明确的返回入口。 */}
+      {/* 本页顶栏位于**全局导航条之下**，所以这里不再承担"全站出口"的职责：
+          书名与换书归导航条右侧的作品选择器，设定库/大纲/质检/统计归导航条的一级导航项。
+          原先的「本书」下拉已删（与全局导航后 4 项完全重叠，留着就是两个入口说同一件事）。
+          只保留一个「返回书库」箭头：写作时最常用的出口，一键可达。 */}
       <Button
         variant="ghost"
         size="md"
@@ -109,50 +110,6 @@ export function TopBar({
         aria-label="返回书库"
         title="返回书库"
         onClick={() => navigate('/')}
-      />
-
-      <Link className={[styles.bookName, styles.bookNameLink].join(' ')} to={`/book/${slug}/desk`}>
-        <Icon name="book" size={16} />
-        <span className={styles.bookNameText} title={bookTitle}>
-          {bookTitle}
-        </span>
-      </Link>
-
-      {/* 本书导航：写作台是唯一不套全局 AppShell 的页面（刻意的沉浸式三栏），
-          代价是**没有出口** —— 此前想从写作台去设定库/大纲/质检/统计，
-          只能按浏览器后退键（老大原话：「上面这些标题最好写死，每个页面都有」）。
-          这里补一个轻量下拉，不引入全站导航条、不破坏三栏骨架。
-          注意：这 4 个页面都是**已有页面**，不是新功能。 */}
-      <Menu
-        triggerLabel="本书"
-        triggerIcon="list"
-        align="start"
-        items={[
-          {
-            key: 'settings',
-            label: '设定库（人物 / 世界观 / 线索）',
-            icon: 'users',
-            onSelect: () => navigate(`/book/${encodeURIComponent(slug)}/settings`),
-          },
-          {
-            key: 'outline',
-            label: '大纲',
-            icon: 'outline',
-            onSelect: () => navigate(`/book/${encodeURIComponent(slug)}/outline`),
-          },
-          {
-            key: 'audit',
-            label: '质检（去 AI 味 / 敏感词）',
-            icon: 'audit',
-            onSelect: () => navigate(`/book/${encodeURIComponent(slug)}/audit`),
-          },
-          {
-            key: 'stats',
-            label: '统计',
-            icon: 'stats',
-            onSelect: () => navigate(`/book/${encodeURIComponent(slug)}/stats`),
-          },
-        ]}
       />
 
       <span className={styles.divider} aria-hidden="true" />
@@ -206,7 +163,7 @@ export function TopBar({
                   label: '跟 AI 聊着建人物和世界观',
                   icon: 'sparkles',
                   onSelect: () =>
-                    navigate(`/book/${encodeURIComponent(slug)}/settings?ai=1`),
+                    navigate(`/book/${slugSegment(slug)}/settings?ai=1`),
                 },
                 {
                   key: 'recall',
@@ -275,7 +232,7 @@ export function TopBar({
           icon="settings"
           aria-label="打开设置"
           title="设置"
-          onClick={() => navigate(`/book/${slug}/config`)}
+          onClick={() => navigate(`/book/${slugSegment(slug)}/config`)}
         />
       </div>
     </header>
@@ -290,7 +247,7 @@ export function TopBar({
           selectedText={selectionText}
           onOpenConfig={() => {
             setAiMode(null);
-            navigate(`/book/${encodeURIComponent(slug)}/config`);
+            navigate(`/book/${slugSegment(slug)}/config`);
           }}
           onClose={() => setAiMode(null)}
         />

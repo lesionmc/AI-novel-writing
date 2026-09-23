@@ -1,7 +1,26 @@
-.shell {
+/* 写作台整页：全局导航条（固定高度）+ 三栏工作区。
+   高度只能由本层吃满 100vh —— 三栏区用 flex:1 拿剩余高度，
+   否则"导航条 52px + 100vh 三栏"会溢出视口，出现双滚动条。 */
+.pageRoot {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  min-width: var(--layout-min-app-width);
+  background-color: var(--color-bg);
+}
+
+/* 作品打不开时的错误页容器（同样是"导航条 + 可滚动内容"两段结构） */
+.pageScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.shell {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
   min-width: var(--layout-min-app-width);
   background-color: var(--color-bg);
 }

@@ -9,7 +9,9 @@
  *        使用 staleTime:0 + enabled 由章号驱动，一次进章仅触发一次（Spec §11 坑 7）。
  */
 
+import { slugSegment } from '@/lib/slug';
 import { downloadFile, request } from './request';
+import { aiHubApi } from './aiHubApi';
 import { writingApi } from './writingApi';
 import type {
   AffectedChapter,
@@ -75,23 +77,26 @@ export const api = {
   // 展开进同一个 `api` 对象 —— 调用方仍写 `api.plotDirections(...)`，且主 client 不超行数门禁。
   ...writingApi,
 
+  // AI 对话工作台（M2-batch3）：同上，分组在 `./aiHubApi`（`api.aiChat(...)`）。
+  ...aiHubApi,
+
   /* --- 5.1 books（R15） --- */
   /** 列表返回契约 `BookBrief`（6 字段，故意不含 target_words/premise/writing_mode） */
   listBooks: () => request<BookBrief[]>('/books'),
   createBook: (payload: CreateBookRequest) =>
     request<Book>('/books', { method: 'POST', body: payload }),
-  getBook: (book: string) => request<Book>(`/books/${encodeURIComponent(book)}`),
+  getBook: (book: string) => request<Book>(`/books/${slugSegment(book)}`),
   updateBook: (book: string, payload: UpdateBookRequest) =>
-    request<Book>(`/books/${encodeURIComponent(book)}`, { method: 'PATCH', body: payload }),
+    request<Book>(`/books/${slugSegment(book)}`, { method: 'PATCH', body: payload }),
   /** 契约 204 无响应体 */
   deleteBook: (book: string) =>
-    request<void>(`/books/${encodeURIComponent(book)}`, { method: 'DELETE' }),
+    request<void>(`/books/${slugSegment(book)}`, { method: 'DELETE' }),
 
   /* --- 5.2 settings（R1） --- */
   listCharacters: (book: string) =>
-    request<Character[]>(`/books/${encodeURIComponent(book)}/characters`),
+    request<Character[]>(`/books/${slugSegment(book)}/characters`),
   createCharacter: (book: string, payload: CharacterWriteRequest) =>
-    request<Character>(`/books/${encodeURIComponent(book)}/characters`, {
+    request<Character>(`/books/${slugSegment(book)}/characters`, {
       method: 'POST',
       body: payload,
     }),
@@ -103,9 +108,9 @@ export const api = {
     request<AffectedChapter[]>(`/characters/${id}/affected-chapters`),
 
   listWorldEntries: (book: string) =>
-    request<WorldEntry[]>(`/books/${encodeURIComponent(book)}/world-entries`),
+    request<WorldEntry[]>(`/books/${slugSegment(book)}/world-entries`),
   createWorldEntry: (book: string, payload: WorldEntryWriteRequest) =>
-    request<WorldEntry>(`/books/${encodeURIComponent(book)}/world-entries`, {
+    request<WorldEntry>(`/books/${slugSegment(book)}/world-entries`, {
       method: 'POST',
       body: payload,
     }),
@@ -114,11 +119,11 @@ export const api = {
   deleteWorldEntry: (id: number) => request<void>(`/world-entries/${id}`, { method: 'DELETE' }),
 
   listForeshadows: (book: string, q?: ForeshadowListQuery) =>
-    request<Foreshadow[]>(`/books/${encodeURIComponent(book)}/foreshadows`, {
+    request<Foreshadow[]>(`/books/${slugSegment(book)}/foreshadows`, {
       query: { status: q?.status, importance: q?.importance },
     }),
   createForeshadow: (book: string, payload: ForeshadowWriteRequest) =>
-    request<Foreshadow>(`/books/${encodeURIComponent(book)}/foreshadows`, {
+    request<Foreshadow>(`/books/${slugSegment(book)}/foreshadows`, {
       method: 'POST',
       body: payload,
     }),
@@ -127,13 +132,13 @@ export const api = {
 
   /** 契约响应为**裸数组** `SearchHit[]`（非 `{query, results}` 包装） */
   searchBook: (book: string, q: string) =>
-    request<SearchHit[]>(`/books/${encodeURIComponent(book)}/search`, { query: { q } }),
+    request<SearchHit[]>(`/books/${slugSegment(book)}/search`, { query: { q } }),
 
   /* --- 5.3 outlines（R7） --- */
   listOutlines: (book: string, level?: string) =>
-    request<OutlineNode[]>(`/books/${encodeURIComponent(book)}/outlines`, { query: { level } }),
+    request<OutlineNode[]>(`/books/${slugSegment(book)}/outlines`, { query: { level } }),
   createOutline: (book: string, payload: OutlineWriteRequest) =>
-    request<OutlineNode>(`/books/${encodeURIComponent(book)}/outlines`, {
+    request<OutlineNode>(`/books/${slugSegment(book)}/outlines`, {
       method: 'POST',
       body: payload,
     }),
@@ -150,9 +155,9 @@ export const api = {
 
   /* --- 5.4 chapters（R2 / R11） --- */
   listChapters: (book: string) =>
-    request<ChapterBrief[]>(`/books/${encodeURIComponent(book)}/chapters`),
+    request<ChapterBrief[]>(`/books/${slugSegment(book)}/chapters`),
   createChapter: (book: string, payload: CreateChapterRequest) =>
-    request<Chapter>(`/books/${encodeURIComponent(book)}/chapters`, {
+    request<Chapter>(`/books/${slugSegment(book)}/chapters`, {
       method: 'POST',
       body: payload,
     }),
@@ -184,13 +189,13 @@ export const api = {
       timeoutMs: 60000,
     }),
   getCharacterStates: (book: string, uptoSeq: number) =>
-    request<CharacterStatePoint[]>(`/books/${encodeURIComponent(book)}/memory/character-states`, {
+    request<CharacterStatePoint[]>(`/books/${slugSegment(book)}/memory/character-states`, {
       query: { upto_seq: uptoSeq },
     }),
   getPlotArcs: (book: string) =>
-    request<PlotArc[]>(`/books/${encodeURIComponent(book)}/memory/plot-arcs`),
+    request<PlotArc[]>(`/books/${slugSegment(book)}/memory/plot-arcs`),
   listRecallLogs: (book: string) =>
-    request<RecallLog[]>(`/books/${encodeURIComponent(book)}/recall-logs`),
+    request<RecallLog[]>(`/books/${slugSegment(book)}/recall-logs`),
 
   /* --- 5.6 providers（R5） --- */
   listProviders: () => request<Provider[]>('/providers'),
@@ -221,9 +226,9 @@ export const api = {
     }),
 
   /* --- 5.7 export / stats / search --- */
-  getStats: (book: string) => request<BookStats>(`/books/${encodeURIComponent(book)}/stats`),
+  getStats: (book: string) => request<BookStats>(`/books/${slugSegment(book)}/stats`),
   exportBook: (book: string, format: 'txt' | 'docx', range?: string) =>
-    downloadFile(`/books/${encodeURIComponent(book)}/export`, { format, range }),
+    downloadFile(`/books/${slugSegment(book)}/export`, { format, range }),
 
   /* --- 5.8 system（能力探测，Spec §12） --- */
   /** 只读无副作用；M1 无 `?refresh`，返回值恒为启动自检缓存 */
@@ -277,7 +282,7 @@ export const api = {
    * 全书扫描，超时放宽到 60s。
    */
   auditSensitive: (book: string) =>
-    request<SensitiveAuditResult>(`/books/${encodeURIComponent(book)}/audit/sensitive`, {
+    request<SensitiveAuditResult>(`/books/${slugSegment(book)}/audit/sensitive`, {
       method: 'POST',
       timeoutMs: 60000,
     }),

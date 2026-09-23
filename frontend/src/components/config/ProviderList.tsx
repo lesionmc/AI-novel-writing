@@ -18,7 +18,7 @@ import { SkeletonRows } from '@/components/common/Skeleton';
 import { toast } from '@/stores/toastStore';
 import { ProviderCard } from './ProviderCard';
 import { ProviderForm } from './ProviderForm';
-import { DEFAULT_BASE_URL, type ProviderFormValue } from './providers';
+import { DEFAULT_BASE_URL, rolesOf, type ProviderFormValue } from './providers';
 import styles from './config.module.css';
 
 const FORM_ID = 'provider-form';
@@ -29,6 +29,7 @@ const BLANK: ProviderFormValue = {
   base_url: DEFAULT_BASE_URL.deepseek,
   api_key: '',
   task_role: null,
+  task_roles: [],
   is_default: false,
   enabled: true,
 };
@@ -40,6 +41,7 @@ function toFormValue(p: Provider): ProviderFormValue {
     base_url: p.base_url ?? '',
     api_key: '', // 明文永不回显；留空表示不修改
     task_role: p.task_role,
+    task_roles: rolesOf(p),
     is_default: Boolean(p.is_default),
     enabled: Boolean(p.enabled),
   };
@@ -105,14 +107,13 @@ export function ProviderList() {
 
     if (editing === 'new') {
       // 契约 `required: [provider, model, api_key]` —— api_key 必带（本地 ollama 可传空串）
-      // `task_role` 选「不指定」时**整字段省略**：后端 `ProviderCreate.task_role` 是
-      // 非空 Literal（默认 content），传 null 会被校验拒成 400（真后端已验）。
+      // 角色用 `task_roles` 数组表达（可多选）；不再发旧单值 `task_role`。
       const payload: ProviderWriteRequest = {
         provider: value.provider,
         model: value.model.trim(),
         api_key: key,
         base_url: value.base_url.trim() || null,
-        ...(value.task_role ? { task_role: value.task_role } : {}),
+        task_roles: value.task_roles,
       };
       create.mutate(payload, {
         onSuccess: () => {
@@ -122,14 +123,13 @@ export function ProviderList() {
       });
     } else if (editing) {
       // 契约 `is_default` / `enabled` 为 integer(0/1)；api_key 仅在更换时传
-      // `task_role` 同理省略：后端新语义下 null = 不修改，省略才是「别动它」的
-      // 清晰表达（旧版传 null 会 500）。
+      // `task_roles` 每次整组提交：它同时表达了「新增角色」与「取消角色」。
       const payload: ProviderUpdateRequest = {
         model: value.model.trim(),
         base_url: value.base_url.trim() || null,
         is_default: value.is_default ? 1 : 0,
         enabled: value.enabled ? 1 : 0,
-        ...(value.task_role ? { task_role: value.task_role } : {}),
+        task_roles: value.task_roles,
       };
       if (key) payload.api_key = key;
       update.mutate(

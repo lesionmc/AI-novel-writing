@@ -3,6 +3,7 @@ import { Button } from '@/components/common/Button';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { EmptyState } from '@/components/common/EmptyState';
 import { OfflineBanner } from '@/components/common/OfflineBanner';
+import { GlobalNav } from '@/components/layout/GlobalNav';
 import { ChapterTree } from '@/components/writingdesk/ChapterTree';
 import { Editor } from '@/components/writingdesk/Editor';
 import { RecallPanel } from '@/components/writingdesk/RecallPanel';
@@ -16,29 +17,40 @@ import styles from '@/components/writingdesk/WritingDesk.module.css';
 /**
  * 写作台 `/book/:slug/desk`（核心页，占 80% 使用时间）。
  * 逻辑全部收敛在 `useWritingDesk`（见该 hook 顶部红线说明）；本文件只负责骨架与 JSX。
+ *
+ * 布局是「全局导航条 + 三栏工作区」两段（导航条高度由 `.pageRoot` 的 flex 分配扣掉）。
+ * 导航条与其它页面共用 `GlobalNav` —— 用户实测明确要求"上面的导航是固定每个页面的"，
+ * 所以写作台不再是导航的例外。
  */
 export function WritingDeskPage() {
   const d = useWritingDesk();
 
   if (d.bookError) {
     return (
-      <div style={{ padding: 'var(--space-10)', maxWidth: '720px', margin: '0 auto' }}>
-        <EmptyState
-          icon="error"
-          title="打不开这部作品"
-          description="它可能已被移入回收目录。回到书库看看当前有哪些作品。"
-        />
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <Button variant="primary" onClick={d.toLibrary}>
-            返回书库
-          </Button>
+      <div className={styles.pageRoot}>
+        <GlobalNav />
+        <div className={styles.pageScroll}>
+          <div style={{ padding: 'var(--space-10)', maxWidth: '720px', margin: '0 auto' }}>
+            <EmptyState
+              icon="error"
+              title="打不开这部作品"
+              description="它可能已被移入回收目录。回到书库看看当前有哪些作品。"
+            />
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <Button variant="primary" onClick={d.toLibrary}>
+                返回书库
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <>
+    <div className={styles.pageRoot}>
+      <GlobalNav />
+
       <WritingDesk
         leftCollapsed={d.focusMode || !d.isMid || d.leftCollapsed}
         rightCollapsed={d.focusMode || !d.isWide || d.rightCollapsed}
@@ -51,7 +63,6 @@ export function WritingDeskPage() {
             ) : null}
             <TopBar
               slug={d.slug}
-              bookTitle={d.bookTitle}
               seq={d.seq}
               chapterTitle={d.chapterTitle}
               wordCount={d.wordCount}
@@ -163,7 +174,8 @@ export function WritingDeskPage() {
           onConfirm={d.confirmDeleteChapter}
         >
           <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
-            将删除第 {d.seq} 章《{d.chapterTitle || '未命名'}》的正文、版本历史与向量分块。该操作不可撤销。
+            将删除第 {d.seq} 章《{d.chapterTitle || '未命名'}》的正文与全部历史版本，该操作不可撤销。
+            已归档的人物状态与线索不会被删除。
           </p>
           {d.deleteError ? (
             <div style={{ marginTop: 'var(--space-3)' }}>
@@ -193,6 +205,6 @@ export function WritingDeskPage() {
         onCancel={d.cancelWriteback}
         onConfirm={d.handleConfirmWriteback}
       />
-    </>
+    </div>
   );
 }

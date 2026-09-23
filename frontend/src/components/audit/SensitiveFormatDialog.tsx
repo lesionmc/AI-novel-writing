@@ -1,5 +1,9 @@
 import { Modal } from '@/components/common/Modal';
-import { SENSITIVE_CATEGORY_LABELS, SENSITIVE_CATEGORY_ORDER } from './auditLabels';
+import {
+  SENSITIVE_CATEGORY_INPUT_ALIASES,
+  SENSITIVE_CATEGORY_LABELS,
+  SENSITIVE_CATEGORY_ORDER,
+} from './auditLabels';
 import styles from './sensitive.module.css';
 
 export interface SensitiveFormatDialogProps {
@@ -22,6 +26,7 @@ export function SensitiveFormatDialog({ open, onClose, path }: SensitiveFormatDi
           <span className={styles.wordlistPath}>{path}</span>。
         </p>
         <p>每行一个词条，格式是「词条,分类」，分类可以省略，省略时归入「其他」。</p>
+        <p>也可用中文写分类，写「违法」和写 illegal 是一样的。</p>
         <pre className={styles.formatCode}>{`# 以 # 开头的行是注释，会被忽略
 词条A,违法
 词条B,低俗
@@ -30,7 +35,7 @@ export function SensitiveFormatDialog({ open, onClose, path }: SensitiveFormatDi
           <span>可用的分类：</span>
           {SENSITIVE_CATEGORY_ORDER.map((c) => (
             <span key={c}>
-              · {SENSITIVE_CATEGORY_LABELS[c]}（{c}）
+              · {SENSITIVE_CATEGORY_LABELS[c]}（{c} / {SENSITIVE_CATEGORY_INPUT_ALIASES[c]}）
             </span>
           ))}
         </div>

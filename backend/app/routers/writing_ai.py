@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
+from app.routers._params import RowId
 from app.models.writing_ai import (
     ContinueRequest,
     DraftTextResponse,
@@ -32,27 +33,27 @@ router = APIRouter(tags=["writing"])
     response_model=PlotDirectionsResponse,
 )
 def plot_directions(
-    chapter_id: int, payload: PlotDirectionsRequest | None = None
+    chapter_id: RowId, payload: PlotDirectionsRequest | None = None
 ) -> PlotDirectionsResponse:
     """给几条可选剧情走向。**不产出正文。**"""
     return writing_ai_service.plot_directions(chapter_id, payload or PlotDirectionsRequest())
 
 
 @router.post("/api/chapters/{chapter_id}/proofread", response_model=ProofreadResponse)
-def proofread(chapter_id: int, payload: ProofreadRequest | None = None) -> ProofreadResponse:
+def proofread(chapter_id: RowId, payload: ProofreadRequest | None = None) -> ProofreadResponse:
     """挑错 + 给修改建议。**只报问题，不返回改写后的正文。**"""
     return writing_ai_service.proofread(chapter_id, payload or ProofreadRequest())
 
 
 @router.post("/api/chapters/{chapter_id}/continue", response_model=DraftTextResponse)
 def continue_writing(
-    chapter_id: int, payload: ContinueRequest | None = None
+    chapter_id: RowId, payload: ContinueRequest | None = None
 ) -> DraftTextResponse:
     """续写草稿。**不写库** —— 由前端插入编辑器，作者自己删改。"""
     return writing_ai_service.continue_writing(chapter_id, payload or ContinueRequest())
 
 
 @router.post("/api/chapters/{chapter_id}/expand", response_model=DraftTextResponse)
-def expand(chapter_id: int, payload: ExpandRequest) -> DraftTextResponse:
+def expand(chapter_id: RowId, payload: ExpandRequest) -> DraftTextResponse:
     """扩写草稿（必须有选中文本）。**不写库。**"""
     return writing_ai_service.expand(chapter_id, payload)

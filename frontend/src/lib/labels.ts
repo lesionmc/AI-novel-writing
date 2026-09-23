@@ -8,9 +8,11 @@ import type {
   ChapterStatus,
   CharacterRole,
   CharacterStatus,
+  ConflictSeverity,
   ForeshadowStatus,
   Importance,
   OutlineLevel,
+  ProofreadIssueType,
   TaskRole,
   WorldEntryCategory,
   WritingMode,
@@ -99,14 +101,14 @@ export const WORLD_CATEGORY_LABELS: Record<WorldEntryCategory, string> = {
 export const TASK_ROLE_LABELS: Record<TaskRole, string> = {
   outline: '写大纲',
   content: '写正文',
-  review: '检查前后一致',
+  review: '检查前后一致（质检页）',
   embedding: '记住全文（便于搜索）',
 };
 
 export const TASK_ROLE_HINTS: Record<TaskRole, string> = {
   outline: '用来展开大纲、生成章节卡',
   content: '用来写正文、生成回写建议',
-  review: '用来检查前后设定有没有打架',
+  review: '用来跑质检页的「一致性审校」；不指定时自动用默认模型',
   embedding: '用来把章节变成可搜索的记忆',
 };
 
@@ -153,5 +155,46 @@ export const WRITING_MODE_LABELS: Record<WritingMode, string> = {
 export const WRITING_MODE_HINTS: Record<WritingMode, string> = {
   manual: '不出现任何 AI 入口，就是一个干净的写作软件',
   assist: '顶栏出现 AI 菜单，需要你点了才动',
-  semi: '帮你记住前文、章末自动整理归档建议，但仍需你确认后才入库',
+  semi: '和「辅助」一样；每章仍会先自动带出人物与线索，章末点「完成本章」由 AI 起草归档建议，确认后才入库',
 };
+
+/* ---------------- 只读质检类结果（校对 / 一致性审校） ---------------- */
+
+/**
+ * 一致性审校的严重度。
+ * AI 对话工作台与质检页都要用，故集中在这里（此前质检页自带一份，口径一致，未强行合并）。
+ */
+export const CONFLICT_SEVERITY_LABELS: Record<ConflictSeverity, string> = {
+  high: '严重',
+  medium: '中等',
+  low: '轻微',
+};
+
+export const CONFLICT_SEVERITY_VARIANT: Record<ConflictSeverity, BadgeVariant> = {
+  high: 'danger',
+  medium: 'warning',
+  low: 'neutral',
+};
+
+/** 校对问题类别（界面只说人话，不暴露英文枚举） */
+export const PROOFREAD_TYPE_LABELS: Record<ProofreadIssueType, string> = {
+  typo: '错别字',
+  punctuation: '标点',
+  grammar: '病句',
+  name: '称呼不一致',
+  setting: '与设定冲突',
+  repeat: '重复表达',
+};
+
+/** 未知取值兜底：后端新增类别时不崩、不显示原始英文 */
+export function proofreadTypeLabel(value: string): string {
+  return PROOFREAD_TYPE_LABELS[value as ProofreadIssueType] ?? '其他问题';
+}
+
+export function conflictSeverityLabel(value: string): string {
+  return CONFLICT_SEVERITY_LABELS[value as ConflictSeverity] ?? '待确认';
+}
+
+export function conflictSeverityVariant(value: string): BadgeVariant {
+  return CONFLICT_SEVERITY_VARIANT[value as ConflictSeverity] ?? 'neutral';
+}

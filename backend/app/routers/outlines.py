@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Query, status
 
+from app.routers._params import RowId
 from app.models.outline import (
     OutlineExpandRequest,
     OutlineExpandResponse,
@@ -35,15 +36,15 @@ def create_outline(book: str, payload: OutlineInput) -> OutlineOut:
 
 
 @router.patch("/api/outlines/{outline_id}", response_model=OutlineOut)
-def update_outline(outline_id: int, payload: OutlineUpdate) -> OutlineOut:
+def update_outline(outline_id: RowId, payload: OutlineUpdate) -> OutlineOut:
     return outline_service.update_outline(outline_id, payload)
 
 
 @router.delete("/api/outlines/{outline_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_outline(outline_id: int) -> None:
+def delete_outline(outline_id: RowId) -> None:
     outline_service.delete_outline(outline_id)
 
 
 @router.post("/api/outlines/{outline_id}/expand", response_model=OutlineExpandResponse)
-def expand_outline(outline_id: int, payload: OutlineExpandRequest) -> OutlineExpandResponse:
+def expand_outline(outline_id: RowId, payload: OutlineExpandRequest) -> OutlineExpandResponse:
     return outline_service.expand_outline(outline_id, payload)

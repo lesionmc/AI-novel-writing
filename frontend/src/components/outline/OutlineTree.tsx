@@ -14,11 +14,14 @@ interface RowProps {
   node: OutlineTreeNode;
   depth: number;
   selectedId: number | null;
+  /** 有未保存本地草稿的节点 id（切走不丢，见 OutlinePage 的 drafts） */
+  dirtyIds: Set<number>;
   onSelect: (node: OutlineNode) => void;
 }
 
-function TreeRow({ node, depth, selectedId, onSelect }: RowProps) {
+function TreeRow({ node, depth, selectedId, dirtyIds, onSelect }: RowProps) {
   const hasChildren = node.children.length > 0;
+  const dirty = dirtyIds.has(node.id);
   return (
     <li>
       <button
@@ -32,6 +35,9 @@ function TreeRow({ node, depth, selectedId, onSelect }: RowProps) {
       >
         <Icon name={LEVEL_ICON[node.level]} size={16} className={styles.treeRowIcon} />
         <span className={styles.treeLabel}>{defaultNodeLabel(node)}</span>
+        {dirty ? (
+          <span className={styles.treeDirty} title="有未保存的修改" role="img" aria-label="有未保存的修改" />
+        ) : null}
         {hasChildren && node.level !== 'chapter' ? (
           <span className={styles.treeCount}>{node.children.length}</span>
         ) : null}
@@ -44,6 +50,7 @@ function TreeRow({ node, depth, selectedId, onSelect }: RowProps) {
               node={child}
               depth={depth + 1}
               selectedId={selectedId}
+              dirtyIds={dirtyIds}
               onSelect={onSelect}
             />
           ))}
@@ -56,16 +63,24 @@ function TreeRow({ node, depth, selectedId, onSelect }: RowProps) {
 export interface OutlineTreeProps {
   nodes: OutlineNode[];
   selectedId: number | null;
+  dirtyIds: Set<number>;
   onSelect: (node: OutlineNode) => void;
 }
 
 /** 大纲左树：总纲 → 卷纲 → 章节卡，三级 */
-export function OutlineTree({ nodes, selectedId, onSelect }: OutlineTreeProps) {
+export function OutlineTree({ nodes, selectedId, dirtyIds, onSelect }: OutlineTreeProps) {
   const tree = buildOutlineTree(nodes);
   return (
-    <ul>
+    <ul className={styles.treeRoot}>
       {tree.map((n) => (
-        <TreeRow key={n.id} node={n} depth={0} selectedId={selectedId} onSelect={onSelect} />
+        <TreeRow
+          key={n.id}
+          node={n}
+          depth={0}
+          selectedId={selectedId}
+          dirtyIds={dirtyIds}
+          onSelect={onSelect}
+        />
       ))}
     </ul>
   );

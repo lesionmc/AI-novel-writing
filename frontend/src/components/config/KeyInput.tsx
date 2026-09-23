@@ -56,7 +56,8 @@ export function KeyInput({
         </button>
       </div>
       {hint ? <span className={form.hintText}>{hint}</span> : null}
-      {existingRef ? <span className={styles.keyRef}>当前密钥：{existingRef}（留空表示不修改）</span> : null}
+      {/* 同 ProviderCard：显示的是引用名不是密钥本体，措辞别让新手以为这是 Key */}
+      {existingRef ? <span className={styles.keyRef}>密钥已保存（内部标识 {existingRef}）；留空表示不修改</span> : null}
     </div>
   );
 }

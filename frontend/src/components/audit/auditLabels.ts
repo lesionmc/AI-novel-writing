@@ -82,6 +82,23 @@ export const SENSITIVE_CATEGORY_ORDER: SensitiveCategory[] = [
   'other',
 ];
 
+/**
+ * 写词表时**可用的另一种写法**（中文别名）。
+ *
+ * 后端的 `_CATEGORY_ALIASES`（services/audit/wordlist.py）中英文都收，
+ * 会归一化成同一套 id。格式说明弹窗给出示例用了中文（`词条A,违法`），
+ * 若「可用的分类」只列英文 id，用户会以为示例写错了 —— 两种都列出来。
+ * `other` 同时是默认归入项，故注明「可省略不写」。
+ */
+export const SENSITIVE_CATEGORY_INPUT_ALIASES: Record<SensitiveCategory, string> = {
+  politics: '政治',
+  violence: '暴力',
+  porn: '色情、低俗',
+  illegal: '违法、违规',
+  superstition: '迷信',
+  other: '其他，可省略不写',
+};
+
 export function sensitiveCategoryLabel(value: string): string {
   return SENSITIVE_CATEGORY_LABELS[value as SensitiveCategory] ?? '其他';
 }

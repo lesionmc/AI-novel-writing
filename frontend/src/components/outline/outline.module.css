@@ -53,6 +53,14 @@
   transition: background-color var(--duration-fast) var(--ease-standard);
 }
 
+/* 多份总纲并列时给一条分隔：几份总纲依次排下来、行高与缩进都一样，
+   没有这条线就分不清"这是 4 份大纲"还是"1 份大纲带了 4 个卷"。 */
+.treeRoot > li + li {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: var(--border-width-1) solid var(--color-border-subtle);
+}
+
 .treeRow:hover {
   background-color: var(--color-surface-hover);
 }
@@ -87,6 +95,15 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* 有未保存本地草稿的小圆点（切节点不丢内容，但必须看得见） */
+.treeDirty {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-warning-text);
+}
+
 /* ---------- 右侧详情 ---------- */
 .detailPane {
   border: var(--border-width-1) solid var(--color-border);
@@ -110,6 +127,16 @@
   gap: var(--space-2);
   color: var(--color-text-secondary);
   font-size: var(--text-xs);
+}
+
+/* 详情里的「未保存」小标 —— 与左树圆点同一件事的两种可见表达 */
+.dirtyTag {
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-warning-soft);
+  color: var(--color-warning-text);
+  font-size: var(--text-2xs);
+  font-weight: var(--font-weight-medium);
 }
 
 .detailActions {

@@ -10,6 +10,12 @@ import sqlite3
 from app.db.connection import Capabilities
 
 
+# 与路由层 `Query(ge=1, le=200)` 对齐的兜底上界：SQLite 的 `LIMIT -1` 等于**无上限**，
+# 内部调用方一旦传入 0/负值就会导出整张表。HTTP 非法值已在路由层被拒（400），
+# 这里再夹一道，保证任何调用路径都不会出现"无上限"查询。
+_MAX_LIMIT = 200
+
+
 def _like_pattern(q: str) -> str:
     escaped = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
     return f"%{escaped}%"
@@ -21,6 +27,7 @@ def search_setting(
     query = (q or "").strip()
     if not query:
         return []
+    limit = min(max(limit, 1), _MAX_LIMIT)
     if caps.fts5_available:
         phrase = '"' + query.replace('"', '""') + '"'
         try:

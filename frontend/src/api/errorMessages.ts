@@ -8,7 +8,8 @@
 
 export const ERROR_MESSAGES: Record<string, string> = {
   // --- AI / 模型（R5 / 04 §6.2） ---
-  LLM_NOT_CONFIGURED: '还没有配置 AI 模型，去设置里添加一个吧',
+  // P2-10：指向具体位置，且与全项目统一指向「模型配置处」的口径一致
+  LLM_NOT_CONFIGURED: '还没有配置 AI 模型，去「设置 · 已配置的模型」里添加一个吧',
   LLM_AUTH_FAILED: '模型的密钥好像不对，检查一下密钥有没有填错',
   LLM_RATE_LIMITED: '模型调用太频繁了，等一会儿再试',
   LLM_TIMEOUT: '模型响应超时了，可能是网络问题，请重试',

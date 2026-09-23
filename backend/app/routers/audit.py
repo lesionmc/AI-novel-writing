@@ -8,6 +8,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
+from app.routers._params import RowId
 from app.models.audit import AiFlavorResult, SensitiveResult, WordlistStatus
 from app.models.writing_ai import ConsistencyRequest
 from app.services import audit_service, consistency_service
@@ -16,7 +17,7 @@ router = APIRouter(tags=["audit"])
 
 
 @router.post("/api/chapters/{chapter_id}/audit/ai-flavor", response_model=AiFlavorResult)
-def audit_ai_flavor(chapter_id: int) -> AiFlavorResult:
+def audit_ai_flavor(chapter_id: RowId) -> AiFlavorResult:
     return audit_service.detect_ai_flavor(chapter_id)
 
 

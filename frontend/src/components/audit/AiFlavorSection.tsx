@@ -17,6 +17,7 @@ import { AiFlavorHitCard } from './AiFlavorHitCard';
 import { ScoreRing, type ScoreRingTone } from './ScoreRing';
 import { scoreBand } from './auditLabels';
 import styles from './audit.module.css';
+import { slugSegment } from '@/lib/slug';
 
 export interface AiFlavorSectionProps {
   slug: string;
@@ -88,7 +89,7 @@ export function AiFlavorSection({ slug }: AiFlavorSectionProps) {
     const anchor = buildLocateAnchor(chapterQuery.data?.content ?? '', hit);
     setActiveChapter(target.id);
     if (anchor) requestChunkHighlight(selectedSeq, anchor);
-    navigate(`/book/${encodeURIComponent(slug)}/desk`);
+    navigate(`/book/${slugSegment(slug)}/desk`);
   };
 
   const band = flavor.data ? scoreBand(flavor.data.score) : null;
@@ -149,6 +150,9 @@ export function AiFlavorSection({ slug }: AiFlavorSectionProps) {
             icon="chapter"
             title="还没有可以检测的章节"
             description="先去写作台写一章，再回来做去 AI 味检测。"
+            actionLabel="去写作台写第一章"
+            actionIcon="edit"
+            onAction={() => navigate(`/book/${slugSegment(slug)}/desk`)}
           />
         ) : flavor.isPending ? (
           <div className={styles.stateWrap}>

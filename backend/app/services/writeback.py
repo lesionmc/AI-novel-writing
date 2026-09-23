@@ -87,6 +87,7 @@ def _index_chapter(
             source_type="chapter",
             source_id=chapter_id,
             chapter_seq=seq,
+            chunk_index=index,
             text=chunk,
             char_count=len(chunk),
             embedding_model=model_name,
@@ -95,7 +96,15 @@ def _index_chapter(
         )
         chunk_repo.insert_vec(conn, registry.caps, chunk_id=chunk_id, embedding=vector)
         count += 1
-    return count
+    # 正文变短时清掉尾部残留块（否则库里留着已不存在的正文，且行数会多于当前分块数）
+    chunk_repo.delete_from_index(
+        conn, registry.caps,
+        source_type="chapter", source_id=chapter_id, from_index=count,
+    )
+    # 【必须】回报**实际落库行数**，不能用上面的循环次数：
+    # 旧实现把循环次数当 chunks_indexed 上报（89），而库里只有 20 行 —— 指标本身在骗人，
+    # 这正是「每章只剩最后一块」潜伏至今的原因（见 schema.sql 修正点 8）。
+    return chunk_repo.count_for_source(conn, "chapter", chapter_id)
 
 
 def confirm_writeback(slug: str, chapter_id: int, suggestion: WritebackSuggestion) -> ConfirmResult:

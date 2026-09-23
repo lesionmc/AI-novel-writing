@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import sqlite3
+
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.errors import AppError
+from app.db.connection import is_busy_error
+from app.errors import AppError, DatabaseBusyError
 from app.logging_config import get_logger, log_fields
 
 logger = get_logger("app.errors")
@@ -56,6 +59,36 @@ def register_exception_handlers(app: FastAPI) -> None:
         return JSONResponse(
             status_code=exc.status_code,
             content={"error": {"code": code, "message": message, "detail": None}},
+        )
+
+    @app.exception_handler(sqlite3.OperationalError)
+    async def handle_sqlite_operational(request, exc: sqlite3.OperationalError) -> JSONResponse:
+        """SQLite 忙锁 → 可重试的 `DB_BUSY`（503），而不是不可重试的 500（A-06）。
+
+        `transaction()` 内的忙锁已被翻译成 `AppError`（走上面的处理器）；
+        这里兜住那些**未被事务包装**的裸读/裸写路径抛出的忙锁，
+        避免它们退化成「服务器内部错误」把用户引向错误的排查方向。
+        """
+        if is_busy_error(exc):
+            logger.warning("db busy", **log_fields(path=request.url.path))
+            return JSONResponse(
+                status_code=DatabaseBusyError.http_status,
+                content=DatabaseBusyError().to_payload(),
+                headers={"Retry-After": "1"},
+            )
+        logger.error(
+            "unhandled error",
+            **log_fields(path=request.url.path, error=exc.__class__.__name__),
+        )
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "服务器内部错误，请稍后重试",
+                    "detail": None,
+                }
+            },
         )
 
     @app.exception_handler(Exception)

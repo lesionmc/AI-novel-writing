@@ -6,6 +6,7 @@ import { Button } from '@/components/common/Button';
 import { Icon } from '@/components/common/Icon';
 import { Menu } from '@/components/common/Menu';
 import styles from './BookCard.module.css';
+import { bookPath } from '@/lib/slug';
 
 export interface BookCardProps {
   /** 列表用契约 `BookBrief`（6 字段，无 target_words/premise/writing_mode） */
@@ -27,14 +28,15 @@ function shortGenre(genre: string): string {
 
 /** 书库作品卡：书名 / 题材 / 字数 / 章节 / 更新时间 / 继续写（04 §5.1） */
 export function BookCard({ book, onRename, onDelete }: BookCardProps) {
-  const slug = encodeURIComponent(book.slug);
+  // 这里存**原始** slug；编码统一交给 bookPath()（避免双重编码，见 lib/slug.ts）
+  const slug = book.slug;
   const navigate = useNavigate();
 
   return (
     <article className={styles.card}>
       <div className={styles.head}>
         <div className={styles.titleRow}>
-          <Link className={styles.title} to={`/book/${slug}/desk`} title={book.title}>
+          <Link className={styles.title} to={bookPath(slug, '/desk')} title={book.title}>
             {book.title}
           </Link>
           <div className={styles.meta}>
@@ -79,7 +81,7 @@ export function BookCard({ book, onRename, onDelete }: BookCardProps) {
           variant="primary"
           size="sm"
           icon="edit"
-          onClick={() => navigate(`/book/${slug}/desk`)}
+          onClick={() => navigate(bookPath(slug, '/desk'))}
         >
           {book.chapter_count > 0 ? '继续写' : '开始写'}
         </Button>

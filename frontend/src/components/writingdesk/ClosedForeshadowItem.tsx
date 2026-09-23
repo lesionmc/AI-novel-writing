@@ -14,12 +14,12 @@ export function ClosedForeshadowItem({ item, onChange }: ClosedForeshadowItemPro
         type="checkbox"
         className={styles.checkbox}
         checked={item.accepted}
-        aria-label={`确认交代线索 ${item.title}`}
+        aria-label={`确认回收线索 ${item.title}`}
         onChange={(e) => onChange({ accepted: e.target.checked })}
       />
       <div className={styles.itemMain}>
         <div className={styles.itemText}>「{item.title}」</div>
-        <div className={styles.itemReason}>确认后把这条线索标记为已交代</div>
+        <div className={styles.itemReason}>确认后把这条线索标记为已回收</div>
       </div>
     </div>
   );

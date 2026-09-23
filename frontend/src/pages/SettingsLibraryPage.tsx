@@ -13,6 +13,7 @@ import { ForeshadowTable } from '@/components/settings/ForeshadowTable';
 import { SetupChatDialog } from '@/components/ai/SetupChatDialog';
 import { toast } from '@/stores/toastStore';
 import styles from './SettingsLibraryPage.module.css';
+import { slugSegment } from '@/lib/slug';
 
 type TabKey = 'characters' | 'world' | 'foreshadows';
 
@@ -112,8 +113,11 @@ export function SettingsLibraryPage() {
             把人物、世界和你埋下的线索集中记在这里。写得越具体，写作台右栏「本章提醒」就越准。
           </p>
         </div>
-        {/* QA L8：写作台有「返回书库」按钮，设定库只有顶栏一个不起眼的链接 —— 统一加一个 */}
-        <Button variant="secondary" icon="chevronLeft" onClick={() => navigate('/')}>
+        {/* QA L8：写作台有「返回书库」按钮，设定库只有顶栏一个不起眼的链接 —— 统一加一个。
+            用 ghost 而不是 secondary：本页的主行动是各 Tab 里的「新建人物 / 新建词条」，
+            页头这个按钮只是"离开"通道。做成带边框的次级按钮会跟主行动抢注意力，
+            也和「开书清单」页头（ghost + accent 主行动）的约定不一致。 */}
+        <Button variant="ghost" icon="chevronLeft" onClick={() => navigate('/')}>
           返回书库
         </Button>
       </header>
@@ -148,7 +152,7 @@ export function SettingsLibraryPage() {
           noModel={noModel}
           onOpenConfig={() => {
             closeChat();
-            navigate(`/book/${encodeURIComponent(slug)}/config`);
+            navigate(`/book/${slugSegment(slug)}/config`);
           }}
           onClose={closeChat}
           onWritten={(res) => {

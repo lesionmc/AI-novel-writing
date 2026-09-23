@@ -28,8 +28,9 @@
 --       仅当 `caps.vec_available` 为真才执行该段（vec_chunk），且仅入书库。
 --     · 行首恰为 `@@GLOBAL <table>` 的行开启一段，到行首恰为 `@@END` 的行结束；
 --       该段属**全局库**（`data/app.db`）对象，`scope="book"` 时**跳过**、`scope="global"` 时**只取该段**；
---       书库不再持有该对象。当前承载 `llm_provider`（模型配置全局共享，换书不必重配）
---       与 `meta`（全局键值元信息，如一次性迁移标记）。
+--       书库不再持有该对象。当前承载 `llm_provider`（模型配置全局共享，换书不必重配）、
+--       `meta`（全局键值元信息，如一次性迁移标记）与 `provider_role`
+--       （模型 ↔ 任务角色的多对多关联，使一个模型可同时承担多个角色）。
 --   ⚠ 红线 3：三张虚拟表若不加标记、随主段一起执行，缺扩展 / 缺 FTS5 的环境会**整体建库失败**，
 --     在“建书库”第一步就崩。必须条件化。
 --   ⚠ 除下方真正的标记行外，**任何注释都不得以 `@@OPTIONAL` / `@@GLOBAL` / `@@END` 作为行首**，
@@ -244,8 +245,12 @@ CREATE INDEX IF NOT EXISTS idx_recall_chapter ON recall_log(chapter_seq);
 -- 12. chunk_meta — 文本分块元数据（向量索引的元信息侧）
 --     [修正点1 / D-18] 增列 embedding / embedding_dim：每块存一份向量本体，
 --       供 sqlite-vec 扩展不可用/损坏时重建。vec_chunk 仍是唯一检索入口，
---       chunk_meta.embedding 仅作重建源（1024×4B ≈ 4KB/块，百万字约 1250 块 ≈ 5MB，体积可控）。
---     [修正点5 / D-15] 唯一性说明见本表下方注释。
+--       chunk_meta.embedding 仅作重建源（1024×4B ≈ 4KB/块，体积可控）。
+--     [修正点5 / D-15 + 修正点8] 唯一性：**一章正文切出的每一块各占一行**，键含
+--       `chunk_index`（章内块序号）。按 `settings.chunk_size = 800` 字/块估算，
+--       百万字约 1000000/800 ≈ 1250 块 —— 「1250 块」正是由此而来，也印证了
+--       chapter 类分块**本来就不是每章一行**（此前旧键把它当每章一行，是缺陷）。
+--       唯一性说明见本表下方注释。
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS chunk_meta (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -253,20 +258,25 @@ CREATE TABLE IF NOT EXISTS chunk_meta (
                     CHECK (source_type IN ('chapter','setting','summary','material')),
     source_id       INTEGER NOT NULL,
     chapter_seq     INTEGER,
+    chunk_index     INTEGER NOT NULL DEFAULT 0,      -- 章内块序号（0 起）；setting/summary 类恒为 0
     text            TEXT    NOT NULL,
     char_count      INTEGER NOT NULL,
     embedding_model TEXT,                 -- 换 embedding 模型需重建全部向量
     embedding       BLOB,                 -- 向量本体（FLOAT[1024]，小端 float32，4096 字节），扩展不可用时为重建源
     embedding_dim   INTEGER NOT NULL DEFAULT 1024,   -- 向量维度，与 vec_chunk FLOAT[1024] 对齐
     created_at      TEXT    NOT NULL,
-    UNIQUE(source_type, source_id, chapter_seq)
+    UNIQUE(source_type, source_id, chapter_seq, chunk_index)
 );
 CREATE INDEX IF NOT EXISTS idx_chunk_source ON chunk_meta(source_type, source_id);
--- [修正点5 / D-15] 唯一性说明：
---   SQLite 视 NULL 互不相等，故表级 UNIQUE(source_type, source_id, chapter_seq) 只在
---   chapter_seq 非空（chapter 类分块）时生效；setting / summary 类 chapter_seq 为 NULL，
---   该约束不起作用。唯一性由写入侧（应用层）保证：写入用
---   INSERT ON CONFLICT(source_type, source_id, chapter_seq) DO UPDATE，或先查后写。
+-- [修正点5 / D-15 + 修正点8] 唯一性说明：
+--   ① chapter 类（chapter_seq 非空）：一章正文由 `utils/chunk.split_text` 切成 N 块，
+--      每块以 (source_type, source_id, chapter_seq, **chunk_index**) 唯一 —— **N 块落 N 行**。
+--      ⚠ 历史缺陷（2026-09-22 修）：旧键不含 chunk_index，同章逐块 upsert 时块块命中
+--      同一冲突键并覆盖前一块，整章只剩最后一块（实测 89 块 → 库里 20 行）；
+--      写入侧的 `ON CONFLICT` 目标必须与上面的四列**逐字一致**，否则覆盖会重现。
+--   ② setting / summary 类（chapter_seq 为 NULL）：SQLite 视 NULL 互不相等，唯一键
+--      对其不生效 —— 唯一性由写入侧「先删后插」保证（`chunk_repo.upsert_chunk` 的
+--      chapter_seq IS NULL 分支），该分支行为与本次修正前**完全一致**。
 
 -- ---------------------------------------------------------------------------
 -- 13. llm_provider — 模型配置（密钥本体存系统密钥环，此处只存引用名）
@@ -312,6 +322,33 @@ CREATE TABLE IF NOT EXISTS meta (
     key   TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );
+-- @@END
+
+-- ---------------------------------------------------------------------------
+-- 16. provider_role — 「模型 ↔ 任务角色」多对多关联（`@@GLOBAL` 块，同属全局库）
+--     为什么要有它：`llm_provider.task_role` 是**单值**列，一个模型只能挂一个角色，
+--     于是「一个模型全包（写大纲 + 写正文 + 审校）」根本无法表达 —— 界面上把同一个
+--     模型指给第二个角色时，只能把上一个角色的分配抢走（用户原话：
+--     「为什么不能选择多个一样的模型」「能不能一个 ai 做完全部」）。
+--     拆出本表后：**一个模型可挂多个角色**，**一个角色仍可有多个候选模型**
+--     （`find_for_role` 按 `is_default DESC, id ASC` 取第一个，与原口径一致）。
+--
+--     · 主键 `(provider_id, task_role)` 天然去重 → 回填/重放用 `INSERT OR IGNORE` 即幂等。
+--     · **不**动 `llm_provider.task_role`：它继续存在（历史数据 + 向后兼容 + 老库回填来源），
+--       但**不再参与路由**；路由一律以本表为准（见 `provider_repo.find_for_role`）。
+--     · 不建外键：全局库里删除 provider 时由应用层同事务清理（`provider_repo.delete`），
+--       与既有「不使用触发器、副作用显式可见」的约定一致。
+--     一次性回填由 `services/provider_role_migration.py` 负责（判据 = meta 表标记
+--     `provider_roles_migrated_v1`，不是"表里有没有行"）。
+-- ---------------------------------------------------------------------------
+-- @@GLOBAL provider_role
+CREATE TABLE IF NOT EXISTS provider_role (
+    provider_id INTEGER NOT NULL,
+    task_role   TEXT    NOT NULL,
+    created_at  TEXT    NOT NULL,
+    PRIMARY KEY (provider_id, task_role)
+);
+CREATE INDEX IF NOT EXISTS idx_provider_role_role ON provider_role(task_role);
 -- @@END
 
 -- ---------------------------------------------------------------------------

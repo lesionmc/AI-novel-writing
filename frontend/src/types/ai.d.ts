@@ -11,7 +11,12 @@
  * 由 `api.d.ts` 统一再导出。
  */
 
-import type { CharacterRole, CharacterStatus, WorldEntryCategory } from './common';
+import type {
+  CharacterRole,
+  CharacterStatus,
+  OutlineLevel,
+  WorldEntryCategory,
+} from './common';
 
 export type ChatRole = 'user' | 'assistant';
 
@@ -72,4 +77,86 @@ export interface SetupChatResponse {
   reply: string;
   done: boolean;
   draft?: SetupDraft | null;
+}
+
+/* ============================================================================
+ * AI 对话工作台（M2-batch3）
+ * ----------------------------------------------------------------------------
+ * 端点 `POST /api/books/{book}/ai/chat`。定位：一个 AI 做完全部 ——
+ * 有上下文、有记忆、有对话，退出再进来还能接着做。
+ *
+ * [关键] 上下文**不在前端拼**：记忆包由服务端 `services/writing_context.py` 组装
+ * （与 5 个写作 AI 能力同源）；前端只带 `messages`（存 localStorage）与可选的
+ * `chapter_id` / `intent`。若前端自己去拉 characters/world-entries/foreshadows
+ * 再拼一份，就会造出第二个真源（审计点过名的双真源反模式）。
+ *
+ * [红线] `draft` 一律是**草稿**：必须用户在界面上点确认才由前端调已有写入端点落库。
+ * ========================================================================== */
+
+/** 草稿类型。`payload` 形状与对应写入端点对齐（`payload` 故意宽类型，渲染前必须校验）。 */
+export type AiChatDraftKind = 'characters' | 'world_entries' | 'outline_nodes' | 'prose';
+
+export interface AiChatMessage {
+  role: ChatRole;
+  content: string;
+}
+
+/** `POST /api/books/{book}/ai/chat` 请求体 */
+export interface AiChatRequest {
+  /** 完整对话历史（含最新一条用户消息） */
+  messages: AiChatMessage[];
+  /** 在哪一章说话（可选）；给了就把该章上下文也带上 */
+  chapter_id?: number | null;
+  /** 要干什么（可选）；`auto` / 缺省 = 由 AI 自己判断 */
+  intent?: string | null;
+}
+
+/** 「这次 AI 读了什么」—— 给用户看的，让"有记忆"这件事可见 */
+export interface AiChatContextUsed {
+  characters: number;
+  foreshadows: number;
+  outlines: number;
+  has_prev_summary: boolean;
+  injected_chars: number;
+}
+
+/** 结构化草稿。`kind` 决定 `payload` 形状；形状不对的草稿由 `parseAiChatDraft` 丢弃。 */
+export interface AiChatDraft {
+  kind: AiChatDraftKind;
+  payload: Record<string, unknown>;
+}
+
+/**
+ * 草稿·人物卡（`kind: 'characters'` 的 `payload.characters`）。
+ * 字段与 `CharacterInput` 对齐，可由前端直接投给 `createCharacter`。
+ */
+export interface AiChatDraftCharacter {
+  name: string;
+  role?: CharacterRole;
+  surface_identity?: string | null;
+  secret_desire?: string | null;
+  fatal_weakness?: string | null;
+  contradiction?: string | null;
+  appearance?: string | null;
+  background?: string | null;
+}
+
+/** 草稿·世界词条（`kind: 'world_entries'` 的 `payload.entries`） */
+export interface AiChatDraftWorldEntry {
+  category?: WorldEntryCategory;
+  name: string;
+  content?: string | null;
+}
+
+/** 草稿·大纲节点（`kind: 'outline_nodes'` 的 `payload.nodes`；**不落库**，确认后才建节点） */
+export interface AiChatDraftOutlineNode {
+  level: OutlineLevel;
+  title: string;
+  content: string;
+}
+
+export interface AiChatResponse {
+  reply: string;
+  draft?: AiChatDraft | null;
+  context_used: AiChatContextUsed;
 }

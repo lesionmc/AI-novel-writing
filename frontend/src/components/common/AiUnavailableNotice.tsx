@@ -16,13 +16,14 @@ export interface AiUnavailableNoticeProps {
 
 /**
  * 「未配置 AI 模型」的可读引导条 —— 与 RecallPanel 的降级条同款处理。
- * 铁律：入口不隐藏、不弹 alert，就地给一句人话 + 一个「去配置」按钮。
+ * 铁律：入口不隐藏、不弹 alert，就地给一句人话 + 一个「去配置模型」按钮。
+ * 按钮文案全项目统一为「去配置模型」（同一动作不要出现多种说法）。
  */
 export function AiUnavailableNotice({
   title = '还没有配置 AI 模型',
   children,
   onOpenConfig,
-  configLabel = '去配置',
+  configLabel = '去配置模型',
 }: AiUnavailableNoticeProps) {
   return (
     <div className={styles.notice} role="status">

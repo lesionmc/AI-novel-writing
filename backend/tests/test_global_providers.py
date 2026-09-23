@@ -44,7 +44,8 @@ def test_global_db_created_in_data_dir(client):
     assert db.path.is_file()
     with db.connection() as conn:
         assert missing_global_objects(conn) == []
-    assert set(expected_global_objects()) == {"llm_provider", "meta"}
+    # 全局库对象 = 模型配置 + 元信息 + 模型↔角色关联表（2026-09-22 新增 provider_role）
+    assert set(expected_global_objects()) == {"llm_provider", "meta", "provider_role"}
 
 
 def test_book_schema_no_longer_holds_llm_provider(client, book):

@@ -7,13 +7,17 @@ from app.db.registry import (
     now_iso,
     sanitize_slug,
 )
-from app.errors import BookNotFoundError
+from app.errors import BookExistsError, BookNotFoundError, ConflictError
 from app.logging_config import get_logger, log_fields
 from app.models.book import BookBrief, BookCreate, BookOut, BookUpdate
 from app.repositories import book_repo
 from app.services import workspace
 
 logger = get_logger(__name__)
+
+# `_unique_slug` 是「查可用名 → 再建目录」的两步，存在查-写竞态：两个并发请求可能
+# 选中同一个候选名。撞上时重算 slug 重试；有限次后仍冲突才 409。
+_SLUG_RETRIES = 5
 
 
 def _unique_slug(base_title: str) -> str:
@@ -79,21 +83,37 @@ def list_books() -> list[BookBrief]:
 
 def create_book(payload: BookCreate) -> BookOut:
     registry = get_registry()
-    slug = _unique_slug(payload.title)
     now = now_iso()
-    meta = {
-        "slug": slug,
-        "title": payload.title,
-        "genre": payload.genre,
-        "target_words": payload.target_words,
-        "premise": payload.premise,
-        "writing_mode": "assist",
-        "created_at": now,
-        "updated_at": now,
-        "total_words": 0,
-        "chapter_count": 0,
-    }
-    registry.create(slug, meta)
+    slug = ""
+    meta: dict = {}
+    for attempt in range(_SLUG_RETRIES):
+        slug = _unique_slug(payload.title)
+        meta = {
+            "slug": slug,
+            "title": payload.title,
+            "genre": payload.genre,
+            "target_words": payload.target_words,
+            "premise": payload.premise,
+            "writing_mode": "assist",
+            "created_at": now,
+            "updated_at": now,
+            "total_words": 0,
+            "chapter_count": 0,
+        }
+        try:
+            registry.create(slug, meta)
+        except BookExistsError:
+            # 查-写竞态：别的请求刚抢占了我们选的 slug → 重算并重试
+            logger.warning(
+                "book slug race; recomputing",
+                **log_fields(slug=slug, attempt=attempt + 1),
+            )
+            continue
+        break
+    else:
+        # 重试耗尽仍撞名：明确 409（BOOK_EXISTS），不要退化成 500
+        raise BookExistsError(f"同名作品已存在：{payload.title}")
+
     try:
         with registry.database(slug).transaction() as conn:
             book_id = book_repo.create_row(

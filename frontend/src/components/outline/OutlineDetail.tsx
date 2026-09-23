@@ -27,6 +27,8 @@ export interface OutlineDetailProps {
   /** 当前节点的直接子节点（由父级按扁平数组 + parent_id 派生，契约无 children 字段） */
   children: OutlineNode[];
   draft: OutlineDraft;
+  /** 当前节点是否有未保存的本地草稿（切走不会丢，但要如实提示） */
+  dirty: boolean;
   onChange: (patch: Partial<OutlineDraft>) => void;
   saving: boolean;
   saveError: unknown;
@@ -62,6 +64,7 @@ export function OutlineDetail({
   node,
   children: childNodes,
   draft,
+  dirty,
   onChange,
   saving,
   saveError,
@@ -88,6 +91,7 @@ export function OutlineDetail({
           <Icon name="outline" size={16} />
           {OUTLINE_LEVEL_LABELS[node.level]}
           {node.level !== 'total' ? <span className={styles.childSeq}>· 序号 {node.seq}</span> : null}
+          {dirty ? <span className={styles.dirtyTag}>未保存</span> : null}
         </span>
         <div className={styles.detailActions}>
           {node.level !== 'chapter' ? (

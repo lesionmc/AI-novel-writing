@@ -4,7 +4,7 @@
   · `scope="book"`   —— 每部作品一个库（`books/<slug>/novel.db`）：
      执行无条件段 + 命中的 `@@OPTIONAL` 段；**跳过** `@@GLOBAL` 段。
   · `scope="global"` —— 全局库（`data/app.db`）：
-     **只执行** `@@GLOBAL` 段（承载跨作品共享对象，当前为 `llm_provider`）。
+     **只执行** `@@GLOBAL` 段（承载跨作品共享对象：`llm_provider` / `meta` / `provider_role`）。
 
 `-- @@OPTIONAL vec` / `-- @@OPTIONAL fts` 标记块内语句，仅在对应能力可用时执行
 （坑 3 / 坑 6 / D-17）。`-- @@GLOBAL` 块则与能力无关，只与目标库有关。
@@ -36,8 +36,12 @@ _BASE_TABLES = (
     "writing_log",
     "material",
 )
-# 全局库（data/app.db）对象：模型配置 + 全局键值元信息（含一次性迁移标记）。
-_GLOBAL_TABLES = ("llm_provider", "meta")
+# 全局库（data/app.db）对象：模型配置 + 全局键值元信息（含一次性迁移标记）
+#   + 模型↔角色关联表（provider_role）。
+# ⚠ `provider_role` 必须登记在此：`global_db._ensure_schema` 只在
+#   `missing_global_objects()` 非空时才执行建库语句 —— 漏登记会导致
+#   **已存在的全局库永远补不上这张新表**（老库升级即缺表）。
+_GLOBAL_TABLES = ("llm_provider", "meta", "provider_role")
 _OPTIONAL_TABLE_CAP = {"vec_chunk": "vec", "chapter_fts": "fts", "setting_fts": "fts"}
 
 

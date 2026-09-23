@@ -14,7 +14,13 @@ from app.models.chapter import (
     ChapterVersionCreate,
     ChapterVersionOut,
 )
-from app.repositories import chapter_repo, chunk_repo, locate_repo, search_repo
+from app.repositories import (
+    chapter_repo,
+    chunk_repo,
+    locate_repo,
+    outline_repo,
+    search_repo,
+)
 from app.services import book_service, workspace
 from app.utils.text import count_words
 
@@ -114,6 +120,7 @@ def save_chapter(chapter_id: int, payload: ChapterPatch) -> ChapterSaveResult:
 def delete_chapter(chapter_id: int) -> None:
     slug = workspace.resolve_slug(locate_repo.has_chapter, chapter_id, ChapterNotFoundError())
     registry = get_registry()
+    detached = 0
     with registry.database(slug).transaction() as conn:
         if not chapter_repo.exists(conn, chapter_id):
             raise ChapterNotFoundError()
@@ -121,8 +128,15 @@ def delete_chapter(chapter_id: int) -> None:
         chunk_repo.delete_for_source(
             conn, registry.caps, source_type="chapter", source_id=chapter_id
         )
+        # 先解绑大纲节点再删章：`outline.chapter_id` 无外键，不显式置 NULL 就会永久悬空
+        detached = outline_repo.detach_chapter(conn, chapter_id)
         chapter_repo.delete(conn, chapter_id)
     book_service.refresh_stats(slug)
+    if detached:
+        logger.info(
+            "chapter deleted; outlines detached",
+            **log_fields(slug=slug, chapter_id=chapter_id, detached=detached),
+        )
     logger.info("chapter deleted", **log_fields(slug=slug, chapter_id=chapter_id))
 
 

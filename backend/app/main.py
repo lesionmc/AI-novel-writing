@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.routing import Match
 
 from app.config import settings
 from app.db.connection import probe_capabilities
@@ -15,6 +16,7 @@ from app.exception_handlers import register_exception_handlers
 from app.logging_config import get_logger, log_fields, setup_logging
 from app.middlewares import RequestContextMiddleware
 from app.routers import (
+    ai_chat,
     ai_setup,
     audit,
     books,
@@ -29,7 +31,9 @@ from app.routers import (
 )
 from app.routers import settings as settings_router
 from app.services import provider_migration
+from app.services import provider_role_migration
 from app.services import fts_migration
+from app.services import chunk_migration
 
 logger = get_logger("app.main")
 
@@ -45,8 +49,12 @@ async def lifespan(app: FastAPI):
     logger.info("startup self-check done", **log_fields(**caps.as_dict()))
     # 一次性把老书库里的模型配置搬到全局库（幂等、失败非致命）
     provider_migration.migrate_providers_to_global()
+    # 把 llm_provider.task_role 一次性回填进 provider_role 关联表（幂等、失败非致命）
+    provider_role_migration.migrate_provider_roles()
     # 把老书库的 FTS 索引从 unicode61 重建为 trigram（幂等、失败非致命）
     fts_migration.migrate_all_book_fts()
+    # 把老书库的 chunk_meta 唯一键升级为含 chunk_index 的四列（幂等、失败非致命）
+    chunk_migration.migrate_all_book_chunks()
     yield
 
 
@@ -78,7 +86,31 @@ app.include_router(export.router)
 app.include_router(system.router)
 app.include_router(topics.router)
 app.include_router(ai_setup.router)
+app.include_router(ai_chat.router)
 app.include_router(writing_ai.router)
+
+
+def _api_path_method_mismatch(application: FastAPI, scope) -> bool:
+    """该请求路径是否命中某个 API 路由、只是 HTTP 方法不对。
+
+    为什么需要它：本函数注册了一条 `GET /{full_path:path}` 兜底（见 `_mount_frontend`），
+    Starlette 按顺序匹配，于是**任何 GET 请求**——包括「路径存在但只支持 POST」的
+    `/api/...`——都会被兜底接走。若不特判，调用方会收到 404「接口不存在」，
+    而正确语义是 **405 METHOD_NOT_ALLOWED**。
+
+    判定用 Starlette 的三态匹配结果：
+      FULL    → 路径与方法都匹配（正常流程不会走到兜底里来）
+      PARTIAL → **路径匹配、方法不匹配** —— 就是我们要找的情形
+      NONE    → 完全不匹配 → 确实是 404
+    """
+    for route in application.routes:
+        try:
+            match, _child = route.matches(scope)
+        except Exception:  # noqa: BLE001 —— 个别 route 类型不实现 matches，跳过即可
+            continue
+        if match is Match.PARTIAL:
+            return True
+    return False
 
 
 def _mount_frontend(application: FastAPI) -> None:
@@ -87,8 +119,21 @@ def _mount_frontend(application: FastAPI) -> None:
         application.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")
 
     @application.get("/{full_path:path}", include_in_schema=False)
-    async def spa(full_path: str):  # noqa: ANN202
-        if full_path.startswith("api/"):
+    async def spa(full_path: str, request: Request):  # noqa: ANN202
+        # `full_path` 不带前导斜杠。判据必须同时覆盖裸 `api` 与 `api/...`：
+        # 漏掉裸 `api` 会让 `GET /api` 返回 200 + 前端 HTML（而不是 404）。
+        if full_path == "api" or full_path.startswith("api/"):
+            if _api_path_method_mismatch(application, request.scope):
+                return JSONResponse(
+                    status_code=405,
+                    content={
+                        "error": {
+                            "code": "METHOD_NOT_ALLOWED",
+                            "message": "请求方法不被允许",
+                            "detail": None,
+                        }
+                    },
+                )
             return JSONResponse(
                 status_code=404,
                 content={"error": {"code": "NOT_FOUND", "message": "接口不存在", "detail": None}},

@@ -2,7 +2,9 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { ToastViewport } from '@/components/common/Toast';
 import { LibraryPage } from '@/pages/LibraryPage';
+import { AiHubPage } from '@/pages/AiHubPage';
 import { WritingDeskPage } from '@/pages/WritingDeskPage';
+import { StartWizardPage } from '@/pages/StartWizardPage';
 import { SettingsLibraryPage } from '@/pages/SettingsLibraryPage';
 import { OutlinePage } from '@/pages/OutlinePage';
 import { AuditPage } from '@/pages/AuditPage';
@@ -13,6 +15,10 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 /**
  * 路由表（Spec §7 锁定，不得改名）：
  *   /                       书库
+ *   /chat                   AI 助手（**无作品也能进**：先选作品才开聊）
+ *   /book/:slug/start       开书向导（按六阶段：立项 → 骨架 → 包装，出口交棒写稿）
+ *                           **新建作品后的默认落点** —— 不再直接丢进空白编辑器
+ *   /book/:slug/chat        AI 助手（带作品：有记忆、有对话，退出再进来还能接着做）
  *   /book/:slug/desk        写作台（核心页，自有三栏骨架）
  *   /book/:slug/settings    设定库
  *   /book/:slug/outline     大纲
@@ -27,7 +33,10 @@ export function App() {
       <Routes>
         <Route element={<AppShell />}>
           <Route path="/" element={<LibraryPage />} />
+          <Route path="/chat" element={<AiHubPage />} />
           <Route path="/config" element={<ConfigPage />} />
+          <Route path="/book/:slug/start" element={<StartWizardPage />} />
+          <Route path="/book/:slug/chat" element={<AiHubPage />} />
           <Route path="/book/:slug/settings" element={<SettingsLibraryPage />} />
           <Route path="/book/:slug/outline" element={<OutlinePage />} />
           <Route path="/book/:slug/audit" element={<AuditPage />} />

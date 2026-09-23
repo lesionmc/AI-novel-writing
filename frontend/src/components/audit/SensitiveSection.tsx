@@ -1,43 +1,27 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { BadgeVariant } from '@/types/ui';
 import { useChapterBriefs, useWordlistStatus } from '@/hooks/queries';
 import { useSensitiveAudit } from '@/hooks/mutations/audit';
 import { useDeskStore } from '@/stores/deskStore';
 import { toast } from '@/stores/toastStore';
-import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
-import { EmptyState } from '@/components/common/EmptyState';
 import { ErrorBar } from '@/components/common/ErrorBar';
 import { Icon } from '@/components/common/Icon';
 import { SkeletonRows } from '@/components/common/Skeleton';
 import {
   SENSITIVE_CATEGORY_LABELS,
   SENSITIVE_CATEGORY_ORDER,
-  sensitiveCategoryLabel,
 } from './auditLabels';
 import { SensitiveFormatDialog } from './SensitiveFormatDialog';
+import { SensitiveHitList } from './SensitiveHitList';
+import type { ChapterGroup } from './SensitiveHitList';
 import { WordlistBanner } from './WordlistBanner';
 import shell from './audit.module.css';
 import styles from './sensitive.module.css';
+import { slugSegment } from '@/lib/slug';
 
 export interface SensitiveSectionProps {
   slug: string;
-}
-
-/** 分类 → 徽标变体（政治/违法/色情/暴力取警示，其余中性） */
-const CATEGORY_VARIANT: Record<string, BadgeVariant> = {
-  politics: 'danger',
-  illegal: 'danger',
-  porn: 'danger',
-  violence: 'warning',
-  superstition: 'neutral',
-  other: 'neutral',
-};
-
-interface ChapterGroup {
-  seq: number;
-  list: { word: string; category: string; count: number }[];
 }
 
 /**
@@ -72,6 +56,8 @@ export function SensitiveSection({ slug }: SensitiveSectionProps) {
   //     注意它 ≠ hits.length（同一词条在多个章节会占多条）。
   const wordCount = useMemo(() => new Set(hits.map((h) => h.word)).size, [hits]);
   const totalHits = sensitive.data?.total_hits ?? 0;
+  // 词库不可用时，「0 命中」是假象：本次根本没比对任何词条。必须显式提示（禁止假安全感）。
+  const wordlistAvailable = sensitive.data?.wordlist_available ?? null;
 
   const runScan = () => {
     // 词库缺失：不隐藏入口，点一下给引导（§5）
@@ -124,7 +110,7 @@ export function SensitiveSection({ slug }: SensitiveSectionProps) {
     }
     setActiveChapter(target.id);
     requestChunkHighlight(seq, word);
-    navigate(`/book/${encodeURIComponent(slug)}/desk`);
+    navigate(`/book/${slugSegment(slug)}/desk`);
   };
 
   return (
@@ -190,6 +176,20 @@ export function SensitiveSection({ slug }: SensitiveSectionProps) {
           </div>
         ) : sensitive.data ? (
           <>
+            {/* 词库为空：结果里的「0 命中」不代表稿子没问题 —— 必须把话说透（醒目但非错误色） */}
+            {wordlistAvailable === false ? (
+              <div
+                className={[styles.wordlistBanner, styles.wordlistBannerAlert].join(' ')}
+                role="status"
+              >
+                <Icon name="info" size={16} className={styles.bannerIcon} />
+                <span className={styles.bannerText}>
+                  <strong>词库为空，本次扫描没有实际检查任何内容</strong>
+                  {' '}—— 请先在设置里配置词库，否则这里的「0 命中」不代表稿子没问题。
+                </span>
+              </div>
+            ) : null}
+
             <p className={styles.summaryLine}>
               词条命中 <strong>{totalHits}</strong> 次，涉及 <strong>{wordCount}</strong> 个词条
               {category ? (
@@ -235,47 +235,12 @@ export function SensitiveSection({ slug }: SensitiveSectionProps) {
               </div>
             ) : null}
 
-            {groups.length === 0 ? (
-              <EmptyState
-                icon="check"
-                title={category ? '这个分类下没有命中' : '没有命中敏感词'}
-                description="词库里的词一个都没出现。结果仅供参考，不构成合规审查结论。"
-              />
-            ) : (
-              <div className={styles.groupList}>
-                {groups.map((g) => (
-                  <div className={styles.group} key={g.seq}>
-                    <div className={styles.groupHead}>
-                      <span className={styles.groupTitle}>第 {g.seq} 章</span>
-                      <span className={styles.wordCount}>
-                        {g.list.reduce((s, h) => s + h.count, 0)} 次
-                      </span>
-                    </div>
-                    <div className={styles.groupBody}>
-                      {g.list.map((h) => (
-                        <div className={styles.wordRow} key={`${g.seq}-${h.word}`}>
-                          <span className={styles.wordText}>{h.word}</span>
-                          <span className={styles.wordGrow}>
-                            <Badge variant={CATEGORY_VARIANT[h.category] ?? 'neutral'}>
-                              {sensitiveCategoryLabel(h.category)}
-                            </Badge>
-                          </span>
-                          <span className={styles.wordCount}>{h.count} 次</span>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            icon="jump"
-                            onClick={() => jumpTo(g.seq, h.word)}
-                          >
-                            跳到本章
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <SensitiveHitList
+              groups={groups}
+              category={category}
+              wordlistAvailable={wordlistAvailable}
+              onJump={jumpTo}
+            />
           </>
         ) : (
           <p className={shell.sectionHint}>

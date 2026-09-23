@@ -13,6 +13,7 @@ import { Button } from '@/components/common/Button';
 import { ErrorBar } from '@/components/common/ErrorBar';
 import { Icon } from '@/components/common/Icon';
 import styles from './audit.module.css';
+import { slugSegment } from '@/lib/slug';
 
 export interface ConsistencySectionProps {
   slug: string;
@@ -119,7 +120,7 @@ export function ConsistencySection({ slug }: ConsistencySectionProps) {
       <div className={styles.sectionBody}>
         {noModel ? (
           <AiUnavailableNotice
-            onOpenConfig={() => navigate(`/book/${encodeURIComponent(slug)}/config`)}
+            onOpenConfig={() => navigate(`/book/${slugSegment(slug)}/config`)}
             configLabel="去配置模型"
           >
             这项能力要读全书内容并比对，必须有模型。配置后就能用了 —— 下面的「去 AI 味」和「敏感词自查」是纯本地的，不受影响。

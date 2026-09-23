@@ -37,6 +37,9 @@ data/app.db-shm
 books/*/novel.db
 books/*/novel.db-wal
 books/*/novel.db-shm
+# meta.json 含书名 / 题材 / 一句话卖点 —— 属于用户内容，按文件头「稿件属于用户」
+# 的声明同样不应进版本库（此前只忽略了 novel.db，一次 `git add -A` 就会把作品 meta 提交）。
+books/*/meta.json
 books/*/exports/
 .recycle/
 
@@ -46,3 +49,9 @@ data/sensitive_words.txt
 # --- 本地临时 / 迁移残留 ----------------------------------------------------
 .cleanup_*/
 *.broken
+
+# --- 开发过程产物（构建/lint/测试的一次性输出，一律不进仓库） ----------------
+/_*.*
+/frontend/_*.*
+/frontend/src/_*.*
+/backend/_*.*

@@ -76,6 +76,35 @@ def test_discover_models_missing_base_url_is_readable_error(client):
     assert "Base URL" in err["message"]
 
 
+# --------------------------------------- 没配密钥 → 400 LLM_NOT_CONFIGURED（P1-2）
+def test_discover_models_without_any_key_is_not_configured(client, monkeypatch):
+    """密钥缺失 ≠ 密钥无效：必须 400 LLM_NOT_CONFIGURED 且指向设置页，不得 502。"""
+
+    def boom(*_a, **_k):
+        raise AssertionError("没有密钥时不得发起任何网络请求")
+
+    monkeypatch.setattr(discovery, "_request", boom)
+    resp = client.post(
+        "/api/providers/discover-models",
+        json={"provider": "deepseek", "base_url": "https://api.deepseek.com/v1"},
+    )
+    assert resp.status_code == 400, resp.text
+    err = resp.json()["error"]
+    assert err["code"] == "LLM_NOT_CONFIGURED"
+    assert "设置" in err["message"]
+
+
+def test_discover_models_ollama_needs_no_key(client, monkeypatch):
+    """Ollama 是本地服务，无密钥也应正常拉取（不被「缺密钥」短路）。"""
+    monkeypatch.setattr(discovery, "_request", lambda *a, **k: (200, {"models": [{"name": "qwen2.5:7b"}]}))
+    resp = client.post(
+        "/api/providers/discover-models",
+        json={"provider": "ollama", "base_url": "http://127.0.0.1:11434"},
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["models"] == ["qwen2.5:7b"]
+
+
 # ---------------------------------------------------- discover-models 错误翻译
 def test_discover_models_auth_failure_translated_to_chinese(client, monkeypatch):
     monkeypatch.setattr(discovery, "_request", lambda *a, **k: (401, {"error": "bad key"}))

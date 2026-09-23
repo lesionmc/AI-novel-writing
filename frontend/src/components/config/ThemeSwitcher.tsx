@@ -20,6 +20,11 @@ export function ThemeSwitcher() {
   const resolved = useThemeStore((s) => s.resolved);
   const setPreference = useThemeStore((s) => s.setPreference);
 
+  /* 说明文字必须跟着**实际生效**的主题走 —— 恒写「深色 / 夜航灯」在浅色系统下
+     与眼前所见直接矛盾（用户会以为设置没生效）。 */
+  const resolvedLabel = THEME_LIST.find((t) => t.id === resolved)?.label ?? '保险蓝';
+  const resolvedIsDark = resolved === 'night' || resolved === 'black';
+
   return (
     <div className={styles.wrap}>
       <div className={styles.options} role="radiogroup" aria-label="外观主题">
@@ -78,8 +83,8 @@ export function ThemeSwitcher() {
         </button>
         <p className={styles.footerHint}>
           {preference === 'system'
-            ? `系统当前是深色，已自动用「夜航灯」。系统切换时会跟着变。`
-            : `当前生效：${THEME_LIST.find((t) => t.id === resolved)?.label ?? '保险蓝'}。选择会被记住，下次打开还是它。`}
+            ? `跟随系统：系统现在是${resolvedIsDark ? '深色' : '浅色'}，已自动用「${resolvedLabel}」。系统切换时会跟着变。`
+            : `当前生效：${resolvedLabel}。选择会被记住，下次打开还是它。`}
         </p>
       </div>
     </div>

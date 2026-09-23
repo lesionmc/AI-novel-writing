@@ -58,6 +58,11 @@ export interface SensitiveHit {
 /** `POST /api/books/{book}/audit/sensitive` 响应（整本书） */
 export interface SensitiveAuditResult {
   total_hits: number;
+  /**
+   * 词库是否可用。`false` 时本次扫描**没有实际检查任何内容** ——
+   * 此时 `total_hits === 0` 不代表稿子没问题，界面必须显式提示（禁止假安全感）。
+   */
+  wordlist_available: boolean;
   hits: SensitiveHit[];
 }
 

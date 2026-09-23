@@ -17,7 +17,7 @@ import threading
 from pathlib import Path
 
 from app.config import settings
-from app.db.connection import Database, probe_capabilities
+from app.db.connection import Database, enable_wal, probe_capabilities
 from app.db.schema_loader import apply_global_schema, missing_global_objects
 from app.logging_config import get_logger, log_fields
 
@@ -35,6 +35,10 @@ def _ensure_schema(db: Database) -> None:
     with db.connection() as conn:
         if not missing_global_objects(conn):
             return
+        # `PRAGMA journal_mode` 是写性质操作，只在**建库**这一次设（A-06）。
+        # 全局库的 schema 走 `scope="global"`，会跳过 schema.sql 里的 PRAGMA 行，
+        # 因此这里必须显式设一次 WAL。
+        enable_wal(conn)
         applied = apply_global_schema(conn)
         remaining = missing_global_objects(conn)
         if remaining:

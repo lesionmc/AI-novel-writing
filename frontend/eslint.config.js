@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'public/mockServiceWorker.js'] },
+  { ignores: ['dist', 'node_modules'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
@@ -26,6 +26,9 @@ export default tseslint.config(
       ],
       '@typescript-eslint/no-explicit-any': 'warn',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
+      // 项目硬规则「单文件 ≤300 行」做成**可执行门禁**（此前只是人工勾选项）。
+      // 只覆盖 ts/tsx —— CSS 不经过 eslint，`styles/design-tokens.css` 因此天然豁免（文档已注明）。
+      'max-lines': ['error', 300],
     },
   },
 );

@@ -17,6 +17,36 @@ def _add_outline_provider(client) -> dict:
 
 
 # ------------------------------------------------------------------- 树 CRUD
+def test_delete_chapter_detaches_outline_node(client, book):
+    """T-C 回归：删章不得在大纲里留下指向已删章节的孤儿。
+
+    `outline.chapter_id` 在 schema 里**没有**外键约束，删章不会自动 SET NULL，
+    必须由删章逻辑在同一事务内显式解绑；节点行本身要保留（章节卡内容仍有价值）。
+    """
+    chapter = client.post(f"/api/books/{book}/chapters", json={"title": "第1章"}).json()
+    node = client.post(
+        f"/api/books/{book}/outlines",
+        json={
+            "level": "chapter",
+            "title": "第一章卡",
+            "content": "主角觉醒",
+            "chapter_id": chapter["id"],
+        },
+    ).json()
+    assert node["chapter_id"] == chapter["id"]
+
+    assert client.delete(f"/api/chapters/{chapter['id']}").status_code == 204
+
+    kept = [
+        n
+        for n in client.get(f"/api/books/{book}/outlines").json()
+        if n["id"] == node["id"]
+    ]
+    assert kept, "大纲行必须保留（只是解绑，不是删除）"
+    assert kept[0]["chapter_id"] is None
+    assert kept[0]["content"] == "主角觉醒"
+
+
 def test_outline_crud_hierarchy(client, book):
     total = client.post(
         f"/api/books/{book}/outlines",

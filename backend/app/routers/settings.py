@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Query, status
 
+from app.routers._params import RowId
 from app.models.character import (
     AffectedChapter,
     CharacterInput,
@@ -37,22 +38,22 @@ def create_character(book: str, payload: CharacterInput) -> CharacterOut:
 
 
 @router.get("/api/characters/{char_id}", response_model=CharacterOut)
-def get_character(char_id: int) -> CharacterOut:
+def get_character(char_id: RowId) -> CharacterOut:
     return setting_service.get_character(char_id)
 
 
 @router.patch("/api/characters/{char_id}", response_model=CharacterOut)
-def update_character(char_id: int, payload: CharacterUpdate) -> CharacterOut:
+def update_character(char_id: RowId, payload: CharacterUpdate) -> CharacterOut:
     return setting_service.update_character(char_id, payload)
 
 
 @router.delete("/api/characters/{char_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_character(char_id: int) -> None:
+def delete_character(char_id: RowId) -> None:
     setting_service.delete_character(char_id)
 
 
 @router.get("/api/characters/{char_id}/affected-chapters", response_model=list[AffectedChapter])
-def affected_chapters(char_id: int) -> list[AffectedChapter]:
+def affected_chapters(char_id: RowId) -> list[AffectedChapter]:
     return setting_service.affected_chapters(char_id)
 
 
@@ -76,12 +77,12 @@ def create_world_entry(book: str, payload: WorldEntryInput) -> WorldEntryOut:
 
 
 @router.patch("/api/world-entries/{entry_id}", response_model=WorldEntryOut)
-def update_world_entry(entry_id: int, payload: WorldEntryUpdate) -> WorldEntryOut:
+def update_world_entry(entry_id: RowId, payload: WorldEntryUpdate) -> WorldEntryOut:
     return setting_service.update_world_entry(entry_id, payload)
 
 
 @router.delete("/api/world-entries/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_world_entry(entry_id: int) -> None:
+def delete_world_entry(entry_id: RowId) -> None:
     setting_service.delete_world_entry(entry_id)
 
 
@@ -104,5 +105,5 @@ def create_foreshadow(book: str, payload: ForeshadowInput) -> ForeshadowOut:
 
 
 @router.patch("/api/foreshadows/{fs_id}", response_model=ForeshadowOut)
-def update_foreshadow(fs_id: int, payload: ForeshadowUpdate) -> ForeshadowOut:
+def update_foreshadow(fs_id: RowId, payload: ForeshadowUpdate) -> ForeshadowOut:
     return setting_service.update_foreshadow(fs_id, payload)

@@ -147,7 +147,7 @@ export function ForeshadowTable({ slug }: { slug: string }) {
     <>
       <div className={styles.toolbar}>
         <span className={styles.hintBlock}>
-          埋下的每处线索都记一笔。写后面的章节时，还没交代的线索会自动出现在右栏提醒你，别让它们石沉大海。
+          埋下的每处线索都记一笔。写后面的章节时，还没回收的线索会自动出现在右栏提醒你，别让它们石沉大海。
         </span>
         <span className={styles.toolbarSpacer} />
         <Button variant="primary" icon="plus" onClick={openNew}>
@@ -225,7 +225,7 @@ export function ForeshadowTable({ slug }: { slug: string }) {
         open={editing !== null}
         onClose={close}
         title={editing === 'new' ? '新建线索' : `编辑「${editing?.title ?? ''}」`}
-        subtitle="埋设与回收的章节号对不上时，写作台右栏会提醒你这条线索还没交代"
+        subtitle="埋设与回收的章节号对不上时，写作台右栏会提醒你这条线索还没回收"
         footer={
           <>
             <Button variant="ghost" onClick={close} disabled={saving}>

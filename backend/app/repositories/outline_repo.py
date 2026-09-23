@@ -72,6 +72,22 @@ def delete(conn: sqlite3.Connection, outline_id: int) -> bool:
     return cur.rowcount > 0
 
 
+def detach_chapter(conn: sqlite3.Connection, chapter_id: int) -> int:
+    """把挂在该章上的大纲节点解绑：`chapter_id` 置 NULL，**保留行本身**。
+
+    为什么必须显式做：`outline.chapter_id` 在 schema 里**没有**外键约束
+    （见 `db/schema.sql` 的 outline 建表），删章不会自动 SET NULL，
+    节点会永久悬空指向一个已不存在的章节。
+
+    为什么是解绑而不是连行删掉：大纲节点自身是用户写的内容（章节卡），
+    章可以不在了，卡还有价值 —— 只是不再属于某一章。返回改动行数便于日志。
+    """
+    cur = conn.execute(
+        "UPDATE outline SET chapter_id = NULL WHERE chapter_id = ?", (chapter_id,)
+    )
+    return cur.rowcount
+
+
 def next_seq(conn: sqlite3.Connection, level: str, parent_id: int | None) -> int:
     if parent_id is None:
         row = fetch_one(

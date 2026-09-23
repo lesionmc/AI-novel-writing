@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 写小说 · 从工具到完稿的全景指南</title>
+<style>
+:root{
+  --bg:#f6f7fb;
+  --bg-soft:#eef1f8;
+  --card:#ffffff;
+  --ink:#141b2d;
+  --ink-2:#3c4661;
+  --ink-3:#6b7590;
+  --line:#e2e7f0;
+  --line-2:#eef1f7;
+  --brand:#2f4bd9;
+  --brand-soft:#eaeeff;
+  --brand-deep:#1d2f96;
+  --amber:#f08a24;
+  --amber-soft:#fff3e4;
+  --green:#12a06a;
+  --green-soft:#e6f7f0;
+  --red:#d94452;
+  --red-soft:#fdedef;
+  --purple:#7a4ddb;
+  --purple-soft:#f1ebff;
+  --radius:16px;
+  --radius-sm:10px;
+  --shadow:0 1px 2px rgba(20,27,45,.05), 0 8px 24px -12px rgba(20,27,45,.14);
+  --shadow-lg:0 2px 4px rgba(20,27,45,.04), 0 18px 44px -18px rgba(20,27,45,.22);
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:88px}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:16px;
+  line-height:1.78;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+img{max-width:100%}
+a{color:var(--brand);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------- 顶部进度条 ---------- */
+#progress{
+  position:fixed;top:0;left:0;height:3px;width:0%;
+  background:linear-gradient(90deg,var(--brand),var(--amber));
+  z-index:100;transition:width .1s linear;
+}
+
+/* ---------- 导航 ---------- */
+.nav{
+  position:sticky;top:0;z-index:90;
+  backdrop-filter:blur(14px);
+  background:rgba(255,255,255,.84);
+  border-bottom:1px solid var(--line);
+}
+.nav-inner{
+  max-width:1180px;margin:0 auto;padding:0 24px;
+  display:flex;align-items:center;gap:26px;height:60px;
+}
+.nav-brand{font-weight:800;font-size:15px;letter-spacing:-.2px;white-space:nowrap;color:var(--ink)}
+.nav-brand span{color:var(--brand)}
+.nav-links{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1}
+.nav-links::-webkit-scrollbar{display:none}
+.nav-links a{
+  padding:7px 12px;border-radius:999px;font-size:13.5px;color:var(--ink-2);
+  white-space:nowrap;font-weight:500;transition:.18s;
+}
+.nav-links a:hover{background:var(--brand-soft);color:var(--brand);text-decoration:none}
+.nav-links a.on{background:var(--brand);color:#fff}
+
+/* ---------- 布局 ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+section{padding:64px 0 8px}
+.sec-head{margin-bottom:34px}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:12.5px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--brand);background:var(--brand-soft);
+  padding:5px 12px;border-radius:999px;margin-bottom:14px;
+}
+h1,h2,h3,h4{line-height:1.35;margin:0}
+h2{font-size:30px;letter-spacing:-.6px;font-weight:800}
+h3{font-size:21px;letter-spacing:-.3px;font-weight:750;margin-bottom:6px}
+h4{font-size:16.5px;font-weight:700;margin-bottom:4px}
+.sec-desc{color:var(--ink-3);font-size:15.5px;margin-top:10px;max-width:820px}
+p{margin:0 0 14px}
+.muted{color:var(--ink-3)}
+
+/* ---------- Hero ---------- */
+.hero{
+  position:relative;overflow:hidden;
+  background:
+    radial-gradient(900px 420px at 12% -10%, #dfe6ff 0%, transparent 62%),
+    radial-gradient(700px 380px at 92% 0%, #ffe9d2 0%, transparent 58%),
+    linear-gradient(180deg,#ffffff 0%, #f6f7fb 100%);
+  border-bottom:1px solid var(--line);
+  padding:74px 0 62px;
+}
+.hero-inner{max-width:1180px;margin:0 auto;padding:0 24px}
+.hero h1{
+  font-size:clamp(30px,4.2vw,50px);font-weight:850;letter-spacing:-1.4px;
+  max-width:900px;margin-bottom:18px;
+}
+.hero h1 em{
+  font-style:normal;
+  background:linear-gradient(96deg,var(--brand) 0%, var(--purple) 55%, var(--amber) 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero .lede{
+  font-size:17.5px;color:var(--ink-2);max-width:720px;margin-bottom:30px;line-height:1.85;
+}
+.hero-meta{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:34px}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;
+  background:#fff;border:1px solid var(--line);border-radius:999px;
+  padding:7px 15px;font-size:13.5px;color:var(--ink-2);font-weight:550;
+  box-shadow:0 1px 2px rgba(20,27,45,.04);
+}
+.chip b{color:var(--ink);font-weight:750}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.dot.a{background:var(--amber)}
+.dot.b{background:var(--brand)}
+
+/* 结论三卡 */
+.verdicts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.verdict{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:22px 22px 20px;box-shadow:var(--shadow);position:relative;
+}
+.verdict::before{
+  content:"";position:absolute;left:0;top:22px;bottom:22px;width:3px;border-radius:3px;
+  background:var(--brand);
+}
+.verdict:nth-child(2)::before{background:var(--amber)}
+.verdict:nth-child(3)::before{background:var(--purple)}
+.verdict .vnum{
+  font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink-3);
+  letter-spacing:1px;margin-bottom:8px;
+}
+.verdict p{font-size:14.8px;color:var(--ink-2);margin:0;line-height:1.75}
+.verdict strong{color:var(--ink);font-weight:750}
+
+/* ---------- 卡片 / 网格 ---------- */
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.g3,.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:680px){.g2,.g3,.g4,.verdicts{grid-template-columns:1fr}}
+
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:22px;box-shadow:var(--shadow);
+}
+.card.flat{box-shadow:none}
+.card h4{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.card p:last-child{margin-bottom:0}
+.card .sub{font-size:13.5px;color:var(--ink-3);margin-top:8px}
+
+.ico{
+  width:30px;height:30px;flex:0 0 30px;border-radius:9px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:15px;background:var(--brand-soft);
+}
+.ico.a{background:var(--amber-soft)}
+.ico.g{background:var(--green-soft)}
+.ico.r{background:var(--red-soft)}
+.ico.p{background:var(--purple-soft)}
+
+/* ---------- 标签 ---------- */
+.tag{
+  display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.3px;
+  padding:3px 9px;border-radius:6px;background:var(--bg-soft);color:var(--ink-2);
+  vertical-align:middle;
+}
+.tag.b{background:var(--brand-soft);color:var(--brand-deep)}
+.tag.a{background:var(--amber-soft);color:#a95c0c}
+.tag.g{background:var(--green-soft);color:#0a7a4f}
+.tag.r{background:var(--red-soft);color:#b02a38}
+.tag.p{background:var(--purple-soft);color:#5a34ab}
+
+/* ---------- 表格 ---------- */
+.tbl-wrap{
+  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+  background:#fff;box-shadow:var(--shadow);
+}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14.2px;min-width:620px}
+thead th{
+  background:var(--bg-soft);text-align:left;padding:13px 16px;
+  font-weight:750;font-size:13px;color:var(--ink);white-space:nowrap;
+  border-bottom:1px solid var(--line);letter-spacing:.2px;
+}
+tbody td{padding:13px 16px;border-bottom:1px solid var(--line-2);vertical-align:top;color:var(--ink-2);line-height:1.7}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#fafbff}
+tbody td:first-child{color:var(--ink);font-weight:600}
+td .name{font-weight:700;color:var(--ink)}
+.tbl-note{font-size:13px;color:var(--ink-3);padding:11px 16px;background:#fafbfe;border-top:1px solid var(--line-2)}
+
+/* ---------- 流程 / 步骤 ---------- */
+.steps{counter-reset:s;display:grid;gap:12px}
+.step{
+  display:flex;gap:16px;background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius-sm);padding:18px 20px;box-shadow:var(--shadow);
+}
+.step-n{
+  flex:0 0 34px;height:34px;border-radius:50%;
+  background:var(--brand);color:#fff;font-weight:800;font-size:14.5px;
+  display:flex;align-items:center;justify-content:center;font-family:var(--mono);
+}
+.step:nth-child(even) .step-n{background:var(--amber)}
+.step-b{flex:1;min-width:0}
+.step-b h4{margin-bottom:4px}
+.step-b p{font-size:14.5px;color:var(--ink-2);margin-bottom:6px}
+.step-b p:last-child{margin-bottom:0}
+
+/* 阶段条 */
+.phaseline{display:grid;gap:14px}
+.phase{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 22px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.phase-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.phase-top .pn{
+  font-family:var(--mono);font-size:12px;font-weight:800;letter-spacing:1px;
+  color:#fff;background:var(--brand);padding:4px 10px;border-radius:6px;
+}
+.phase:nth-child(2) .pn{background:#3d63e8}
+.phase:nth-child(3) .pn{background:var(--purple)}
+.phase:nth-child(4) .pn{background:var(--amber)}
+.phase:nth-child(5) .pn{background:var(--green)}
+.phase:nth-child(6) .pn{background:#5a6580}
+.phase h4{font-size:17px}
+.phase .bar{height:5px;border-radius:5px;background:var(--bg-soft);margin:12px 0 14px;overflow:hidden}
+.phase .bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--brand),var(--amber))}
+.phase ul{margin:0;padding-left:20px;font-size:14.5px;color:var(--ink-2)}
+.phase li{margin-bottom:5px}
+.phase .out{
+  margin-top:12px;font-size:13.5px;background:#fafbfe;border:1px dashed var(--line);
+  border-radius:8px;padding:10px 13px;color:var(--ink-2);
+}
+.phase .out b{color:var(--ink)}
+
+/* ---------- 高亮块 ---------- */
+.callout{
+  border-radius:var(--radius);padding:20px 22px;border:1px solid var(--line);
+  background:#fff;box-shadow:var(--shadow);margin:22px 0;
+}
+.callout.tip{background:linear-gradient(180deg,#fffdf7,#fff);border-color:#f6e0bd}
+.callout.warn{background:linear-gradient(180deg,#fff9f9,#fff);border-color:#f6d3d7}
+.callout.key{background:linear-gradient(180deg,#f7f9ff,#fff);border-color:#d5ddfb}
+.callout h4{margin-bottom:8px}
+.callout p:last-child{margin-bottom:0}
+.callout ul{margin:6px 0 0;padding-left:20px}
+.callout li{margin-bottom:5px}
+
+/* ---------- 对比条 ---------- */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+@media(max-width:680px){.compare{grid-template-columns:1fr}}
+.cmp{border-radius:var(--radius-sm);padding:16px 18px;border:1px solid var(--line);background:#fff}
+.cmp.bad{background:#fffafa;border-color:#f3d6da}
+.cmp.good{background:#f8fdfb;border-color:#cdebdf}
+.cmp .lbl{font-size:12px;font-weight:800;letter-spacing:.6px;margin-bottom:8px;display:block}
+.cmp.bad .lbl{color:var(--red)}
+.cmp.good .lbl{color:var(--green)}
+.cmp p{font-size:14.2px;margin:0;color:var(--ink-2);line-height:1.75}
+.cmp code{font-family:var(--mono);font-size:13px;background:#fff;border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:var(--ink)}
+
+/* ---------- 流派卡 ---------- */
+.school{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:22px;box-shadow:var(--shadow);border-top:3px solid var(--brand);
+}
+.school:nth-child(2){border-top-color:#3d63e8}
+.school:nth-child(3){border-top-color:var(--purple)}
+.school:nth-child(4){border-top-color:var(--amber)}
+.school:nth-child(5){border-top-color:var(--green)}
+.school h4{margin-bottom:10px}
+.school dl{margin:0}
+.school dt{font-size:12.5px;font-weight:800;color:var(--ink-3);letter-spacing:.4px;margin-top:12px}
+.school dd{margin:3px 0 0;font-size:14.3px;color:var(--ink-2);line-height:1.72}
+.school dd:last-child{margin-bottom:0}
+
+/* ---------- 仓库条 ---------- */
+.repo{
+  display:flex;justify-content:space-between;align-items:center;gap:14px;
+  padding:15px 18px;border:1px solid var(--line);border-radius:var(--radius-sm);
+  background:#fff;box-shadow:var(--shadow);
+}
+.repo .rl{min-width:0}
+.repo .rn{font-weight:700;font-size:15px}
+.repo .rp{font-family:var(--mono);font-size:12.2px;color:var(--ink-3);margin-top:2px;word-break:break-all}
+.repo .rs{
+  flex:0 0 auto;font-family:var(--mono);font-size:13px;font-weight:800;
+  color:var(--amber);background:var(--amber-soft);padding:5px 11px;border-radius:8px;
+}
+.repo .rs.unk{color:var(--ink-3);background:var(--bg-soft)}
+
+/* ---------- 目录页 ---------- */
+.toc{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:900px){.toc{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.toc{grid-template-columns:1fr}}
+.toc a{
+  display:block;background:#fff;border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:16px 18px;box-shadow:var(--shadow);transition:.2s;text-decoration:none;
+}
+.toc a:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);text-decoration:none;border-color:#cfd8f5}
+.toc .tn{font-family:var(--mono);font-size:12px;font-weight:800;color:var(--brand);letter-spacing:1px}
+.toc .tt{font-weight:750;font-size:15.5px;color:var(--ink);margin:4px 0 3px}
+.toc .td{font-size:13px;color:var(--ink-3);line-height:1.6}
+
+/* ---------- 页脚 ---------- */
+footer{
+  margin-top:70px;padding:40px 0 54px;border-top:1px solid var(--line);
+  background:#fff;color:var(--ink-3);font-size:13.5px;
+}
+footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:flex-start}
+footer ul{margin:0;padding-left:18px}
+footer li{margin-bottom:3px}
+.foot-title{font-weight:750;color:var(--ink);margin-bottom:6px;font-size:14px}
+
+/* 工具条 */
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14.2px;margin-top:10px}
+.kv dt{color:var(--ink-3);font-weight:650;white-space:nowrap}
+.kv dd{margin:0;color:var(--ink-2)}
+
+ol.clean{padding-left:20px;margin:8px 0 0}
+ol.clean li{margin-bottom:7px;font-size:14.5px;color:var(--ink-2)}
+ul.clean{padding-left:20px;margin:8px 0 0}
+ul.clean li{margin-bottom:7px;font-size:14.5px;color:var(--ink-2)}
+
+.flow{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:16px 0;
+}
+.flow .fn{
+  background:#fff;border:1px solid var(--line);border-radius:9px;
+  padding:8px 13px;font-size:13.5px;font-weight:650;box-shadow:0 1px 2px rgba(20,27,45,.05);
+}
+.flow .fa{color:var(--brand);font-weight:800;font-size:15px}
+
+.hr{height:1px;background:var(--line);margin:40px 0}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<!-- ============ 导航 ============ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-brand">AI 写小说 · <span>全景指南</span></div>
+    <div class="nav-links" id="navlinks">
+      <a href="#now">现状</a>
+      <a href="#tools">工具地图</a>
+      <a href="#platforms">平台态度</a>
+      <a href="#opensource">开源项目</a>
+      <a href="#method">创作方法论</a>
+      <a href="#pipeline">完整流程</a>
+      <a href="#action">新手清单</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ Hero ============ -->
+<header class="hero">
+  <div class="hero-inner">
+    <h1>AI 能写小说，但<em>写完一本小说</em>仍然是人的活</h1>
+    <p class="lede">
+      这份指南把「AI 小说创作」这件事拆开揉碎讲清楚：现在有哪些工具、它们各自怎么实现的、开源圈子里的大神都在用什么思路、以及写一本小说从选题到完稿到底要走哪几步。
+      不用任何技术背景，看完就能上手。
+    </p>
+    <div class="hero-meta">
+      <span class="chip"><i class="dot b"></i>调研时间 <b>2026 年 9 月</b></span>
+      <span class="chip"><i class="dot"></i>覆盖 <b>20+ 工具</b></span>
+      <span class="chip"><i class="dot a"></i>覆盖 <b>16 个开源项目</b></span>
+      <span class="chip"><i class="dot"></i>五大技术流派</span>
+    </div>
+
+    <div class="verdicts">
+      <div class="verdict">
+        <div class="vnum">结论 01</div>
+        <p><strong>AI 已经能写好「段落」，但还写不好「长篇」。</strong>普遍现象是：写到 3 万字左右质量断崖式下跌，第 10～15 章开始人设漂移、前后矛盾。</p>
+      </div>
+      <div class="verdict">
+        <div class="vnum">结论 02</div>
+        <p><strong>行业共识已经形成：AI 干体力活，人干灵魂活。</strong>大纲、素材、句子优化交给 AI；人物、情绪、转折、爽点必须自己来。</p>
+      </div>
+      <div class="verdict">
+        <div class="vnum">结论 03</div>
+        <p><strong>所有成熟方案的共同秘密只有四个字：记忆外置。</strong>把设定从模型的脑子里，搬到一个外部数据库里，写到哪一章就查哪一章。</p>
+      </div>
+    </div>
+
+    <div style="margin-top:38px" class="toc" id="toc"></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ============ 1. 现状 ============ -->
+<section id="now">
+  <div class="sec-head">
+    <div class="eyebrow">01 / 现状</div>
+    <h2>先搞清楚：AI 写小说现在到底行不行？</h2>
+    <p class="sec-desc">网上各种宣传很热闹，但真实情况可以用一句话概括：<strong>AI 是一支很好用的笔，但它还不是一个作家。</strong>下面把它为什么行、为什么不行讲明白。</p>
+  </div>
+
+  <h3 style="margin:36px 0 14px">三条技术路线，各干各的活</h3>
+  <div class="grid g3">
+    <div class="card">
+      <h4><span class="ico b">1</span>通用大模型直接写</h4>
+      <p class="sub">代表：DeepSeek、Kimi、通义千问、Claude、ChatGPT、Gemini</p>
+      <p>你直接对着聊天框说「帮我写个玄幻小说开头」，它就能写。</p>
+      <p><b>优势：</b>便宜甚至免费、中文语感好、灵活。</p>
+      <p><b>死穴：</b><strong>没有持久记忆</strong>。关掉对话再打开，它就完全不认识你的主角了。适合用来「想点子、搭设定、排逻辑」，不适合做长篇管理。</p>
+    </div>
+    <div class="card">
+      <h4><span class="ico a">2</span>垂直专用工具</h4>
+      <p class="sub">代表：Sudowrite、Novelcrafter、NovelAI、笔灵AI、彩云小梦</p>
+      <p>专门为写小说做的软件，核心是「<strong>模型 + 记忆层</strong>」：Story Bible / Codex / Lorebook 这类设定库，本质就是一套检索系统（RAG）。</p>
+      <p><b>优势：</b>能记住你的角色和世界观，是目前解决长篇一致性的<strong>唯一有效路径</strong>。</p>
+      <p><b>死穴：</b>要花钱、要学、功能边界窄。</p>
+    </div>
+    <div class="card">
+      <h4><span class="ico p">3</span>多智能体工作流</h4>
+      <p class="sub">代表：Agents' Room、StoryWriter、以及一批 Agent 框架</p>
+      <p>不再让一个 AI 从头写到尾，而是组一个「编剧组」：有人管世界观、有人当写手、有人当审校、有人专门挑逻辑漏洞。</p>
+      <p><b>优势：</b>分工带来质量提升，模块可以随时替换。</p>
+      <p><b>死穴：</b><strong>烧钱</strong>——调用次数成倍上涨，而且几个 Agent 之间还可能互相带偏。</p>
+    </div>
+  </div>
+
+  <h3 style="margin:48px 0 14px">六个绕不过去的痛点</h3>
+  <p class="muted" style="margin-bottom:18px">这六个问题，是目前所有工具和方案都在拼命解决的。看懂它们，你就看懂了整个领域在卷什么。</p>
+  <div class="grid g3">
+    <div class="card flat">
+      <h4><span class="ico r">!</span>长文失忆</h4>
+      <p class="sub">最致命的一个</p>
+      <p>模型的记忆是一个「滑动窗口」，写到第 50 章时，第 5 章的细节早就滑出窗口了。实测普遍在 <strong>3 万字后质量明显下滑</strong>。</p>
+    </div>
+    <div class="card flat">
+      <h4><span class="ico r">!</span>人设崩坏 / 吃书</h4>
+      <p>角色性格慢慢「软化」成通用默认值；死掉的角色被当成活人引用；能力等级前后对不上。</p>
+    </div>
+    <div class="card flat">
+      <h4><span class="ico r">!</span>剧情重复套路化</h4>
+      <p>AI 天生倾向于选「最不出错」的选项，所以反转基本都能猜到，情节容易自我复制。</p>
+    </div>
+    <div class="card flat">
+      <h4><span class="ico r">!</span>AI 味重</h4>
+      <p>三个特征：句式太整齐、用词太安全（「进行/使得/作为一个」）、情绪太平（写「他感到愤怒」而不是「他把烟按灭在掌心」）。</p>
+    </div>
+    <div class="card flat">
+      <h4><span class="ico r">!</span>写不长 / 水字数</h4>
+      <p>到一定长度就开始重复描写同一个动作、同一段心理，看上去在写，其实在灌水。</p>
+    </div>
+    <div class="card flat">
+      <h4><span class="ico r">!</span>情感深度的「恐怖谷」</h4>
+      <p>它能熟练地写出「悲伤」的词汇，但很难真正理解复杂动机。概率平均化天然抹掉了那种让人意外的「陌生感」。</p>
+    </div>
+  </div>
+
+  <div class="callout key">
+    <h4>🔑 一句话理解这些痛点是怎么来的</h4>
+    <p>大模型的本质是「根据前文预测下一个词」。它<strong>没有真正的记忆，只有上下文</strong>；它<strong>没有意图，只有概率</strong>。所以「忘得早」和「写得平」是它的出厂设置，而不是某个 bug。所有聪明的方案，本质上都是在用工程手段绕过这两条。</p>
+  </div>
+</section>
+
+<div class="hr"></div>
+
+<!-- ============ 2. 工具地图 ============ -->
+<section id="tools">
+  <div class="sec-head">
+    <div class="eyebrow">02 / 工具地图</div>
+    <h2>现在有哪些工具？各自什么定位？</h2>
+    <p class="sec-desc">分成三块看：<strong>国内网文专用工具</strong>（最懂套路）、<strong>通用大模型</strong>（最灵活最便宜）、<strong>海外小说工具</strong>（工程最成熟）。选哪个，取决于你写中文还是英文、想省事还是想掌控。</p>
+  </div>
+
+  <h3 style="margin:32px 0 14px">A. 国内网文垂直工具</h3>
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr><th>工具</th><th>形态</th><th>核心能力</th><th>实现方式</th><th>价格</th><th>优点 / 缺点</th><th>适合谁</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="name">笔灵AI</span><br><span class="tag b">最热门</span></td>
+            <td>网页</td>
+            <td>100+ 小说生成器、爆款大纲、开头仿写、拆书、编辑细纲、续写/改写/润色、投稿预审核</td>
+            <td>未公开模型信息；第三方实测 50 章后长篇连贯性下降，角色卡字段较简单</td>
+            <td>月费 69 元；终身 199 元（送 50 万 AI 字数）</td>
+            <td><span class="tag g">优</span>上手门槛最低、懂网文套路<br><span class="tag r">缺</span>长篇弱、续写不自动带前文</td>
+            <td>网文新手、日更写手</td>
+          </tr>
+          <tr>
+            <td><span class="name">蛙蛙写作</span></td>
+            <td>网页 / App</td>
+            <td>码字环境（强制锁定）、模板化大纲、短篇反转结构、转剧本</td>
+            <td>未公开</td>
+            <td>约 29 元/月、298 元/年（第三方来源）</td>
+            <td><span class="tag g">优</span>短篇「短平快强反转」结构成熟<br><span class="tag r">缺</span>长篇支撑不足、模板感强</td>
+            <td>知乎/Lofter 短篇作者、工作室</td>
+          </tr>
+          <tr>
+            <td><span class="name">墨狐AI</span></td>
+            <td>网页</td>
+            <td>人物关系图谱、世界观框架、流派模板、起名、文笔润色</td>
+            <td>未公开</td>
+            <td>未确认</td>
+            <td><span class="tag g">优</span>点选式极简，搭框架友好<br><span class="tag r">缺</span>正文一般，5 万字后局限明显</td>
+            <td>纯新手试水</td>
+          </tr>
+          <tr>
+            <td><span class="name">彩云小梦</span></td>
+            <td>App + 网页</td>
+            <td>输入一段续写→给 3 条不同走向、多题材模型切换、世界设定词条、<b>后悔药回溯</b>、角色语音</td>
+            <td>彩云科技自研模型；词条关系网能被真正调用</td>
+            <td>注册赠额度；App 内订阅（金额未确认）</td>
+            <td><span class="tag g">优</span>中文语感稳、破卡文快<br><span class="tag r">缺</span>偏「玩」不偏生产，长篇管理弱</td>
+            <td>卡文求助者、AI 角色扮演用户</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-note">💡 「实现方式」一栏写「未确认」的，是因为这些产品没有公开底层模型信息。这不是遗漏，而是事实——下面海外工具之所以能写得清楚，是因为它们公开了自研模型名称。</div>
+  </div>
+
+  <h3 style="margin:44px 0 14px">B. 通用大模型 —— 中文写作的实际主力</h3>
+  <p class="muted" style="margin-bottom:18px">很多人以为要买专门的写作软件，其实大部分写手真正在用的就是这几个通用模型。关键在于<strong>知道每个模型适合干什么</strong>。</p>
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr><th>模型</th><th>最适合的环节</th><th>上下文长度</th><th>价格</th><th>大白话点评</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="name">DeepSeek</span></td>
+            <td>世界观搭建、逻辑推演、伏笔与时间线排雷</td>
+            <td>V3 约 128K</td>
+            <td>网页/App <b>免费</b>；API ¥1/¥2 每百万 token</td>
+            <td>性价比之王，逻辑推理强，中文表达自然。新手首选。</td>
+          </tr>
+          <tr>
+            <td><span class="name">Kimi</span></td>
+            <td>超长文本吞吐、跨章一致性检查、资料消化</td>
+            <td>K2.6 约 262K tokens</td>
+            <td>免费档 20 万字；付费档价格<b>各来源不一致</b>，以官网为准</td>
+            <td>能一次吃下好几本书，查「前面写过什么」特别好用。</td>
+          </tr>
+          <tr>
+            <td><span class="name">通义千问 Qwen</span></td>
+            <td>长文统筹、剧本格式、逻辑冲突检查</td>
+            <td>qwen-long 达 <b>10M</b></td>
+            <td>创作核心免费；API ¥0.5/¥2 每百万 token</td>
+            <td>上下文长度记录保持者，适合把整个系列一次性丢进去。</td>
+          </tr>
+          <tr>
+            <td><span class="name">豆包</span></td>
+            <td>头脑风暴、批量初稿、碎片写作</td>
+            <td>约 32K</td>
+            <td>基础免费，免费额度大</td>
+            <td>适合随手发散点子，别指望它管长篇。</td>
+          </tr>
+          <tr>
+            <td><span class="name">腾讯元宝</span></td>
+            <td>热点素材、设定集整理</td>
+            <td>未确认</td>
+            <td>免费为主</td>
+            <td>蹭社会热点找灵感方便。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-note">⚠️ 提醒：上下文长 ≠ 记得住。业界已经确认「召回率」比「窗口大小」更关键——窗口再大，问到细节时找不回来也没用。</div>
+  </div>
+
+  <h3 style="margin:44px 0 14px">C. 海外 AI 小说工具</h3>
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr><th>工具</th><th>核心能力</th><th>实现方式</th><th>价格</th><th>优点 / 缺点</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="name">Sudowrite</span><br><span class="tag a">小说垂直度最高</span></td>
+            <td><b>Story Bible</b>（角色/世界/大纲持久记忆）、Story Engine（大纲→章节）、五感描写、10+ 改写模式、跨书追踪</td>
+            <td>自研 <b>Muse 1.5</b>（据称用出版小说微调）+ 可切换 Claude / GPT / Mistral</td>
+            <td>约 $10–19/月起，按 credits 计费；免费试用约 1 万 credits</td>
+            <td><span class="tag g">优</span>文风匹配强（上传样本学你的笔法）<br><span class="tag r">缺</span>只能写小说、按量计费容易烧光</td>
+          </tr>
+          <tr>
+            <td><span class="name">Novelcrafter</span><br><span class="tag b">硬核规划派</span></td>
+            <td><b>Codex</b> 结构化故事圣经，自动注入角色/地点/派系；Plot Engine；场景—节拍规划</td>
+            <td><b>BYOK</b>：自带 API Key，可接 OpenAI / Anthropic / Google / 本地模型</td>
+            <td>订阅 $4–20/月，<b>API 费用另付</b>（实测 $3–30/月）</td>
+            <td><span class="tag g">优</span>长篇/系列一致性方案最强，模型可随时升级<br><span class="tag r">缺</span>学习曲线陡、要自己管 API Key</td>
+          </tr>
+          <tr>
+            <td><span class="name">NovelAI</span></td>
+            <td>无限续写、<b>Lorebook</b>（设定按需注入）+ Memory、图片生成、TTS、客户端加密</td>
+            <td>自研 Kayra 13B / Llama 3 Erato 70B；Opus 档提及 355B MoE</td>
+            <td>$10 / $15 / $25 三档；免费试用 50 次生成</td>
+            <td><span class="tag g">优</span>全档位无限生成、内容限制最少、隐私强<br><span class="tag r">缺</span>上下文仅 2.8 万 tokens、无 API、全英文</td>
+          </tr>
+          <tr>
+            <td><span class="name">AI Dungeon</span></td>
+            <td>互动式文字冒险，你行动→AI 续写，多人协作，Memory Bank</td>
+            <td>自有/第三方模型混合（未确认）</td>
+            <td>免费档（4k 上下文）；付费 $14.99–99.99</td>
+            <td><span class="tag g">优</span>探索式找灵感独一无二<br><span class="tag r">缺</span>本质是游戏引擎，无导出无排版，一致性差</td>
+          </tr>
+          <tr>
+            <td><span class="name">Squibler</span></td>
+            <td>分屏编辑器 + 故事板、Elements 设定、场景扩写、导出 PDF/Kindle/Word</td>
+            <td>未确认</td>
+            <td>免费 6,000 AI 词/月；Pro 约 $16/月</td>
+            <td><span class="tag g">优</span>对新手友好、导出齐全<br><span class="tag r">缺</span>没有连续性系统，深度不如头部</td>
+          </tr>
+          <tr>
+            <td><span class="name">Claude</span></td>
+            <td>通用长文写作，可上传样本模仿文风</td>
+            <td>上下文 200K（部分来源称 1M，口径不一）；<b>无跨会话记忆</b></td>
+            <td>Pro 约 $20/月</td>
+            <td><span class="tag g">优</span>公认散文质量最高、能维持次要角色口吻<br><span class="tag r">缺</span>第 10–15 章起人设漂移、跨会话失忆</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-note">💡 有个规律：Sudowrite、Novelcrafter、NovelAI 三家虽然形态不同，但都在做同一件事——<strong>建一个设定数据库，写每一章时自动把相关设定塞进 prompt</strong>。这就是「记忆外置」，也是这一节最该记住的东西。</div>
+  </div>
+
+  <div class="callout tip">
+    <h4>🧭 选型速查（给不想纠结的人）</h4>
+    <ul>
+      <li><b>零预算起步：</b>DeepSeek（搭设定 / 排逻辑）+ 豆包或通义千问（出大纲初稿）+ Kimi 免费档（吃长文）</li>
+      <li><b>认真写中文长篇：</b>优先用平台官方工具（免费且合规），或笔灵AI 入门</li>
+      <li><b>写英文/类型小说：</b>Sudowrite（省心）或 Novelcrafter（掌控力强）</li>
+      <li><b>只想玩、找灵感：</b>彩云小梦、AI Dungeon</li>
+      <li><b>投稿前必做：</b>自查 AI 痕迹——删套话、打散节奏、加角色专属口头禅、重写关键段落</li>
+    </ul>
+  </div>
+</section>
+
+<div class="hr"></div>
+
+<!-- ============ 3. 平台态度 ============ -->
+<section id="platforms">
+  <div class="sec-head">
+    <div class="eyebrow">03 / 平台态度</div>
+    <h2>写网文之前，先看清平台的「红线」</h2>
+    <p class="sec-desc">这一节很实际：<strong>你用什么工具不重要，能不能过审才重要。</strong>五大平台的 AI 政策差异极大，用错工具可能直接封号。</p>
+  </div>
+
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr><th>平台</th><th>官方 AI 工具</th><th>开放程度</th><th>态度档位</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="name">阅文</span>（起点/QQ阅读）</td>
+            <td>作家助手 + <b>妙笔通鉴</b>（千万字级理解，做细节回顾、剧情总结、伏笔挖掘）</td>
+            <td>只开放校对、润色、素材整理；<b>不允许整章生成/剧情代写</b></td>
+            <td><span class="tag r">最严</span> 有来源称 AI 正文占比超 30% 直接拒稿</td>
+          </tr>
+          <tr>
+            <td><span class="name">番茄小说</span></td>
+            <td>番茄作家助手：AI 扩写、改写、续写、起名、卡文锦囊等七项功能</td>
+            <td>官方表态「做的是 AI 辅助写作，而非纯 AI 小说」</td>
+            <td><span class="tag a">中度</span> 2026 年 5 月将「AI 批量生成、缺乏原创性」列为低质标准</td>
+          </tr>
+          <tr>
+            <td><span class="name">七猫</span></td>
+            <td>未确认具体工具</td>
+            <td>禁 AI 情绪模板，重细腻剧情（女频为主）</td>
+            <td><span class="tag a">质感管控</span></td>
+          </tr>
+          <tr>
+            <td><span class="name">飞卢</span></td>
+            <td>未确认具体工具</td>
+            <td>重脑洞轻文笔</td>
+            <td><span class="tag g">最宽松</span></td>
+          </tr>
+          <tr>
+            <td><span class="name">晋江</span></td>
+            <td>明确<b>不引入</b> AI 创作工具</td>
+            <td>分级制：只允许「校对」「要素」「粗纲」三级</td>
+            <td><span class="tag r">最保守</span> 越线即锁章 + 黄牌一个月 + 永久禁榜，V 文退还订阅</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-note">📌 行业层面：16 家头部平台已联合发布《网络文学行业反洗稿自律公约》。晋江明确表示「很长时间内不会考虑将 AI 工具直接引入创作领域」。</div>
+  </div>
+
+  <div class="callout warn" style="margin-top:24px">
+    <h4>⚠️ 三条实操底线</h4>
+    <ul>
+      <li><b>用 AI 理大纲、查资料、做校对 —— 安全。</b>所有平台的官方工具都在做这些。</li>
+      <li><b>让 AI 整章生成正文 —— 高危。</b>投晋江会锁章，投起点有被判拒稿的风险。</li>
+      <li><b>投晋江的</b>务必守住「校对/要素/粗纲」三级红线；<b>投起点的</b>不要碰整章生成。</li>
+    </ul>
+    <p style="margin-top:10px">另外记住一条行业统一公式：<strong>AI 干体力活（大纲、素材、句子优化），作者干灵魂活（人设、情绪、转折、爽点）。</strong></p>
+  </div>
+</section>
+
+<div class="hr"></div>
+
+<!-- ============ 4. 开源项目 ============ -->
+<section id="opensource">
+  <div class="sec-head">
+    <div class="eyebrow">04 / 开源项目</div>
+    <h2>GitHub 上的大神们，是怎么解决「写不长」的？</h2>
+    <p class="sec-desc">
+      商业工具的源码你看不到，但开源项目全都能看。这一节把 GitHub 上最有代表性的项目拆开，看看它们各自押注哪条技术路线。
+      <strong>理解这些思路，比会用任何一个工具都值钱</strong>——因为这些思路可以直接迁移到你自己的工作流里。
+    </p>
+  </div>
+
+  <h3 style="margin:32px 0 14px">五大技术流派（这是本节的核心）</h3>
+  <p class="muted" style="margin-bottom:18px">所有开源方案，本质上都在用下面五种思路中的一种或几种。看懂这五张卡，你就掌握了这个领域的「武功图谱」。</p>
+
+  <div class="grid g2">
+    <div class="school">
+      <h4><span class="tag b">流派 ①</span> 大纲驱动 · 分层生成</h4>
+      <dl>
+        <dt>解决什么问题</dt>
+        <dd>全局结构失控、前后不呼应——写着写着就跑偏了。</dd>
+        <dt>怎么做</dt>
+        <dd>先大纲后正文，而且大纲分层递进：粗纲 → 细纲 → 章节要点，生成时一层层往下钻。</dd>
+        <dt>代表作</dt>
+        <dd>DOC（三层大纲 + 控制器）、DOME（动态展开细纲）</dd>
+        <dt>优点 / 缺点</dt>
+        <dd>✅ 结构完整、可控性强、人能插手的点很清晰<br>❌ 大纲一旦定死就无法适应剧情涌现；细纲展开依赖模型质量</dd>
+      </dl>
+    </div>
+
+    <div class="school">
+      <h4><span class="tag b">流派 ②</span> 递归循环 · 带记忆生成</h4>
+      <dl>
+        <dt>解决什么问题</dt>
+        <dd>上下文窗口有限，写长了就忘。</dd>
+        <dt>怎么做</dt>
+        <dd>每写一段就重新拼一次 prompt（递归重提示），同时把历史压成摘要 / 状态文件 / 向量库，反复召回。</dd>
+        <dt>代表作</dt>
+        <dd>Re3、AI_NovelGenerator（状态文件 + 向量库）、LongWriter（AgentWrite 分段）</dd>
+        <dt>优点 / 缺点</dt>
+        <dd>✅ 理论上可无限长、工程门槛低<br>❌ 摘要会丢细节；错误会沿着链条累积放大</dd>
+      </dl>
+    </div>
+
+    <div class="school">
+      <h4><span class="tag p">流派 ③</span> 多 Agent 协作</h4>
+      <dl>
+        <dt>解决什么问题</dt>
+        <dd>单个模型「一种人格写到底」，创意贫乏、不会自我审查。</dd>
+        <dt>怎么做</dt>
+        <dd>按职能拆 Agent：规划者、角色设计师、写手、编辑、审校、书目管理员，用共享黑板 + 编排器串起来。</dd>
+        <dt>代表作</dt>
+        <dd>Agents' Room（Google DeepMind）、StoryWriter（清华 KEG）、CrewAI 系示例</dd>
+        <dt>优点 / 缺点</dt>
+        <dd>✅ 分工带来可测量的质量提升、模块可替换<br>❌ <b>调用次数与成本成倍上涨</b>；Agent 之间可能互相污染</dd>
+      </dl>
+    </div>
+
+    <div class="school">
+      <h4><span class="tag a">流派 ④</span> 知识图谱 + 检索增强</h4>
+      <dl>
+        <dt>解决什么问题</dt>
+        <dd>人物关系、战力体系、时间线这类<b>结构化</b>的一致性。</dd>
+        <dt>怎么做</dt>
+        <dd>把剧情抽成三元组/四元组存进图数据库（Neo4j、时序知识图谱），写新章前检索相关事实注入。</dd>
+        <dt>代表作</dt>
+        <dd>DOME（时序知识图谱）、NovelForge（Neo4j 关系入图）、GraphRAG、Letta（前 MemGPT）</dd>
+        <dt>优点 / 缺点</dt>
+        <dd>✅ 能精确回答「第 10 章主角有没有断剑」这类硬问题<br>❌ 抽取本身靠 LLM 会抽错；维护成本高；对文学性毫无帮助</dd>
+      </dl>
+    </div>
+
+    <div class="school">
+      <h4><span class="tag g">流派 ⑤</span> 微调专用写作模型</h4>
+      <dl>
+        <dt>解决什么问题</dt>
+        <dd>通用模型「不愿写长、写不长」——输出长度被训练数据锁死了。</dd>
+        <dt>怎么做</dt>
+        <dd>不是提示词技巧，而是数据 + 训练：构造长文 SFT 数据集 + DPO/RL，把长文能力<b>训进权重里</b>。</dd>
+        <dt>代表作</dt>
+        <dd>LongWriter（清华 + 智谱）、StoryWriter 微调版、AI-Writer（RWKV 中文网文语料）</dd>
+        <dt>优点 / 缺点</dt>
+        <dd>✅ 一次推理出万字，快、无编排复杂度<br>❌ 需要 GPU 和训练资源；模型训练完就「冻结」，无法动态接知识库</dd>
+      </dl>
+    </div>
+
+    <div class="school" style="border-top-color:var(--red);background:linear-gradient(180deg,#fffafb,#fff)">
+      <h4><span class="tag r">实战共识</span> 真正能跑通百万字的，都是混血</h4>
+      <dl>
+        <dt>关键结论</dt>
+        <dd>GitHub 上真正跑通「百万字中文网文」的项目，几乎都是 <b>①大纲分层 + ②记忆递归 + ④向量检索</b> 的混合体，再用 ③多 Agent 做审核修复；流派 ⑤ 则作为「长文输出能力」的底层补丁被嫁接进来。</dd>
+        <dt>为什么</dt>
+        <dd>因为每个流派只解决一个维度的问题：①管结构、②管长度、③管质量、④管一致性、⑤管产能。<b>单一流派都无法独立解决长篇小说问题。</b></dd>
+      </dl>
+    </div>
+  </div>
+
+  <h3 style="margin:48px 0 14px">代表性开源项目一览</h3>
+  <p class="muted" style="margin-bottom:18px">Star 数为核实时刻的快照，会随时间变动。</p>
+  <div class="grid" style="gap:10px">
+    <div class="repo">
+      <div class="rl"><div class="rn">GraphRAG <span class="tag">微软</span></div><div class="rp">microsoft/graphrag · Python · 知识图谱检索增强</div></div>
+      <div class="rs">36.0k</div>
+    </div>
+    <div class="repo">
+      <div class="rl"><div class="rn">STORM <span class="tag">斯坦福</span></div><div class="rp">stanford-oval/storm · Python · 知识策展，生成带引用的长文</div></div>
+      <div class="rs">31.4k</div>
+    </div>
+    <div class="repo">
+      <div class="rl"><div class="rn">Letta（前 MemGPT）</div><div class="rp">letta-ai/letta · Python · 长时记忆 Agent 框架</div></div>
+      <div class="rs">24.8k</div>
+    </div>
+    <div class="repo">
+      <div class="rl"><div class="rn">AI_NovelGenerator <span class="tag b">中文最主流</span></div><div class="rp">YILING0013/AI_NovelGenerator · Python · 中文长篇小说全流程生成</div></div>
+      <div class="rs">6.1k</div>
+    </div>
+    <div class="repo">
+      <div class="rl"><div class="rn">AI-Writer</div><div class="rp">BlinkDL/AI-Writer · Python · RWKV 中文网文续写</div></div>
+      <div class="rs">3.9k</div>
+    </div>
+    <div class="repo">
+      <div class="rl"><div class="rn">chinese-novelist-skill</div><div class="rp">PenglongHuang/chinese-novelist-skill · Python · Agent 写作技能，10–50 章</div></div>
+      <div class="rs">3.1k</div>
+    </div>
+    <div class="repo">
+      <div class="rl"><div class="rn">AI-Novel-Writing-Assistant <span class="tag a">工程最重</span></div><div class="rp">ExplosiveCoderflome/AI-Novel-Writing-Assistant · TypeScript · 整本书生产线</div></div>
+      <div class="rs">3.0k</div>
+    </div>
+    <div class="repo">
+      <div class="rl"><div class="rn">gpt-author</div><div class="rp">mshumer/gpt-author · Jupyter · GPT-4 链式生成直接出 EPUB</div></div>
+      <div class="rs">2.5k</div>
+    </div>
+    <div class="repo">
+      <div class="rl"><div class="rn">LongWriter <span class="tag p">清华+智谱</span></div><div class="rp">THUDM/LongWriter · Python · 超长文本生成专用模型，一分钟万词</div></div>
+      <div class="rs">1.9k</div>
+    </div>
+    <div class="repo">
+      <div class="rl"><div class="rn">91Writing</div><div class="rp">ponysb/91Writing · Vue · 小说创作 Web 工具</div></div>
+      <div class="rs">1.6k</div>
+    </div>
+    <div class="repo">
+      <div class="rl"><div class="rn">NovelForge</div><div class="rp">RhythmicWave/NovelForge · Python+TS · 卡片式 + 知识图谱创作</div></div>
+      <div class="rs">1.2k</div>
+    </div>
+    <div class="repo">
+      <div class="rl"><div class="rn">Re3</div><div class="rp">yangkevin2/emnlp22-re3-story-generation · Python · 递归重提示 + 修订</div></div>
+      <div class="rs">257</div>
+    </div>
+    <div class="repo">
+      <div class="rl"><div class="rn">DOC</div><div class="rp">yangkevin2/doc-story-generation · Python · 细粒度大纲控制</div></div>
+      <div class="rs">160</div>
+    </div>
+    <div class="repo">
+      <div class="rl"><div class="rn">Agents' Room</div><div class="rp">google-deepmind/tell_me_a_story · Python · 多 Agent 编剧室</div></div>
+      <div class="rs">52</div>
+    </div>
+    <div class="repo">
+      <div class="rl"><div class="rn">StoryWriter</div><div class="rp">THU-KEG/StoryWriter · Python · 多 Agent + 事件大纲</div></div>
+      <div class="rs">46</div>
+    </div>
+    <div class="repo">
+      <div class="rl"><div class="rn">DOME</div><div class="rp">Qianyue-Wang/DOME · Python · 动态分层大纲 + 时序知识图谱</div></div>
+      <div class="rs">19</div>
+    </div>
+  </div>
+
+  <h3 style="margin:48px 0 14px">三个最值得琢磨的项目</h3>
+
+  <div class="grid g2">
+    <div class="card" style="border-top:3px solid var(--brand)">
+      <h4><span class="ico b">中</span>AI_NovelGenerator —— 中文圈最接地气的方案</h4>
+      <p class="sub">YILING0013/AI_NovelGenerator · 6.1k ⭐ · Python · 完全可本地部署</p>
+      <p><b>核心思路：</b>分步人工确认 + 状态文件 + 向量召回。它不是一键生成，而是把流程切成可控的段落：</p>
+      <div class="flow">
+        <span class="fn">设定工坊<br><span style="font-size:11px;color:var(--ink-3)">世界观/角色/伏笔</span></span>
+        <span class="fa">→</span>
+        <span class="fn">生成章节目录</span>
+        <span class="fa">→</span>
+        <span class="fn">逐章生成<br><span style="font-size:11px;color:var(--ink-3)">生成前向量检索召回历史</span></span>
+        <span class="fa">→</span>
+        <span class="fn">确认定稿<br><span style="font-size:11px;color:var(--ink-3)">回写状态文件+更新向量库</span></span>
+        <span class="fa">→</span>
+        <span class="fn">一致性审校</span>
+      </div>
+      <p><b>关键实现：</b>每章定稿时会回写三个状态文件——<code style="font-family:var(--mono);font-size:13px">global_summary.txt</code>（全书摘要）、<code style="font-family:var(--mono);font-size:13px">character_state.txt</code>（角色状态）、<code style="font-family:var(--mono);font-size:13px">plot_arcs.txt</code>（剧情线），并同步更新向量库。支持按任务路由不同模型（架构用 Gemini、正文用 DeepSeek、审校用第三个模型）。</p>
+      <p><b>值得学的地方：</b>「用不同模型干不同活」这个思路，你完全可以在手动工作流里照搬。<b>局限：</b>向量检索以「章节摘要」为粒度，跨章细节仍可能漂移。</p>
+    </div>
+
+    <div class="card" style="border-top:3px solid var(--amber)">
+      <h4><span class="ico a">重</span>AI-Novel-Writing-Assistant —— 工程最重的「整本书生产线」</h4>
+      <p class="sub">ExplosiveCoderflome/AI-Novel-Writing-Assistant · 3.0k ⭐ · TypeScript · 可暂停可恢复</p>
+      <p><b>核心思路：</b>不写「一段文案」，而是做一条<b>可暂停、可恢复的整本书生产链</b>。一句灵感输入进去，自动跑：</p>
+      <p style="margin:12px 0;padding:12px 14px;background:#fafbfe;border:1px dashed var(--line);border-radius:8px;font-size:14px">
+        自动导演（方向/世界/角色/卷战略/章节任务）→ 章节生成 → AI 审核 → 修复 → <b>角色状态、事实、伏笔回灌</b> → 下一章
+      </p>
+      <p><b>技术栈：</b>React 19 + Vite + Express 5 + Prisma；编排用 LangChain + LangGraph；SQLite 默认，RAG 走 Qdrant；含 Electron 桌面版。</p>
+      <p><b>三个亮点模块：</b></p>
+      <ul class="clean">
+        <li><b>角色资源账本</b>——按本章参与者筛选角色信息，避免把所有人全塞进 prompt（省 token 的关键）</li>
+        <li><b>反 AI 规则引擎</b>——专门去模板感</li>
+        <li><b>RAG 召回 trace</b>——可以追踪「这一章到底召回了哪些历史片段」，方便排查失忆问题</li>
+      </ul>
+    </div>
+
+    <div class="card" style="border-top:3px solid var(--purple)">
+      <h4><span class="ico p">术</span>Agents' Room —— 把写作变成「编剧室开会」</h4>
+      <p class="sub">google-deepmind/tell_me_a_story · 52 ⭐ · Gemini 1.5 Flash 底座</p>
+      <p><b>核心思路：</b>模拟影视剧的 writers' room。任务拆成两类 Agent，由 Orchestrator 统一调度，所有产出写进共享的 <b>Scratchpad（黑板记忆）</b>，后面的 Agent 都能读到前文。</p>
+      <div class="compare">
+        <div class="cmp good">
+          <span class="lbl">PLANNING AGENTS</span>
+          <p>负责规划：分别处理<b>冲突、角色、设定、情节</b>，把「怎么写」这件事先想清楚。</p>
+        </div>
+        <div class="cmp good">
+          <span class="lbl">WRITING AGENTS</span>
+          <p>负责执笔：按 Freytag 金字塔分段写——开端 / 上升 / 高潮 / 下降 / 结局。</p>
+        </div>
+      </div>
+      <p><b>有意思的做法：</b>用「蒸馏反向翻译」——先让强模型从人类好故事里<b>逆向抽出「计划」和「分段」</b>，再微调小模型学会「怎么规划」。</p>
+      <p><b>成绩：</b>平均约 3000 字（端到端基线约 1200 字），专家评测在情节、创意、人物发展、语言四个维度全面胜出。<b>局限：</b>框架代码未完全开源，只放出了数据集；量级仍是 3000 字，不是百万字网文方案。</p>
+    </div>
+
+    <div class="card" style="border-top:3px solid var(--green)">
+      <h4><span class="ico g">简</span>gpt-author —— 最简单的「链式生成」样本</h4>
+      <p class="sub">mshumer/gpt-author · 2.5k ⭐ · Jupyter Notebook · 玩具级但极具启发</p>
+      <p><b>核心思路：</b>就是一条链子，直接抄作业都行：</p>
+      <div class="flow">
+        <span class="fn">生成候选情节</span><span class="fa">→</span>
+        <span class="fn">选优</span><span class="fa">→</span>
+        <span class="fn">提炼书名</span><span class="fa">→</span>
+        <span class="fn">生成 N 章故事线</span><span class="fa">→</span>
+        <span class="fn">逐章写作<br><span style="font-size:11px;color:var(--ink-3)">参考前文</span></span><span class="fa">→</span>
+        <span class="fn">生成封面 prompt</span><span class="fa">→</span>
+        <span class="fn">打包 EPUB</span>
+      </div>
+      <p><b>成本：</b>15 章小说低至 <b>4 美元、几分钟出稿</b>。</p>
+      <p><b>作者自己列的问题：</b>早期章节 token 会爆、章节常被截断、<b>没有记忆压缩机制</b>。所以它属于玩具级原型——但作为理解「链式生成」的起点，它是全网最好的教材。</p>
+    </div>
+  </div>
+
+  <div class="callout key">
+    <h4>🎯 从开源项目里能抄走的三条「干货」</h4>
+    <ol class="clean">
+      <li><b>状态文件外置法：</b>维护三个文件——全书摘要、角色状态、剧情线，每写完一章就更新。这是最低成本的长篇管理方案，用记事本就能做，不需要任何编程。</li>
+      <li><b>按任务分工用模型：</b>架构/大纲用逻辑强的（DeepSeek、Gemini），正文用文笔好的（Claude），审校用另一个模型专门挑逻辑错误。换模型 = 换个视角检查。</li>
+      <li><b>写新章前先做一次召回：</b>不要凭记忆写下一章。先问 AI「根据前文，这一章登场的人物现在分别是什么状态」，让它去翻你的状态文件，再动笔。</li>
+    </ol>
+  </div>
+</section>
+
+<div class="hr"></div>
+
+<!-- ============ 5. 创作方法论 ============ -->
+<section id="method">
+  <div class="sec-head">
+    <div class="eyebrow">05 / 创作方法论</div>
+    <h2>工具只是笔，会写才是本事</h2>
+    <p class="sec-desc">
+      前面讲的都是「怎么让 AI 帮忙」。但真正决定一本书能不能被人读下去的，是下面这些最朴素的东西。
+      <strong>好消息是：它们全都可以学，而且大部分是套路。</strong>
+    </p>
+  </div>
+
+  <h3 style="margin:32px 0 16px">5.1 选题：写什么题材</h3>
+
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr><th>赛道</th><th>典型细分</th><th>读者要的核心体验</th><th>新人友好度</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="name">玄幻 / 仙侠</span></td><td>传统玄幻、家族修仙、赛博修仙</td><td>变强、打脸、等级攀升</td><td><span class="tag r">低</span> 红海，几十万本同台</td></tr>
+          <tr><td><span class="name">都市</span></td><td>都市高武、都市脑洞、职业异能</td><td>现实代入 + 逆袭反差</td><td><span class="tag g">高</span></td></tr>
+          <tr><td><span class="name">悬疑 / 灵异</span></td><td>规则怪谈、民俗志怪、无限流</td><td>烧脑、规则解谜、「再看一章」</td><td><span class="tag g">高</span> 供给不足</td></tr>
+          <tr><td><span class="name">历史</span></td><td>历史权谋、历史脑洞</td><td>智斗、爽感野史</td><td><span class="tag a">中</span></td></tr>
+          <tr><td><span class="name">科幻</span></td><td>末世求生、游戏现实主义</td><td>新奇设定 + 生存压力</td><td><span class="tag a">中</span></td></tr>
+          <tr><td><span class="name">言情（女频）</span></td><td>豪门总裁、年代、甜宠、追妻火葬场</td><td>情感拉扯 + 情绪释放</td><td><span class="tag g">中高</span></td></tr>
+          <tr><td><span class="name">女频新贵</span></td><td>恶毒女配、女性悬疑、无 CP 事业流</td><td>反套路 + 成长感</td><td><span class="tag a">中</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-note">📈 趋势参考：规则怪谈/无限流搜索量同比暴涨约 300%；都市脑洞稳居流量第一；女频「恶毒女配/全家反派」长期占据热榜 30%–40%。</div>
+  </div>
+
+  <div class="callout tip" style="margin-top:24px">
+    <h4>💡 最有用的一条数据对比</h4>
+    <p>番茄小说上：<b>「传统玄幻」超 47 万本，单书平均读者不足 60 人</b>；而<b>「民俗志怪」不到 8000 本，单书平均读者超 1100 人</b>。</p>
+    <p style="margin-top:8px">结论很直白：<strong>在红海当炮灰，不如在蓝海当标杆。</strong>新人不要一头扎进最热的赛道。</p>
+  </div>
+
+  <h4 style="margin:28px 0 10px">判断一个题材能不能写：四问 + 三数据</h4>
+  <div class="grid g2">
+    <div class="card flat">
+      <h4>先自问四个问题（答不上就别开）</h4>
+      <ol class="clean">
+        <li><b>我最常读什么类型？</b>兴趣决定你能不能坚持到 100 万字。</li>
+        <li><b>我有什么别人没有的知识或经历？</b>你的职业、地域、行业就是天然的壁垒。</li>
+        <li><b>我能稳定日更多少字？</b>产能决定了你该选什么样的赛道上限。</li>
+        <li><b>这个题材的核心矛盾，撑得住三卷、上百章吗？</b>撑不住就是短篇的命。</li>
+      </ol>
+    </div>
+    <div class="card flat">
+      <h4>再去平台拉三个数据</h4>
+      <ol class="clean">
+        <li><b>同分类月新增书数</b> → 看市场容量有多大</li>
+        <li><b>榜单前 20 名的流量集中度</b> → 越低越容易分到流量</li>
+        <li><b>评论区高频吐槽</b> → 这是读者未被满足的真实需求，是最值钱的情报</li>
+      </ol>
+      <p style="margin-top:12px;font-size:14px"><b>创新公式：经典赛道 + 新兴元素。</b>例如「无限流 + 中式民俗」「年代文 + 实业报国」。凭空自创世界观 = 把理解成本全甩给读者，冷启动极难。</p>
+    </div>
+  </div>
+
+  <h3 style="margin:52px 0 16px">5.2 爆点：怎么判断和打造</h3>
+
+  <div class="compare">
+    <div class="cmp bad">
+      <span class="lbl">爽点 = 零件</span>
+      <p>单次情绪交付的小单位，读者「爽一下」就过去了。比如一次打脸、一次升级、一句嘴炮。<br><b>作用是让读者继续读。</b></p>
+    </div>
+    <div class="cmp good">
+      <span class="lbl">爆点 = 烟花</span>
+      <p>多个爽点叠加、铺垫到位后引爆的<b>情绪峰值 + 记忆点</b>，能形成「名场面」和口碑传播。<br><b>作用是让读者主动安利。</b></p>
+    </div>
+  </div>
+
+  <h4 style="margin:28px 0 12px">12 种常见爽点类型（可以直接当选题库用）</h4>
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th style="width:34px">#</th><th>类型</th><th>一句话说明</th><th>举例</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><span class="name">信息差碾压</span></td><td>我知道，你不知道</td><td>重生后预判事件走向</td></tr>
+          <tr><td>2</td><td><span class="name">降维打击</span></td><td>用高维能力解低维问题</td><td>顶级黑客破解校园网</td></tr>
+          <tr><td>3</td><td><span class="name">认知颠覆</span></td><td>你坚信的常识其实是错的</td><td>「你嘴里的废物，是我师父」</td></tr>
+          <tr><td>4</td><td><span class="name">以彼之道还施彼身</span></td><td>用对手最擅长的方式赢他</td><td>按你定的规矩玩死你</td></tr>
+          <tr><td>5</td><td><span class="name">绝境反转</span></td><td>99% 绝望时亮底牌</td><td>全场以为完了，主角翻盘</td></tr>
+          <tr><td>6</td><td><span class="name">身份揭晓</span></td><td>小人物其实是……</td><td>赘婿真实身份曝光</td></tr>
+          <tr><td>7</td><td><span class="name">连锁反应</span></td><td>一个小动作引发大势</td><td>做一件事，一串人慌了</td></tr>
+          <tr><td>8</td><td><span class="name">群体震撼</span></td><td>一群人的认知被颠覆</td><td>全场鸦雀无声</td></tr>
+          <tr><td>9</td><td><span class="name">时间魔法</span></td><td>你以为三年，其实三天</td><td>别人十年苦修，主角三日大成</td></tr>
+          <tr><td>10</td><td><span class="name">代价转移</span></td><td>你的攻击成了我的养分</td><td>吸收对手力量为己用</td></tr>
+          <tr><td>11</td><td><span class="name">规则利用</span></td><td>在规则内合法玩死你</td><td>规矩是你定的，赢得还是我</td></tr>
+          <tr><td>12</td><td><span class="name">情感共鸣</span></td><td>你守护的也是我珍视的</td><td>读者代入，跟着感动</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-note">再补一批经典套路：扮猪吃虎、退婚打脸、打了小的来了老的、跳崖得宝、极限反杀（反派死于话多）、偷听密文。</div>
+  </div>
+
+  <h4 style="margin:32px 0 12px">爆点怎么「埋」和「爆」：H-I-P 公式</h4>
+  <div class="grid g3">
+    <div class="card" style="border-top:3px solid var(--red)">
+      <h4>H · Hook 压力输入</h4>
+      <p class="sub">制造焦虑、愤怒、好奇</p>
+      <p>用短句、断句，把读者的心提起来。</p>
+      <p style="font-family:var(--mono);font-size:13.5px;background:#fafbfe;padding:10px 12px;border-radius:8px;color:var(--ink-2)">「门开了。没人。只有血。」</p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--amber)">
+      <h4>I · Intensity 压抑积蓄</h4>
+      <p class="sub">张力累积</p>
+      <p>用中长句、心理描写、信息不对称，让读者越来越憋。</p>
+      <p style="font-size:13.5px;color:var(--ink-3)">这一段越长，后面的爆就越响。</p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--green)">
+      <h4>P · Payoff 释放</h4>
+      <p class="sub">反击、揭晓、收获</p>
+      <p>用有力动词 + 短促结论，一击即中，别拖。</p>
+      <p style="font-family:var(--mono);font-size:13.5px;background:#fafbfe;padding:10px 12px;border-radius:8px;color:var(--ink-2)">「枪响。人倒。钱到手。」</p>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <h4>⚡ 两条必须记住的节奏铁律</h4>
+    <ul>
+      <li><b>70% 的章尾要卡在 I → P 的转换瞬间。</b>读者被「卡在半空」，就只能点下一章。如果卡在 P 之后，读者满足了就关掉了。</li>
+      <li><b>不能连续 P-P-P。</b>一直爽会麻木，必须穿插 H-H-H 或 I-I-I 让读者换气。</li>
+    </ul>
+  </div>
+
+  <h4 style="margin:28px 0 12px">判断一个点子是不是爆点：可写性五问</h4>
+  <div class="steps">
+    <div class="step"><div class="step-n">1</div><div class="step-b"><h4>主角在这件事里有明确想要的东西吗？</h4><p>没有欲望 = 没有戏。主角必须「想要」，而且很想要。</p></div></div>
+    <div class="step"><div class="step-n">2</div><div class="step-b"><h4>阻力是谁？对手看起来比他强吗？</h4><p>对手太弱，爽感就很廉价。要让读者真的替主角捏一把汗。</p></div></div>
+    <div class="step"><div class="step-n">3</div><div class="step-b"><h4>读者看到这里，会不会替主角憋气？</h4><p>没有压抑就没有释放。这一点是很多人写爽文失败的根源。</p></div></div>
+    <div class="step"><div class="step-n">4</div><div class="step-b"><h4>这个爽点爽完之后，能不能牵出更大的麻烦？</h4><p>如果不能，剧情就断档了。好的爽点是「升级打怪」，不是「通关结束」。</p></div></div>
+    <div class="step"><div class="step-n">5</div><div class="step-b"><h4>用一句话讲给朋友听，他会不会问「然后呢」？</h4><p>说不清的就是不成立的。这个测试最简单也最准。</p></div></div>
+  </div>
+
+  <h4 style="margin:32px 0 12px">黄金三章：开篇必须完成什么</h4>
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th style="width:90px">位置</th><th>必须完成的任务</th><th>硬性红线</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="name">第 1 章</span></td>
+            <td>抛冲突、立人设、埋悬念</td>
+            <td><b>前 300–500 字必须出冲突</b>；前 300 字不写景、不铺垫、不介绍背景</td>
+          </tr>
+          <tr>
+            <td><span class="name">第 2 章</span></td>
+            <td>金手指 / 核心设定亮相，顺带带出世界观</td>
+            <td>专有名词每章 ≤ 3 个；设定靠剧情带出来，不靠旁白说明</td>
+          </tr>
+          <tr>
+            <td><span class="name">第 3 章</span></td>
+            <td>小高潮收束开局危机 + 引出更大矛盾 + 强钩子</td>
+            <td>章末必须留钩子</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="compare" style="margin-top:20px">
+    <div class="cmp bad">
+      <span class="lbl">✗ 平淡写法</span>
+      <p><code>李雷是个普通大学生，20岁，住在A市，每天过着平凡生活。有一天……</code></p>
+      <p style="margin-top:8px;font-size:13.5px;color:var(--ink-3)">读者：跟我有什么关系？划走。</p>
+    </div>
+    <div class="cmp good">
+      <span class="lbl">✓ 钩子写法</span>
+      <p><code>「警告！宿主生命体征正在急速下降！」李雷睁开眼，发现自己被绑在手术台上，头顶无影灯刺得他睁不开眼。</code></p>
+      <p style="margin-top:8px;font-size:13.5px;color:var(--ink-3)">读者：为什么？然后呢？</p>
+    </div>
+  </div>
+
+  <h3 style="margin:52px 0 16px">5.3 怎么把小说写好</h3>
+
+  <div class="grid g2">
+    <div class="card">
+      <h4><span class="ico b">人</span>人物</h4>
+      <p><b>「四要素钉死法」</b>——动笔前必须想清：</p>
+      <ol class="clean">
+        <li>主角是谁？（定位与初始状态）</li>
+        <li>他现在最麻烦的事是什么？（有压力的初始冲突）</li>
+        <li>他最想得到什么？（短期目标 + 深层欲望）</li>
+        <li>谁或什么在拦着他？（具体对手）</li>
+      </ol>
+      <p style="margin-top:14px"><b>立体人物公式：</b>表面身份 + 秘密欲望 + 致命弱点 + 矛盾行为。</p>
+      <p>配角的低效写法是「有朋友有敌人」；高效写法是「导师是旧案嫌疑人、搭档是受害者家属」——<b>让关系与主线纠缠在一起</b>。</p>
+      <p><b>人物弧光五步：</b>设定主性格 → 加辅助性格（对外泼辣，对内心软）→ 用他人对比强化 → 安排违背性格逻辑的事件制造挣扎 → 写出转变。</p>
+      <p style="margin-top:12px;padding:11px 13px;background:var(--red-soft);border-radius:8px;font-size:14px"><b>铁律：没人爱看完美人设。</b>有缺点的人才真实，欲望才是驱动剧情的发动机。</p>
+    </div>
+
+    <div class="card">
+      <h4><span class="ico a">界</span>世界观：够用就好，别得「设定癌」</h4>
+      <p>新手只需要写清楚 4 件事：<b>时代/技术背景、规则体系（等级/职场/豪门规则）、地域格局、核心冲突来源。</b></p>
+      <p style="margin-top:12px"><b>有效设定三问：</b></p>
+      <ol class="clean">
+        <li>它给主角什么机会？</li>
+        <li>它制造什么限制？</li>
+        <li>它把主角推向什么选择？</li>
+      </ol>
+      <p style="margin-top:12px"><b>不能改变人物行动、也不能改变故事走向的设定，就是装饰。</b></p>
+      <p>原则：<b>剧情先行，设定后置。</b>人物用到什么就解释什么，剧情走到哪就铺到哪。开篇像说明书，读者直接闪退。</p>
+    </div>
+  </div>
+
+  <h4 style="margin:32px 0 12px">结构：三级大纲</h4>
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>层级</th><th>写什么</th><th>篇幅</th><th>作用</th></tr></thead>
+        <tbody>
+          <tr><td><span class="name">总纲</span></td><td>核心矛盾 + 主角成长弧线 + 结局方向</td><td>1000–3000 字</td><td>判断每一章是否在服务整个故事</td></tr>
+          <tr><td><span class="name">卷纲</span></td><td>每卷 2–3 件大事、主角状态变化、卷末钩子</td><td>每卷 500–1500 字</td><td>防中段失控、防烂尾</td></tr>
+          <tr><td><span class="name">章节蓝图</span></td><td>开场状态 + 3–5 个情节节点 + 章末钩子</td><td>每章 50–150 字</td><td>辅助日更，钩子提前规划好</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-note">⚠️ <b>别一上来写十万字大纲</b>——既耗热情又束缚灵感。先定结局方向和前三卷节点，再把最近 20 章做成章节卡。开书前一次性规划两卷（约百万字情节），够你写四个月。</div>
+  </div>
+
+  <div class="callout key" style="margin-top:22px">
+    <h4>📐 想用经典结构做参照？Save the Cat 15 节拍（已由 Jessica Brody 改编用于小说）</h4>
+    <div class="tbl-scroll">
+      <table style="min-width:520px;margin-top:10px">
+        <thead><tr><th>节拍</th><th>位置</th><th>网文对应</th></tr></thead>
+        <tbody>
+          <tr><td>开场画面 / 主题陈述 / 铺垫</td><td>0–10%</td><td>第 1–3 章</td></tr>
+          <tr><td>催化剂（激励事件）</td><td>约 10%</td><td>穿越 / 重生 / 系统绑定</td></tr>
+          <tr><td>进入第二幕</td><td>约 20%</td><td>主角决定上路</td></tr>
+          <tr><td>玩乐与游戏（前提兑现）</td><td>20–50%</td><td>前期刷怪升级——「这书封面承诺的东西」</td></tr>
+          <tr><td>中点（假胜利 / 假失败）</td><td>约 50%</td><td>阶段性大胜或大崩</td></tr>
+          <tr><td>坏蛋逼近 → 失去一切 → 灵魂黑夜</td><td>50–80%</td><td>中期背叛、最低谷</td></tr>
+          <tr><td>进入第三幕 → 终局</td><td>80–100%</td><td>反击、决战、收线</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:12px;font-size:14px">英雄之旅（平凡世界→冒险召唤→拒绝→导师→跨越门槛→试炼→洞穴深处→磨难→奖赏→归返→复活→带着灵药归来）更适合长篇玄幻冒险；Story Grid 的「激励事件→渐进式复杂化→危机→高潮→结局」则适合<b>逐场景自检</b>。</p>
+  </div>
+
+  <h4 style="margin:32px 0 12px">节奏：张力曲线与断章</h4>
+  <div class="grid g2">
+    <div class="card flat">
+      <h4>四个配比参考</h4>
+      <ul class="clean">
+        <li><b>快慢 3:1</b>——3 章紧张配 1 章缓冲</li>
+        <li><b>黄金速度</b>——爽点间隔不超过 4 万字</li>
+        <li><b>信息密度</b>——约 300 字一个小起伏、500 字一个钩子、一章一个悬念</li>
+        <li><b>章末钩子配比</b>——危机型 30%、悬念型 25%、反转型 20%、机遇型 15%、升级型 10%</li>
+      </ul>
+    </div>
+    <div class="card flat">
+      <h4>断章四原则</h4>
+      <ul class="clean">
+        <li>在情绪最高点断</li>
+        <li>在悬念刚抛出时断</li>
+        <li>在反转刚发生时断</li>
+        <li>在信息差最大时断</li>
+      </ul>
+      <p style="margin-top:12px"><b>自检：</b>如果连续三章都回答不出「主角目标变了吗？敌人压力升级了吗？读者信息增加了吗？关系位移了吗？」——你的节奏就是在原地打转。</p>
+    </div>
+  </div>
+
+  <h4 style="margin:28px 0 12px">三个可以直接套用的章节模板</h4>
+  <div class="grid g3">
+    <div class="card flat" style="border-left:3px solid var(--brand)">
+      <h4>起承转爽</h4>
+      <p class="sub">最通用的模板</p>
+      <p>起（回顾 + 引冲突）→ 承（压力升级）→ 转（转折）→ 爽（反击 + 钩子）</p>
+    </div>
+    <div class="card flat" style="border-left:3px solid var(--amber)">
+      <h4>过山车</h4>
+      <p class="sub">适合高潮章</p>
+      <p>紧张 → 喘息 → 更紧张 → <b>假结局</b> → 最高潮 → 钩子</p>
+    </div>
+    <div class="card flat" style="border-left:3px solid var(--purple)">
+      <h4>信息递进</h4>
+      <p class="sub">适合悬疑/推理</p>
+      <p>线索 A → 结论 1 → 发现不对 → 线索 B 推翻 → 更大秘密</p>
+    </div>
+  </div>
+
+  <h4 style="margin:32px 0 12px">对话与描写：怎么写出画面感</h4>
+  <div class="grid g2">
+    <div class="card flat">
+      <h4>情感不「说」，要「做」</h4>
+      <div class="compare" style="grid-template-columns:1fr;margin:10px 0 0">
+        <div class="cmp bad"><span class="lbl">✗ 直接说情绪</span><p><code>她感到非常悲伤。</code></p></div>
+        <div class="cmp good"><span class="lbl">✓ 用动作传递</span><p><code>她没有哭出声。只是把那条围巾叠好，放进抽屉最里面，关上。然后继续煮饭。</code></p></div>
+      </div>
+    </div>
+    <div class="card flat">
+      <h4>对话要「保护自己」，不要「说明自己」</h4>
+      <p>真人不会说「我嫉妒你所以抢你功劳」，而会说：</p>
+      <p><code style="font-family:var(--mono);font-size:13.5px;background:#fafbfe;padding:8px 10px;display:block;border-radius:8px">「你别把话说得那么难听，这项目也不是你一个人的功劳吧。」</code></p>
+      <p style="margin-top:12px"><b>环境描写</b>只抓一到两个关键感官就够：集市抓声音和气味，审讯室抓灯光和沉默。景物必须服务人物当下的情绪，杜绝全景式堆砌。</p>
+      <p><b>视角别乱：</b>主角不知道的事别写出来，否则就是「开天眼」，读者瞬间出戏。</p>
+    </div>
+  </div>
+
+  <h4 style="margin:32px 0 12px">文风与「AI 味」：闻到就改</h4>
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th style="width:44%">AI 味五大标志</th><th>怎么改</th></tr></thead>
+        <tbody>
+          <tr><td>① 「首先……其次……最后……综上所述」</td><td>逻辑写在路标上了 —— 小说不需要路标</td></tr>
+          <tr><td>② 每段都是「总—分—总」</td><td>小说段落应该是「动作—反应—结果」</td></tr>
+          <tr><td>③ 情感词汇堆砌但传递不到：<code style="font-family:var(--mono);font-size:13px">他感到无比愤怒</code></td><td>换成行为描写</td></tr>
+          <tr><td>④ 形容词通货膨胀：非常 / 极其 / 无比 / 深深 / 彻底</td><td>全文搜索，删掉大半</td></tr>
+          <tr><td>⑤ 永远正确的废话：「人生充满挑战，只要坚持就能克服困难」</td><td>整句删掉，一句都不留</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout tip" style="margin-top:20px">
+    <h4>🧹 去 AI 味四步流程</h4>
+    <ol class="clean">
+      <li><b>全文检索删除连接词套话</b>（首先/其次/综上/因此/总的来说）</li>
+      <li><b>扫描情感标签</b>，全部换成行为描写</li>
+      <li><b>通读删掉「删了也不影响」的句子</b>——通常能删掉 20%</li>
+      <li><b>注入一次性细节</b>，替换通用表述（不是「一家餐厅」，而是「门口挂着褪色塑料灯牌的面馆」）</li>
+    </ol>
+    <p style="margin-top:12px"><b>建立个人风格锚点：</b>先写 500 字文风样本，提炼专属习惯——固定偏好句式、标志性小动作、常用标点、环境描写不超过三行——然后要求自己全程遵守。</p>
+    <p style="margin-top:10px">⚠️ 番茄等平台已明确严查纯 AI 生成。<b>用 AI 理大纲可以，正文自己写并留底稿。</b></p>
+  </div>
+
+  <h3 style="margin:52px 0 16px">5.4 扑街清单：十个最常见的死法</h3>
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th style="width:34px">#</th><th>症状</th><th>读者反应</th><th>怎么改</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>开篇堆设定、堆世界观</td><td>直接闪退</td><td>剧情先行、设定后置；第一章只留钩子和冲突</td></tr>
+          <tr><td>2</td><td>第一章写回忆、主角原地不动</td><td>三句话看不到当下剧情就划走</td><td>必须有行动、选择、变化；静态抒情是毒点</td></tr>
+          <tr><td>3</td><td>主角「圣人」——无缺点、无欲望、无情绪</td><td>无法共情</td><td>补上欲望、软肋、性格缺陷</td></tr>
+          <tr><td>4</td><td>主角刚得能力就去欺负弱者</td><td>显得低级、掉格局</td><td>让主角对抗更强的对手</td></tr>
+          <tr><td>5</td><td>开篇人物扎堆、名字生僻</td><td>记不住谁是谁</td><td>开篇只保留主角 + 1–2 个关键配角</td></tr>
+          <tr><td>6</td><td>书名模糊、简介糊弄</td><td>首页点击率直接死</td><td>一句话讲清身份 + 核心冲突 + 最大看点</td></tr>
+          <tr><td>7</td><td>节奏拖沓、无冲突也写一章</td><td>追更率下跌</td><td>「无冲突不写章」；每章一小冲突 + 一小进展 + 一钩子</td></tr>
+          <tr><td>8</td><td>跟风过时二十年的老套路</td><td>被编辑一眼判「过时又没爽点」</td><td>经典赛道 + 新兴元素</td></tr>
+          <tr><td>9</td><td>后期崩坏 / 烂尾 / 断更</td><td>读者转移且不会回来</td><td>三级大纲锁住方向；「停笔有风险，断更需谨慎」</td></tr>
+          <tr><td>10</td><td>用第一人称写长篇</td><td>无法切视角、多线崩、逻辑出漏洞</td><td>长篇用第三人称；第一人称留给 10 万字内短篇</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-note">🛑 额外提醒：不要全职裸辞入局、不要自费大额投流买假数据、不要为签约贱卖全版权。先用副业心态写完 3–5 本完本作品，再谈变现。</div>
+  </div>
+</section>
+
+<div class="hr"></div>
+
+<!-- ============ 6. 完整流程 ============ -->
+<section id="pipeline">
+  <div class="sec-head">
+    <div class="eyebrow">06 / 完整流程</div>
+    <h2>从选题到完稿：一条能跑通的路线图</h2>
+    <p class="sec-desc">
+      前面把「工具」「开源思路」「创作方法论」三块都讲完了。这一节把它们拧成一股绳——
+      <strong>每个阶段该做什么、产出什么、AI 在哪一步能帮上忙、哪一步绝对不能交给 AI。</strong>
+    </p>
+  </div>
+
+  <div class="callout key" style="margin-bottom:26px">
+    <h4>🔗 三块内容是怎么拼在一起的</h4>
+    <p>开源项目总结出的「记忆外置 + 按任务分工模型 + 写前召回」三条干货，正好对应创作流程里的<strong>骨架搭建、写稿、质检</strong>三个阶段。换句话说：<strong>大神们用代码实现的自动化流程，你用三个文档 + 三个聊天窗口，可以手动复刻出七八成效果。</strong></p>
+  </div>
+
+  <h3 style="margin:32px 0 16px">六阶段实战路线图</h3>
+  <div class="phaseline">
+    <div class="phase">
+      <div class="phase-top"><span class="pn">PHASE 1</span><h4>立项：决定写什么、写给谁看</h4></div>
+      <div class="bar"><i style="width:10%"></i></div>
+      <ul>
+        <li>用「四问 + 三数据」筛选题材，锁定一个<b>半热不热的蓝海细分</b></li>
+        <li>用「经典赛道 + 新兴元素」公式做出差异化</li>
+        <li>确定目标平台（不同平台的红线和读者口味完全不同）</li>
+      </ul>
+      <div class="out"><b>产出：</b>一句话卖点 · 目标平台 · 题材定位文档</div>
+      <div style="margin-top:12px;padding:12px 14px;background:var(--brand-soft);border-radius:8px;font-size:14px">
+        <b>🤖 AI 怎么用：</b>让 DeepSeek 帮你分析「这五个细分赛道，哪个竞争更小、更适合新人」，或者让它列出某题材的常见套路与已饱和的点子。<b>但最终拍板必须是你</b>——因为只有你知道自己能写什么、能坚持多久。
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-top"><span class="pn">PHASE 2</span><h4>骨架：搭设定、立人物、写大纲</h4></div>
+      <div class="bar"><i style="width:25%"></i></div>
+      <ul>
+        <li>用「四要素钉死法」确定主角，「立体人物公式」补完配角</li>
+        <li>写清世界观的 4 件事，用「有效设定三问」砍掉没用的设定</li>
+        <li>写三级大纲：总纲 → 卷纲 → 最近 20 章的章节卡</li>
+        <li><b>顺手建三个状态文件</b>（这是从开源项目抄来的）：全书摘要、角色状态、剧情线</li>
+      </ul>
+      <div class="out"><b>产出：</b>设定文档 + 三级大纲 + 三个状态文件（用普通文档就行）</div>
+      <div style="margin-top:12px;padding:12px 14px;background:var(--brand-soft);border-radius:8px;font-size:14px">
+        <b>🤖 AI 怎么用：</b>这是 AI 价值最高的环节之一。把人物设定丢给它，让它推演冲突、检查逻辑漏洞、生成大纲候选。也可以用笔灵AI 这类工具直接出爆款大纲做参照。<b>注意：</b>AI 出的大纲会很「标准」，你需要手动加入一个它想不到的转折。
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-top"><span class="pn">PHASE 3</span><h4>包装：书名、简介、目录</h4></div>
+      <div class="bar"><i style="width:40%"></i></div>
+      <ul>
+        <li>书名：反差 + 卖点，控制在 15 字内</li>
+        <li>简介：一句话讲清「身份 + 核心冲突 + 最大看点」</li>
+        <li>这三件套直接决定首页点击率——<b>写得再好，没人点开也白搭</b></li>
+      </ul>
+      <div class="out"><b>产出：</b>吸量三件套（书名 / 简介 / 目录）</div>
+      <div style="margin-top:12px;padding:12px 14px;background:var(--brand-soft);border-radius:8px;font-size:14px">
+        <b>🤖 AI 怎么用：</b>让 AI 一次生成 20 个书名备选，你从中挑。这是典型的「AI 出量、人做判断」。<b>但别让 AI 直接定</b>——它取的名字往往很模板化。
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-top"><span class="pn">PHASE 4</span><h4>写稿：写正文（占整个工作量的 60%）</h4></div>
+      <div class="bar"><i style="width:60%"></i></div>
+      <ul>
+        <li><b>优先死磕黄金前三章</b>：第 1 章前 300–500 字必须出冲突，第 3 章章末必须留强钩子</li>
+        <li>之后逐章推进：每章一小冲突 + 一小进展 + 一钩子</li>
+        <li>用「起承转爽」「过山车」「信息递进」三个模板轮换着写</li>
+        <li><b>每写完一章就更新状态文件</b>，再写下一章</li>
+      </ul>
+      <div class="out"><b>产出：</b>正文初稿</div>
+      <div style="margin-top:12px;padding:12px 14px;background:var(--amber-soft);border-radius:8px;font-size:14px">
+        <b>🤖 AI 怎么用（这里要特别小心）：</b>
+        <ul style="margin:8px 0 0;padding-left:20px">
+          <li><b>可以：</b>卡文时让它给三个剧情走向供你选；让它写一段环境描写你再改；写完自己的一章让它挑逻辑漏洞。</li>
+          <li><b>不建议：</b>让它整章生成。除了平台红线问题，更实际的原因是——<b>AI 的段落单独看没问题，连起来就是流水账</b>，后期你会发现改它的稿比自己写还累。</li>
+          <li><b>关键动作：</b>写新章之前，先让 AI 根据你的状态文件回答「这一章该出场的人物现在分别是什么状态、有哪些未回收的伏笔」。这一步能直接解决 80% 的「吃书」问题。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-top"><span class="pn">PHASE 5</span><h4>质检：逐章打分 + 去 AI 味</h4></div>
+      <div class="bar"><i style="width:85%"></i></div>
+      <ul>
+        <li><b>逐章自检四问：</b>主角目标变了吗？敌人压力升级了吗？读者信息增加了吗？关系位移了吗？</li>
+        <li>画一条「爽点—节奏曲线」，找出低洼区（连续几章没有起伏的地方）</li>
+        <li>跑一遍「去 AI 味四步流程」</li>
+        <li>对照扑街清单十条，逐条排查</li>
+      </ul>
+      <div class="out"><b>产出：</b>修改清单 + 修订稿</div>
+      <div style="margin-top:12px;padding:12px 14px;background:var(--brand-soft);border-radius:8px;font-size:14px">
+        <b>🤖 AI 怎么用：</b>把某几章丢给<b>换一个模型</b>（不是写的那一个），让它专门找逻辑矛盾和角色前后不一致——这就是开源项目里「用不同模型干不同活」的手动版。让它做校对、错别字检查也完全没问题。
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-top"><span class="pn">PHASE 6</span><h4>归档：沉淀下一本可复用的经验</h4></div>
+      <div class="bar"><i style="width:100%"></i></div>
+      <ul>
+        <li>正文、设定、复盘分文件夹存放</li>
+        <li>把这本书踩过的坑、验证有效的模板记下来</li>
+        <li>数据复盘：哪一章掉得最狠就从哪一章改起</li>
+      </ul>
+      <div class="out"><b>产出：</b>素材库 + 个人写作方法论</div>
+      <div style="margin-top:12px;padding:12px 14px;background:var(--brand-soft);border-radius:8px;font-size:14px">
+        <b>🤖 AI 怎么用：</b>让 AI 帮你把这本书的写作过程做成结构化总结，沉淀成下一本可以直接复用的模板。<b>这是让第二本书比第一本轻松的关键。</b>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="margin:52px 0 16px">一张表看懂：AI 在每个环节的合适位置</h3>
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>环节</th><th>AI 的合适角色</th><th>推荐工具</th><th>红线</th></tr></thead>
+        <tbody>
+          <tr><td><span class="name">选题</span></td><td>数据分析助手 —— 帮你比较赛道、列套路</td><td>DeepSeek、Kimi</td><td><span class="tag g">放心用</span></td></tr>
+          <tr><td><span class="name">人设 / 世界观</span></td><td>头脑风暴搭档 —— 推演冲突、找逻辑漏洞</td><td>DeepSeek、通义千问</td><td><span class="tag g">放心用</span></td></tr>
+          <tr><td><span class="name">大纲</span></td><td>初稿生成器 —— 出候选方案，人来定稿</td><td>笔灵AI、通用大模型</td><td><span class="tag a">需人工把关</span></td></tr>
+          <tr><td><span class="name">书名 / 简介</span></td><td>备选生成器 —— 出 20 个让你挑</td><td>通用大模型</td><td><span class="tag a">需人工把关</span></td></tr>
+          <tr><td><span class="name">正文</span></td><td>救火队 —— 只在卡文、写景、改稿时介入</td><td>Claude（文笔好）</td><td><span class="tag r">别整章代写</span></td></tr>
+          <tr><td><span class="name">一致性检查</span></td><td>审校员 —— 换一个模型专门挑错</td><td>与写作不同的模型</td><td><span class="tag g">放心用</span></td></tr>
+          <tr><td><span class="name">去 AI 味</span></td><td>不能靠它 —— 这是人的活</td><td>—</td><td><span class="tag r">自己做</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-note">📌 一句话概括这张表：<b>AI 在「想」的环节随便用，在「写」的环节要节制，在「品味」的环节用不上。</b></div>
+  </div>
+
+  <h3 style="margin:52px 0 16px">几个容易踩的现实问题</h3>
+  <div class="grid g2">
+    <div class="card flat">
+      <h4><span class="ico b">平</span>平台怎么选</h4>
+      <div class="tbl-scroll">
+        <table style="min-width:440px;margin-top:8px">
+          <thead><tr><th>平台</th><th>模式</th><th>签约门槛</th><th>适合谁</th></tr></thead>
+          <tbody>
+            <tr><td>番茄</td><td>免费 + 广告分成</td><td>满 2 万字可申请</td><td>纯小白试水、快节奏爽文</td></tr>
+            <tr><td>起点</td><td>付费订阅</td><td>内投 1 万字，通过率约 15–20%</td><td>有文笔野心、能熬长期</td></tr>
+            <tr><td>晋江</td><td>付费订阅</td><td>签「人」不签「文」</td><td>女频言情</td></tr>
+            <tr><td>七猫</td><td>免费 + 广告（有保底）</td><td>真人编辑审核</td><td>求稳定现金流</td></tr>
+            <tr><td>飞卢</td><td>冲榜</td><td>2 万字签约、12 万字上架</td><td>脑洞大、能日更 6000+</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:12px;font-size:14px"><b>一句话：</b>求稳→七猫；赌上限→番茄；赌长期→起点；写女频→晋江。<b>选定一个平台，至少写完一本 50 万字再换</b>——频繁换平台是最大的沉没成本陷阱。</p>
+    </div>
+
+    <div class="card flat">
+      <h4><span class="ico a">时</span>时间与字数怎么管</h4>
+      <ul class="clean">
+        <li><b>日更底线：</b>番茄首秀期建议 6000 字/天，起点保底 4000 字/天。断更 48 小时，算法会默认「内容不稳定」。</li>
+        <li><b>固定写作时段：</b>例如每晚 20:00–22:00，前一晚先写次日 2–3 句章节梗概。</li>
+        <li><b>写作纪律：</b>写作期间关手机；先一口气写完初稿，<b>过程中不回头删改</b>；写完只修病句，不做大篇幅剧情改动。</li>
+        <li><b>存稿 3–7 天</b>，用存稿箱定时发布。</li>
+        <li><b>卡文急救：</b>给主角制造新困境、让对手加压；过渡章可以跳过，优先写关键剧情。</li>
+        <li><b>数据复盘：</b>每天花 5 分钟看后台，哪一章掉得最狠就从哪一章改起。</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout tip" style="margin-top:24px">
+    <h4>📊 三条参考及格线（不同平台口径有差异，仅作量级参考）</h4>
+    <ul>
+      <li>番茄书架比 / 追更比及格线约 <b>35%</b></li>
+      <li>前 10 章完读率低于 <b>8%</b>，基本就腰斩了</li>
+      <li>脑洞文 10 万字完读率 <b>≥15%</b>、爽文 <b>≥10%</b></li>
+    </ul>
+  </div>
+</section>
+
+<div class="hr"></div>
+
+<!-- ============ 7. 新手清单 ============ -->
+<section id="action">
+  <div class="sec-head">
+    <div class="eyebrow">07 / 行动清单</div>
+    <h2>如果你今天就想开始，照着做</h2>
+    <p class="sec-desc">不用全部想清楚再动手——那永远不会开始。<strong>下面这份清单，按顺序做就行。</strong></p>
+  </div>
+
+  <div class="grid g2">
+    <div class="card" style="border-top:3px solid var(--brand)">
+      <h4>第 1 天：准备</h4>
+      <ol class="clean">
+        <li>注册一个通用大模型（DeepSeek 免费就够）</li>
+        <li>建一个文件夹，里面建四个文件：<code style="font-family:var(--mono);font-size:13px">设定.md</code>、<code style="font-family:var(--mono);font-size:13px">总纲.md</code>、<code style="font-family:var(--mono);font-size:13px">角色状态.md</code>、<code style="font-family:var(--mono);font-size:13px">剧情线.md</code></li>
+        <li>花两小时泡在平台榜单上，只看不写——看前十名都在写什么、书名怎么起、简介怎么写</li>
+      </ol>
+    </div>
+
+    <div class="card" style="border-top:3px solid var(--amber)">
+      <h4>第 2–3 天：定方向</h4>
+      <ol class="clean">
+        <li>用「四问 + 三数据」选出你的题材，写下<b>一句话卖点</b></li>
+        <li>用「四要素钉死法」定主角，「立体人物公式」补两个配角</li>
+        <li>写 1500 字的<b>总纲</b>：核心矛盾 + 主角成长弧线 + 结局方向</li>
+        <li>把最近 20 章做成<b>章节卡</b>（每章 50–150 字）</li>
+      </ol>
+    </div>
+
+    <div class="card" style="border-top:3px solid var(--purple)">
+      <h4>第 4–6 天：死磕前三章</h4>
+      <ol class="clean">
+        <li>第 1 章：<b>开头 500 字内出冲突</b>，不写景不铺垫</li>
+        <li>第 2 章：金手指亮相，世界观靠剧情带出</li>
+        <li>第 3 章：收束开局危机 + 引出更大矛盾 + 强钩子收尾</li>
+        <li>写完自己读一遍：如果三章读完你不想看第四章，重写</li>
+      </ol>
+    </div>
+
+    <div class="card" style="border-top:3px solid var(--green)">
+      <h4>第 7 天起：稳定推进</h4>
+      <ol class="clean">
+        <li>每天固定时段写，先定当日目标字数</li>
+        <li>写新章前，先让 AI 汇报「人物当前状态 + 未回收伏笔」</li>
+        <li>写完一章，立刻更新<b>角色状态</b>和<b>剧情线</b>两个文件</li>
+        <li>每 10 章做一次质检：跑自检四问 + 去 AI 味流程</li>
+        <li>存稿 3–7 天再发布</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="callout key" style="margin-top:26px">
+    <h4>🎯 最后一句，也是最重要的一句</h4>
+    <p style="font-size:16.5px;line-height:1.85">
+      <strong>先写完，再写好。</strong>第一本书的目标不是成神，而是<strong>完本</strong>——
+      完本能力才是这个行业最稀缺的东西。绝大多数人不是输在写得不好，而是输在没写完。
+    </p>
+    <p style="margin-top:12px">AI 能帮你省掉查资料、想大纲、改病句的时间，但<strong>它不能替你坐下来写那 3000 字</strong>。这一点，2026 年和一百年前没有任何区别。</p>
+  </div>
+
+  <div class="hr"></div>
+
+  <h3 style="margin-bottom:14px">📚 主要参考来源</h3>
+  <div class="grid g3" style="font-size:13.8px">
+    <div class="card flat">
+      <h4 style="font-size:15px">工具与行业</h4>
+      <ul class="clean" style="font-size:13.5px">
+        <li>笔灵AI 官网 ibiling.cn</li>
+        <li>晋江《AI 辅助写作使用、判定试运行公告》</li>
+        <li>中新网《AI 搅浑网文圈》(2026.03)</li>
+        <li>阅文「妙笔通鉴」发布信息</li>
+        <li>Sudowrite / Novelcrafter / NovelAI 官方定价页与第三方横评</li>
+      </ul>
+    </div>
+    <div class="card flat">
+      <h4 style="font-size:15px">开源项目</h4>
+      <ul class="clean" style="font-size:13.5px">
+        <li>YILING0013/AI_NovelGenerator</li>
+        <li>ExplosiveCoderflome/AI-Novel-Writing-Assistant</li>
+        <li>THUDM/LongWriter（arXiv:2408.07055）</li>
+        <li>yangkevin2/emnlp22-re3-story-generation（arXiv:2210.06774）</li>
+        <li>yangkevin2/doc-story-generation（arXiv:2212.10077）</li>
+        <li>Qianyue-Wang/DOME（arXiv:2412.13575）</li>
+        <li>google-deepmind/tell_me_a_story（arXiv:2410.02603）</li>
+        <li>microsoft/graphrag · letta-ai/letta</li>
+      </ul>
+    </div>
+    <div class="card flat">
+      <h4 style="font-size:15px">创作方法论</h4>
+      <ul class="clean" style="font-size:13.5px">
+        <li>H-I-P 公式与爽点密度相关写作方法论文章</li>
+        <li>三级大纲体系相关教程</li>
+        <li>Save the Cat / Hero's Journey / Story Grid 结构理论</li>
+        <li>网文平台签约规则与新人避坑指南</li>
+        <li>「去 AI 味」实操方法相关文章</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout warn" style="margin-top:22px">
+    <h4>⚠️ 关于数据的三点说明</h4>
+    <ul>
+      <li>各家 AI 产品的<strong>会员价格、上下文长度</strong>在不同来源间存在冲突，本文已标注「未确认」或「来源不一致」。实际以官网实时页面为准。</li>
+      <li>部分行业数据（如使用率、投稿占比）来自商业媒体，<strong>量级参考即可</strong>，不建议当作精确事实引用。</li>
+      <li>GitHub 项目 Star 数为核实时刻快照，会随时间变动。</li>
+    </ul>
+  </div>
+</section>
+
+
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <div class="foot-title">AI 写小说 · 从工具到完稿的全景指南</div>
+      <div>调研整理于 2026 年 9 月 · 内容来自公开网络搜索与 GitHub 仓库核实</div>
+    </div>
+    <div>
+      <div class="foot-title">数据说明</div>
+      <ul>
+        <li>标注「未确认」表示公开来源未提供有效信息，未做推测填充</li>
+        <li>价格、上下文长度等易变信息，请以各产品官网为准</li>
+        <li>Star 数为核验时刻快照，会随时间变动</li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<script>
+// 进度条
+var pg=document.getElementById('progress');
+window.addEventListener('scroll',function(){
+  var h=document.documentElement;
+  var p=h.scrollTop/(h.scrollHeight-h.clientHeight)*100;
+  pg.style.width=(p||0)+'%';
+},{passive:true});
+
+// 目录卡片（自动生成）
+var secs=[
+  ['01','现状','AI 到底行不行：三大技术路线 + 六大痛点'],
+  ['02','工具地图','国内垂直工具 / 通用大模型 / 海外工具'],
+  ['03','平台态度','起点、番茄、七猫、晋江分别怎么看 AI'],
+  ['04','开源项目','GitHub 上的五大技术流派与代表方案'],
+  ['05','创作方法论','选题、爆点、怎么写好、为什么会扑街'],
+  ['06','完整流程','从选题到完稿的六阶段实战路线图']
+];
+var anchors=['#now','#tools','#platforms','#opensource','#method','#pipeline'];
+var toc=document.getElementById('toc');
+secs.forEach(function(s,i){
+  var a=document.createElement('a');
+  a.href=anchors[i];
+  a.innerHTML='<div class="tn">'+s[0]+'</div><div class="tt">'+s[1]+'</div><div class="td">'+s[2]+'</div>';
+  toc.appendChild(a);
+});
+
+// 导航高亮
+var navAs=[].slice.call(document.querySelectorAll('#navlinks a'));
+var targets=navAs.map(function(a){return document.querySelector(a.getAttribute('href'));});
+window.addEventListener('scroll',function(){
+  var y=window.scrollY+140,idx=-1;
+  targets.forEach(function(t,i){if(t&&t.offsetTop<=y)idx=i;});
+  navAs.forEach(function(a,i){a.classList.toggle('on',i===idx);});
+},{passive:true});
+</script>
+</body>
+</html>

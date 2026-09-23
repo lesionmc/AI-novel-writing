@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useBook, useStats } from '@/hooks/queries';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ErrorBar } from '@/components/common/ErrorBar';
@@ -6,6 +6,7 @@ import { SkeletonBlock } from '@/components/common/Skeleton';
 import { StatCards } from '@/components/stats/StatCards';
 import { DailyChart } from '@/components/stats/DailyChart';
 import { ChapterProgressBar } from '@/components/stats/ChapterProgressBar';
+import { bookPath } from '@/lib/slug';
 import styles from '@/components/stats/stats.module.css';
 
 /**
@@ -14,6 +15,7 @@ import styles from '@/components/stats/stats.module.css';
  */
 export function StatsPage() {
   const { slug = '' } = useParams();
+  const navigate = useNavigate();
   const query = useStats(slug);
   // 目标字数不在 stats 契约里，取自作品详情
   const bookQuery = useBook(slug);
@@ -48,6 +50,9 @@ export function StatsPage() {
           icon="stats"
           title="还没有可统计的内容"
           description="去写作台写下第一章，这里就会出现字数、章节与日更曲线。"
+          actionLabel="去写作台写第一章"
+          actionIcon="edit"
+          onAction={() => navigate(bookPath(slug, '/desk'))}
         />
       ) : query.data ? (
         <>

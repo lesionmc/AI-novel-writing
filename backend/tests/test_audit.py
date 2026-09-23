@@ -121,7 +121,8 @@ def test_sensitive_endpoint_without_wordlist_returns_empty(client, book):
     _add_chapter(client, book, "随便写一些正文内容。")
     resp = client.post(f"/api/books/{book}/audit/sensitive")
     assert resp.status_code == 200, resp.text
-    assert resp.json() == {"total_hits": 0, "hits": []}
+    # 词库缺失时必须显式标注「没实际检查」，不能只给一个 0 命中（假安全感，P1-4）
+    assert resp.json() == {"total_hits": 0, "wordlist_available": False, "hits": []}
 
 
 def test_sensitive_endpoint_with_wordlist_aggregates_per_chapter(client, book, tmp_path):
@@ -151,7 +152,8 @@ def test_sensitive_endpoint_does_not_match_across_paragraphs(client, book, tmp_p
 
     resp = client.post(f"/api/books/{book}/audit/sensitive")
     assert resp.status_code == 200, resp.text
-    assert resp.json() == {"total_hits": 0, "hits": []}
+    # 有词库（词库可用）但跨段不命中 → total_hits=0 才是真正的「检查过、没命中」
+    assert resp.json() == {"total_hits": 0, "wordlist_available": True, "hits": []}
 
 
 def test_sensitive_endpoint_still_matches_within_paragraph_bypass(client, book, tmp_path):
@@ -166,8 +168,22 @@ def test_sensitive_endpoint_still_matches_within_paragraph_bypass(client, book, 
     assert resp.status_code == 200, resp.text
     assert resp.json() == {
         "total_hits": 1,
+        "wordlist_available": True,
         "hits": [{"word": "敏感", "category": "illegal", "chapter_seq": 1, "count": 1}],
     }
+
+
+def test_sensitive_wordlist_available_flag_true_when_configured(client, book, tmp_path):
+    """词库存在时 wordlist_available 为 true（显式钉死语义）。"""
+    _add_chapter(client, book, "正文里没有敏感内容。")
+    data_dir = tmp_path / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    wordlist_path(data_dir).write_text("某词,illegal\n", encoding="utf-8")
+    reset_cache_for_tests()
+
+    body = client.post(f"/api/books/{book}/audit/sensitive").json()
+    assert body["wordlist_available"] is True
+    assert body["total_hits"] == 0  # 词库有词、正文没命中 → 这才是真正的「0 命中」
 
 
 def test_sensitive_endpoint_book_not_found(client):

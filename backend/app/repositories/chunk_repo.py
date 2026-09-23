@@ -2,6 +2,8 @@
 
 vec_chunk 为 sqlite-vec 虚拟表：扩展不可用时**跳过**，其余流程照常（坑 6 / D-17）。
 chunk_meta.embedding 存向量本体副本，作为扩展不可用时的重建源（D-18）。
+唯一键为 `(source_type, source_id, chapter_seq, chunk_index)`：**一章正文切出的 N 块 = N 行**
+（旧键缺 chunk_index → 后一块覆盖前一块，见 `schema.sql` 修正点 8）。
 """
 
 from __future__ import annotations
@@ -24,9 +26,20 @@ def upsert_chunk(
     embedding_model: str | None,
     embedding: list[float] | None,
     now: str,
+    chunk_index: int = 0,
     dim: int = 1024,
 ) -> int:
-    """写入一块文本；chapter_seq 为 NULL 时应用层先删后插保证唯一（D-15）。"""
+    """写入一块文本，返回该块的行 id（0 表示未取到）。
+
+    唯一键是四列 `(source_type, source_id, chapter_seq, chunk_index)`：
+    **同一章正文切出的 N 块各占一行**。
+    ⚠ 历史缺陷（2026-09-22 修）：旧键不含 `chunk_index`，同章逐块 upsert 时
+    每一块都命中同一冲突键并覆盖前一块 → 整章只剩最后一块。
+    故此处 `ON CONFLICT` 目标必须与 `schema.sql` 的表级 UNIQUE **逐字一致**。
+
+    `chapter_seq is None`（setting / summary 类）时唯一键不生效（SQLite 视 NULL
+    互不相等），改由应用层**先删后插**保证唯一（D-15）—— 该分支行为与修正前一致。
+    """
     blob = to_blob(embedding) if embedding else None
     if chapter_seq is None:
         conn.execute(
@@ -37,34 +50,52 @@ def upsert_chunk(
             conn,
             """
             INSERT INTO chunk_meta
-                (source_type, source_id, chapter_seq, text, char_count,
+                (source_type, source_id, chapter_seq, chunk_index, text, char_count,
                  embedding_model, embedding, embedding_dim, created_at)
-            VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (source_type, source_id, text, char_count, embedding_model, blob, dim, now),
+            (source_type, source_id, chunk_index, text, char_count,
+             embedding_model, blob, dim, now),
         )
     conn.execute(
         """
         INSERT INTO chunk_meta
-            (source_type, source_id, chapter_seq, text, char_count,
+            (source_type, source_id, chapter_seq, chunk_index, text, char_count,
              embedding_model, embedding, embedding_dim, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(source_type, source_id, chapter_seq) DO UPDATE SET
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(source_type, source_id, chapter_seq, chunk_index) DO UPDATE SET
             text = excluded.text,
             char_count = excluded.char_count,
             embedding_model = excluded.embedding_model,
             embedding = excluded.embedding,
             embedding_dim = excluded.embedding_dim
         """,
-        (source_type, source_id, chapter_seq, text, char_count,
+        (source_type, source_id, chapter_seq, chunk_index, text, char_count,
          embedding_model, blob, dim, now),
     )
     row = fetch_one(
         conn,
-        "SELECT id FROM chunk_meta WHERE source_type = ? AND source_id = ? AND chapter_seq = ?",
-        (source_type, source_id, chapter_seq),
+        """
+        SELECT id FROM chunk_meta
+         WHERE source_type = ? AND source_id = ? AND chapter_seq = ? AND chunk_index = ?
+        """,
+        (source_type, source_id, chapter_seq, chunk_index),
     )
     return int(row["id"]) if row else 0
+
+
+def count_for_source(conn: sqlite3.Connection, source_type: str, source_id: int) -> int:
+    """某来源**实际落库**的分块行数 —— 接口上报的唯一可信口径。
+
+    不要用「循环写入次数」当指标：那正是分块覆盖缺陷潜伏至今的原因
+    （循环 89 次、库里 20 行、接口回报 89）。
+    """
+    row = fetch_one(
+        conn,
+        "SELECT COUNT(*) AS c FROM chunk_meta WHERE source_type = ? AND source_id = ?",
+        (source_type, source_id),
+    )
+    return int(row["c"]) if row else 0
 
 
 def insert_vec(
@@ -99,6 +130,20 @@ def ids_for_source(
     return [int(r["id"]) for r in rows]
 
 
+def _delete_vec(conn: sqlite3.Connection, caps: Capabilities, chunk_ids: list[int]) -> None:
+    """同步清理 vec_chunk（坑 13）；扩展不可用时静默跳过。"""
+    if not chunk_ids or not caps.vec_available:
+        return
+    try:
+        placeholders = ",".join("?" for _ in chunk_ids)
+        conn.execute(
+            f"DELETE FROM vec_chunk WHERE chunk_id IN ({placeholders})",  # noqa: S608
+            chunk_ids,
+        )
+    except sqlite3.Error:
+        pass
+
+
 def delete_for_source(
     conn: sqlite3.Connection,
     caps: Capabilities,
@@ -107,19 +152,36 @@ def delete_for_source(
     source_id: int,
 ) -> int:
     """删除某来源的全部分块，并同步清理 vec_chunk（坑 13）。"""
-    chunk_ids = ids_for_source(conn, source_type, source_id)
-    if chunk_ids and caps.vec_available:
-        try:
-            placeholders = ",".join("?" for _ in chunk_ids)
-            conn.execute(
-                f"DELETE FROM vec_chunk WHERE chunk_id IN ({placeholders})",  # noqa: S608
-                chunk_ids,
-            )
-        except sqlite3.Error:
-            pass
+    _delete_vec(conn, caps, ids_for_source(conn, source_type, source_id))
     cur = conn.execute(
         "DELETE FROM chunk_meta WHERE source_type = ? AND source_id = ?",
         (source_type, source_id),
+    )
+    return cur.rowcount
+
+
+def delete_from_index(
+    conn: sqlite3.Connection,
+    caps: Capabilities,
+    *,
+    source_type: str,
+    source_id: int,
+    from_index: int,
+) -> int:
+    """删除某来源中 `chunk_index >= from_index` 的残留分块（正文变短时清尾），并清理 vec_chunk。
+
+    为什么需要它：upsert 只会覆盖本次写到的块序号。若一章正文被删短后重新回写，
+    旧的尾部块不会被覆盖 → 检索库里留着已不存在的正文。清尾后「库里行数 == 当前分块数」恒成立。
+    """
+    rows = fetch_all(
+        conn,
+        "SELECT id FROM chunk_meta WHERE source_type = ? AND source_id = ? AND chunk_index >= ?",
+        (source_type, source_id, from_index),
+    )
+    _delete_vec(conn, caps, [int(r["id"]) for r in rows])
+    cur = conn.execute(
+        "DELETE FROM chunk_meta WHERE source_type = ? AND source_id = ? AND chunk_index >= ?",
+        (source_type, source_id, from_index),
     )
     return cur.rowcount
 

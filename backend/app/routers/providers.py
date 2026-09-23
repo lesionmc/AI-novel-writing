@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Query, status
 
+from app.routers._params import RowId
 from app.models.provider import (
     DiscoverModelsRequest,
     DiscoverModelsResult,
@@ -42,23 +43,23 @@ def test_draft(payload: DraftTestRequest) -> ProviderTestResult:
 
 
 @router.patch("/{provider_id}", response_model=LLMProviderOut)
-def update_provider(provider_id: int, payload: ProviderUpdate) -> LLMProviderOut:
+def update_provider(provider_id: RowId, payload: ProviderUpdate) -> LLMProviderOut:
     return provider_service.update_provider(provider_id, payload)
 
 
 @router.delete("/{provider_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_provider(provider_id: int) -> None:
+def delete_provider(provider_id: RowId) -> None:
     provider_service.delete_provider(provider_id)
 
 
 @router.post("/{provider_id}/test", response_model=ProviderTestResult)
-def test_provider(provider_id: int) -> ProviderTestResult:
+def test_provider(provider_id: RowId) -> ProviderTestResult:
     return provider_service.test_provider(provider_id)
 
 
 @router.get("/{provider_id}/usage", response_model=ProviderUsage)
 def get_usage(
-    provider_id: int,
+    provider_id: RowId,
     from_date: str | None = Query(default=None, alias="from"),
     to_date: str | None = Query(default=None, alias="to"),
 ) -> ProviderUsage:

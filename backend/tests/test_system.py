@@ -21,5 +21,42 @@ def test_llm_configured_reflects_current_config(client, book):
         "/api/providers",
         json={"provider": "ollama", "model": "m", "task_role": "content"},
     )
-    # 模型配置即时生效（非启动快照）
+    # 模型配置即时生效（非启动快照）；ollama 属无密钥 provider，无需密钥即算可用
     assert client.get("/api/system/capabilities").json()["llm_configured"] is True
+
+
+def _create_provider(client, **overrides) -> dict:
+    payload = {"provider": "deepseek", "model": "deepseek-chat", "task_role": "content"}
+    payload.update(overrides)
+    resp = client.post("/api/providers", json=payload)
+    assert resp.status_code == 201, resp.text
+    return resp.json()
+
+
+def test_llm_configured_false_when_secret_missing(client):
+    """P0-2 回归：有**已启用**的 provider 行，但密钥环里没有对应密钥。
+
+    旧实现只查 `llm_provider` 有没有 enabled 行 → 谎报 `true`，
+    而所有 AI 端点都会 400 `LLM_NOT_CONFIGURED`，前端能力判断被误导。
+    """
+    created = _create_provider(client)  # 未传 api_key → key_ref 为空
+    assert created["key_ref"] is None
+    assert client.get("/api/providers").json()[0]["enabled"] == 1
+    assert client.get("/api/system/capabilities").json()["llm_configured"] is False
+
+
+def test_llm_configured_true_when_secret_loadable(client, secrets_backend):
+    """密钥真的能从密钥环取到 → 才算「确实有一个能用的模型」。"""
+    assert client.get("/api/system/capabilities").json()["llm_configured"] is False
+    created = _create_provider(client, api_key="sk-unit-test")
+    assert created["key_ref"]
+    assert client.get("/api/system/capabilities").json()["llm_configured"] is True
+
+
+def test_llm_configured_false_when_secret_slot_emptied(client, secrets_backend):
+    """配置行仍在、密钥被清空（本机真实处境）→ 必须为 false。"""
+    created = _create_provider(client, api_key="sk-unit-test")
+    assert client.get("/api/system/capabilities").json()["llm_configured"] is True
+    secrets_backend.delete(created["key_ref"])  # 模拟密钥环里的密钥失效/被清空
+    assert client.get("/api/providers").json()[0]["enabled"] == 1  # 配置行未动
+    assert client.get("/api/system/capabilities").json()["llm_configured"] is False

@@ -10,24 +10,28 @@
 - `design-decision-to-evaluate` —— 设计待评估（需对比或试点）
 - `existing-design-boundary` —— 现有设计的边界约束（不是缺陷，是已知取舍）
 
-**当前状态：12 条 → 11 条已关闭，1 条 OPEN。**
+**当前状态：15 条（原始 12 + 2026-09-23 追加 3）→ 10 条已关闭，3 条 OPEN，2 条已被后续修订取代。**
+2026-09-23 用户实测反馈推翻了 OD-02（改表结构）与 OD-06（只做轻量指路）两条原决议，详见追加行。
 2026-09-22 第 4 次对话老大指令「全部做，全部修复，你拿主意，帮我完成，然后测试」，
 授权逐条决策并执行。
 
 | Date | Source | Open Item | Slug | Related Constraints | Current Leaning | Blocked By | Resolves When | Status |
 |------|--------|-----------|------|---------------------|-----------------|------------|---------------|--------|
 | 2026-09-22 | 复核 | **正文类 AI（续写/扩写/剧情走向/校对）做不做** | waiting-on-external-condition | 需求文档强制声明「不在写的环节代笔」 | 已按「全部做」执行，并**同步修订**该声明 | — | 已拍板 | **RESOLVED** |
-| 2026-09-22 | 复核 | **一个模型能否承担多个任务角色** | design-decision-to-evaluate | `task_role` 单值 + CHECK 不保证唯一 | 决定**不改表结构**，保持界面如实提示 | — | 已拍板 | **RESOLVED** |
+| 2026-09-22 | 复核 | ~~一个模型能否承担多个任务角色~~ | design-decision-to-evaluate | `task_role` 单值 + CHECK 不保证唯一 | 当时决定**不改表结构**，保持界面如实提示 | — | 已拍板 | **SUPERSEDED**（见 2026-09-23 追加行） |
 | 2026-09-22 | 复核 | **语义召回为空：embedding 模型从哪来** | waiting-on-external-condition | 现有平台只有聊天模型 | 决定**不下载本地模型**，改为把"为什么用不了"讲清楚 | — | 已拍板 | **RESOLVED** |
 | 2026-09-22 | 复核 | **一致性审校 R8 是否解冻** | existing-design-boundary | 契约唯一 deferred | 决定**解冻并实现**（SSE 两轮审校） | — | 已拍板 | **RESOLVED** |
 | 2026-09-22 | 复核 | **选题数据策略：写死 / 联网 / 混合 / 用户维护** | design-decision-to-evaluate | 「纯本地读文件、绝不联网」 | 决定**保持本地不联网**，改在提示词层禁编造 | — | 已拍板 | **RESOLVED** |
-| 2026-09-22 | 复核 | **开书是否改成「骨架优先」向导** | waiting-on-external-condition | 六阶段路线图 | 决定**只做轻量指路**，不做新状态机 | — | 已拍板 | **RESOLVED** |
+| 2026-09-22 | 复核 | ~~开书是否改成「骨架优先」向导~~ | waiting-on-external-condition | 六阶段路线图 | 当时决定**只做轻量指路**，不做新状态机 | — | 已拍板 | **SUPERSEDED**（见 2026-09-23 追加行） |
 | 2026-09-22 | 复核 | **AI 对话是否升级为后端会话表** | design-decision-to-evaluate | 已做前端本地留存 | 决定**保持前端留存**；「记忆」由上下文注入解决 | — | 已拍板 | **RESOLVED** |
 | 2026-09-22 | 复核 | **书库遗留的旧 `llm_provider` 表要不要 DROP** | existing-design-boundary | 迁移源需保留 | 决定**保留**（已有回归测试锁死"无人读它"） | — | 已拍板 | **RESOLVED** |
 | 2026-09-22 | 复核 | **契约路径参数名与实现不一致** | existing-design-boundary | 16 条历史端点 | 决定**历史不动**，**新端点统一用 `{chapter_id}`** | — | 已拍板 | **RESOLVED** |
 | 2026-09-22 | 复核 | **FTS5 用 `unicode61`，中文子串 MATCH 恒为 0** | existing-design-boundary | 功能靠 LIKE 兜底仍正确 | 决定**改为 `trigram` + 存量迁移** | — | 已拍板 | **RESOLVED** |
 | 2026-09-22 | 复核 | **`_清理_20260922`（65.7MB）与 `.venv.broken`（30.2MB）是否删除** | waiting-on-external-condition | C 盘紧张 | 已删 `.venv.broken` 与全部构建缓存；**归档目录保留** | — | 部分执行 | **RESOLVED** |
-| 2026-09-22 | 复核 | **小说《重生之我在末世开超市》2 处遗留** | waiting-on-external-condition | ① ch5 倒计时日期矛盾；② ch4 双仓库未合并 | 待确认这本是否作交付成品 | 老大确认 | 老大拍板后 | **OPEN** |
+| 2026-09-22 | 复核 | **小说《重生之我在末世开超市》2 处遗留** | waiting-on-external-condition | ① ch5 倒计时日期矛盾；② ch4 双仓库未合并 | 待确认这本是否作交付成品 | 用户确认 | 用户拍板后 | **OPEN** |
+| 2026-09-23 | **用户实测** | **OD-02 修订：一个模型能否承担多个角色（重开）** | design-decision-to-evaluate | 原判「不改表结构」；用户实测「为什么不能选择多个一样的模型」 | 改为**新增 `provider_role` 关联表**（`(provider_id, task_role)` 主键），**不动** `llm_provider.task_role` 的存储语义 | — | 已实施 | **RESOLVED** |
+| 2026-09-23 | **用户实测** | **OD-06 修订：开书流程按六阶段重排（重开）** | waiting-on-external-condition | 原判「只做轻量指路」**不足**：落点仍是空白编辑器，用户实测「还是先起名字的，搭设定、立人物、写大纲这些都还没做，顺序错了」 | 改为**纯前端开书向导** `/book/<slug>/start`（零后端改动 + 推断式完成度 + 进度存 localStorage） | — | 实施完成 | **OPEN** |
+| 2026-09-23 | **用户实测** | **是否把散装 AI 菜单升级为「一个 AI 全包」的对话工作台** | design-decision-to-evaluate | 现状 AI 是 6 个一次性下拉动作，无会话/无记忆 | 倾向：统一对话面板（可选书 / 可调全部能力 / 带上下文与记忆 / 重进还在） | 用户确认 | 用户拍板后 | **OPEN** |
 
 ---
 
@@ -56,6 +60,32 @@
 （写作 AI 走 `content`、审校走 `review`，本身已是分工）。
 保持现状，并已在界面如实提示"多模型抢同一角色"与"角色未启用"。
 
+### OD-02 修订（2026-09-23）—— **推翻原决议：改为新增关联表**
+
+**为什么推翻**：原决议的理由是"改表要动 5 个消费点 + 迁移"。
+但用户实测直接撞上了这个限制并明确反馈（「为什么不能选择多个一样的模型」「能不能一个 ai 做完全部」）——
+**"省一次迁移"换来的是一个用户每天都碰得到的能力缺失**，这个取舍当时算错了。
+
+**Resolution**：
+- `schema.sql` 新增全局表
+  `provider_role(provider_id INTEGER, task_role TEXT, created_at TEXT, PRIMARY KEY(provider_id, task_role))`
+  + `idx_provider_role_role(task_role)`；**放进 `@@GLOBAL` 条件块**（否则全局库不会有它）；
+- `provider_repo.find_for_role()` 改为**联表查 `provider_role`**，`ORDER BY p.is_default DESC, p.id ASC LIMIT 1`；
+  **`find_default` 保留为回退** —— 这是"一个模型全包"（所有角色都不指定 → 全走默认）能成立的前提；
+- `provider_service` 支持 `task_roles: list[str]` **整体替换**，传 `[]` = **解除分配**
+  （这个能力此前**根本不存在**，因为 `task_role` 是 `NOT NULL` 且 `null` 被契约定义为"不修改"）；
+- `LLMProviderOut` **新增** `task_roles`，**保留** `task_role` 不动（避免破坏现有前端类型与契约）；
+- 迁移 `services/provider_role_migration.py`：读**全局库**、`INSERT OR IGNORE` 天然幂等、
+  另加 **一次性标记 `meta.provider_roles_migrated_v1`**（防止"用户取消分配后重启又复活"——
+  这是项目里踩过的坑，见 `provider_migration.py` 的同类处理）、失败只 WARN 不抛。
+- **关键补漏**：`schema_loader._GLOBAL_TABLES` 必须同时加上 `provider_role`，
+  否则**已存在的全局库永远补不上这张表**（这条已用测试锁住）。这是审计 A-09
+  「schema 真源被硬编码出一份表名副本」那条隐患的又一次实际发作。
+
+**验证**：后端 `pytest` **238 tests / 0 failures / 0 errors / 0 skipped**（原 227 + 新增 11）；
+schema 派生副本对账 `--check` 退出码 0、维 1 维 2 双 PASS。
+决策记录见 `ADR-007-模型多角色用关联表.md`。
+
 ### OD-03 embedding 模型 —— 决定不自带
 
 **Resolution**：本机 C 盘紧张、本地向量模型要几百 MB 且首次需联网下载，收益不确定。
@@ -82,6 +112,31 @@
 
 **Resolution**：已有页面齐全，缺的只是指路。空章节时给「先搭骨架」引导卡
 指向设定库 / 大纲，**不新增路由与状态机**。
+
+### OD-06 修订（2026-09-23）—— **原决议不足，改为做一个真正的开书向导**
+
+**原决议为什么不够**：当时判断"已有页面齐全，缺的只是指路"，于是只在章节为空时给了一张引导卡。
+但实测证明**落点没变** —— 用户新建作品后仍然直接掉进空白编辑器，
+而引导卡只是"告诉他去别处"，顺序问题一点没解决。
+
+**用户原话**：
+> 「流程没有按照六阶段实战路线图来，还是先起名字的，搭设定、立人物、写大纲这些都还没做，顺序错了」
+
+**权威依据**（用户指定）：`AI小说创作调研与实战指南.html` 的「六阶段实战路线图」——
+**立项 → 骨架 → 包装 → 写稿 → 质检 → 归档**。
+关键发现：**「书名」属于 PHASE 3「包装」，而现在的实现把它提到了第 1 步、整段跳过「骨架」。**
+产品甚至自相矛盾：写作台空态文案自己写的就是正确顺序
+（"建议先搭骨架再动笔 ① 设定库 ② 大纲 ③ 再写第一章"）。
+
+**选型**：方案 A（**纯前端编排，零后端改动**）——
+新增 `/book/<slug>/start` 向导覆盖 PHASE 1–3，完成度**从已有端点推断**
+（`characters` / `world-entries` / `outlines` / `book.premise`），进度存 localStorage
+（复用 `setupChatArchive.ts` 的按作品分键 + 版本号模式）。
+否决方案 B（后端加"创作阶段"字段 + 完成度接口）：单机单用户场景跨设备一致无价值，
+却要动 schema + 契约 + 迁移 4 部已有作品。
+**老作品天然兼容**（推断式，零迁移，不打扰）。**每一步都能跳过**（不强制）。
+
+**状态**：实施中（本文件记为 OPEN，完成后就地关闭）。
 
 ### OD-07 会话表 —— 决定保持前端留存
 

@@ -16,6 +16,7 @@ import { NewBookForm } from '@/components/library/NewBookForm';
 import { DeleteBookDialog, RenameBookDialog } from '@/components/library/BookDialogs';
 import { TopicWizard } from '@/components/topics/TopicWizard';
 import { toast } from '@/stores/toastStore';
+import { bookPath } from '@/lib/slug';
 import styles from './LibraryPage.module.css';
 
 const FORM_ID = 'new-book-form';
@@ -49,11 +50,11 @@ export function LibraryPage() {
       onSuccess: (book) => {
         setCreating(false);
         setPrefill(null);
-        // 新手是奔着「写小说」来的：建完直接落到写作台（能马上写第一章），
-        // 而不是丢到满屏术语的设定库（QA M3：「第一步就迷路」）。
-        // 设定可以先跳过 —— 写作台空态里另有「先建立人物设定」的入口。
-        toast.success(`《${book.title}》已建好，直接开始写吧`);
-        navigate(`/book/${encodeURIComponent(book.slug)}/desk`);
+        // 按实战指南的六阶段顺序（立项 → 骨架 → 包装 → 写稿），建完书先落「开书清单」，
+        // 而不是直接丢进空白编辑器 —— 那样等于让用户跳过前三步、从空白页开始"吃书"。
+        // 清单里每一步都能跳过，右上角另有「直接开始写」，所以不构成任何门禁。
+        toast.success(`《${book.title}》已建好，先花两分钟把架子搭起来`);
+        navigate(bookPath(book.slug, '/start'));
       },
       onError: (e) => setCreateError(e),
     });
@@ -77,7 +78,7 @@ export function LibraryPage() {
     setTopicOpen(false);
     const target = books[0];
     if (target) {
-      navigate(`/book/${encodeURIComponent(target.slug)}/config`);
+      navigate(bookPath(target.slug, '/config'));
     } else {
       setCreating(true);
       toast.info('先建一个作品，再到「设置 → 已配置的模型」里加一个模型');
@@ -166,7 +167,7 @@ export function LibraryPage() {
         subtitle={
           prefill?.genre
             ? '已按 AI 推荐的方向预填了题材与卖点，随时可以改。'
-            : '题材与目标字数都可以之后再定，先给作品起个名字。'
+            : '先给作品占个位置就行 —— 名字随手起一个，方向和简介之后在「开书清单」里慢慢定。'
         }
         footer={
           <>

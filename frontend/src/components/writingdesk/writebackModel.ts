@@ -13,7 +13,7 @@ import type {
 export function writebackDoneText(res: ConfirmWritebackResponse): string {
   return (
     `本章已归档：人物 ${res.character_states_written} / ` +
-    `新线索 ${res.foreshadows_created} / 交代线索 ${res.foreshadows_closed}`
+    `新线索 ${res.foreshadows_created} / 回收线索 ${res.foreshadows_closed}`
   );
 }
 
@@ -91,6 +91,10 @@ export const EMPTY_WRITEBACK_SUGGESTION: WritebackSuggestion = {
  * 用 `?? true` 而不是直接用返回值，是为了**向后兼容**：老版本后端不返回该字段时，
  * 行为退回与改动前一致（默认勾选），不会突然变成全不勾。
  *
+ * 另有一条前端自订规则：**人物状态行 `state` 为空或纯空白时默认不勾选** ——
+ * 这类行通常是 AI 只给了名字、没给状态，默认勾着直接点确认就会写进一条空记录。
+ * 有内容的行不受影响。
+ *
  * 契约 `WritebackSuggestion.closed_foreshadow_ids` 只有 id（`number[]`，无 accepted 字段），
  * 标题由 `titleOf` 解析（调用方传入当前未回收伏笔的 id→标题映射），解析不到时回落 `伏笔 #id`。
  */
@@ -102,13 +106,20 @@ export function fromSuggestions(
     summary: s.chapter_summary ?? '',
     hook: s.hook ?? null,
     rawAiOutput: s.raw_ai_output ?? null,
-    characters: (s.character_updates ?? []).map((c) => ({
-      key: nextKey('ch'),
-      name: c.name,
-      state: c.state,
-      reason: c.reason ?? null,
-      accepted: c.accepted ?? true,
-    })),
+    characters: (s.character_updates ?? []).map((c) => {
+      // 归一化成字符串：AI 输出偶尔缺 `state`，直接透传会在下游 `.trim()` 处抛错
+      const state = c.state ?? '';
+      return {
+        key: nextKey('ch'),
+        name: c.name,
+        state,
+        reason: c.reason ?? null,
+        // 内容为空的行默认**不勾选**：原来勾着直接点确认，会往设定库写一条空状态。
+        // 界面会在该行标注「内容为空，已默认不勾选」。有内容的行不受影响，
+        // 仍沿用后端按重要度给出的权威默认值。
+        accepted: state.trim() ? (c.accepted ?? true) : false,
+      };
+    }),
     plotProgress: (s.plot_progress ?? []).map((p) => ({
       key: nextKey('pl'),
       arc: p.arc,

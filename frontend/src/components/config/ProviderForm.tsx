@@ -152,14 +152,37 @@ export function ProviderForm({
 
       <DraftTestLine result={modelActions.result} />
 
-      <Select
-        label="任务角色"
-        options={ROLE_OPTIONS}
-        placeholder="不指定（仅作备用）"
-        value={value.task_role ?? ''}
-        onChange={(e) => onChange({ task_role: e.target.value ? (e.target.value as TaskRole) : null })}
-        hint={value.task_role ? TASK_ROLE_HINTS[value.task_role] : '可以让不同服务商分工，也可以只用一个'}
-      />
+      {/* 任务角色：**可多选** —— 一个模型可以同时写大纲、写正文、做一致性审校。
+          旧版是单选下拉，把同一个模型指给第二个角色时会挤掉第一个（用户原话：
+          「为什么不能选择多个一样的模型」）。全不勾 = 不分配，只作为默认回退候选。 */}
+      <fieldset className={styles.roleFieldset}>
+        <legend className={styles.checkLabel}>任务角色（可多选）</legend>
+        <div className={styles.roleChecks}>
+          {ROLE_OPTIONS.map((opt) => (
+            <label key={opt.value} className={styles.roleCheck}>
+              <input
+                type="checkbox"
+                checked={value.task_roles.includes(opt.value)}
+                onChange={(e) =>
+                  onChange({
+                    task_roles: e.target.checked
+                      ? [...value.task_roles, opt.value]
+                      : value.task_roles.filter((r) => r !== opt.value),
+                  })
+                }
+              />
+              <span>
+                <span className={styles.checkLabel}>{opt.label}</span>
+                <br />
+                <span className={styles.checkHint}>{TASK_ROLE_HINTS[opt.value]}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+        <div className={styles.checkHint}>
+          勾几个就干几件事；想让一个模型全包，就四个都勾上。也可以一个都不勾，只把它设为默认模型。
+        </div>
+      </fieldset>
 
       <label className={styles.checkRow}>
         <input

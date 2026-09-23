@@ -1,0 +1,293 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { userMessageOf } from '@/api/client';
+import { useChapterBriefs } from '@/hooks/queries';
+import { useCapabilities } from '@/hooks/useCapabilities';
+import { useAiChat, useWriteHubDraft } from '@/hooks/mutations/aiHub';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { toast } from '@/stores/toastStore';
+import { ChatHead } from './ChatHead';
+import { ChatStream } from './ChatStream';
+import { ContextPanel } from './ContextPanel';
+import { HubComposer } from './HubComposer';
+import { HubGate } from './HubGate';
+import { ModelWarn } from './ModelWarn';
+import { SessionRail } from './SessionRail';
+import {
+  HUB_WELCOME,
+  actionOf,
+  newSession,
+  parseAiChatDraft,
+  titleFromText,
+} from './hubModel';
+import type { HubMessage, HubSession } from './hubModel';
+import { useHubReadings } from './useHubReadings';
+import { loadHubArchive, saveHubArchive } from './hubArchive';
+import type { HubArchive } from './hubArchive';
+import styles from './hub.module.css';
+
+function initialArchive(slug: string): HubArchive {
+  const saved = loadHubArchive(slug);
+  if (saved) return saved;
+  const fresh = newSession();
+  return { sessions: [fresh], activeId: fresh.id };
+}
+
+function withMarkedDraft(session: HubSession, index: number, state: 'applied' | 'discarded'): HubSession {
+  return {
+    ...session,
+    messages: session.messages.map((m, i) => (i === index ? { ...m, draftState: state } : m)),
+  };
+}
+
+/**
+ * AI 对话工作台（`/chat` 与 `/book/:slug/chat`）。
+ *
+ * 三栏：左会话列表 / 中对话流 / 右「这次 AI 读了什么」。
+ * 对话史存本机（`hubArchive`，按作品分键）；**上下文由服务端组装** ——
+ * 前端只把对话历史 + 可选章节 + 可选意图发出去，从不自己拼一份设定上下文。
+ *
+ * 八项能力分两类（见 `HUB_ACTIONS`）：
+ *   · 会产出草稿的（建人物 / 世界观 / 大纲 / 写正文）—— **必须用户点「确认写入」才落库**，
+ *     正文草稿连确认写入都没有，只能复制走（正文必须人工定稿）；
+ *   · 只读的（校对 / 审校 / 敏感词）—— 只出一份报告，**没有任何落库路径**（见 `useHubReadings`）。
+ */
+export function AiHubWorkspace({ slug }: { slug: string }) {
+  if (!slug) {
+    return (
+      <div className={styles.hub}>
+        <HubGate />
+      </div>
+    );
+  }
+  return <HubWorkspace slug={slug} />;
+}
+
+function HubWorkspace({ slug }: { slug: string }) {
+  const chapters = useChapterBriefs(slug);
+  const capabilities = useCapabilities();
+  const noModel = capabilities.data?.llm_configured === false;
+  const chat = useAiChat(slug);
+  const writeDraft = useWriteHubDraft(slug);
+
+  const [archive, setArchive] = useState<HubArchive>(() => initialArchive(slug));
+  const [actionKey, setActionKey] = useState('auto');
+  const [chapterId, setChapterId] = useState<number | null>(null);
+  const [writingIndex, setWritingIndex] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<HubSession | null>(null);
+  const autoPicked = useRef(false);
+
+  // 退出再进来还在 —— 每次改动都落盘（换本书不会串，键按 slug 分）
+  useEffect(() => {
+    saveHubArchive(slug, archive);
+  }, [slug, archive]);
+
+  // 默认落在最新一章：用户说"接着写"时最自然的落点
+  useEffect(() => {
+    if (autoPicked.current) return;
+    const list = chapters.data ?? [];
+    if (list.length === 0) return;
+    autoPicked.current = true;
+    setChapterId(list[list.length - 1].id);
+  }, [chapters.data]);
+
+  const active = useMemo(
+    () => archive.sessions.find((s) => s.id === archive.activeId) ?? archive.sessions[0] ?? null,
+    [archive],
+  );
+  // 显式 useMemo：否则每次渲染都新建数组，下游 useMemo（右栏的"读了什么"）会一直重算
+  const messages = useMemo(() => active?.messages ?? [], [active]);
+  const lastUsed = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const used = messages[i].contextUsed;
+      if (messages[i].role === 'assistant' && used) return used;
+    }
+    return null;
+  }, [messages]);
+
+  const patchSession = useCallback((id: string, fn: (s: HubSession) => HubSession) => {
+    setArchive((a) => ({ ...a, sessions: a.sessions.map((s) => (s.id === id ? fn(s) : s)) }));
+  }, []);
+
+  const chapterList = chapters.data ?? [];
+
+  // 只读能力（校对 / 审校 / 敏感词）：结果只进对话流，不进草稿通道
+  const readings = useHubReadings({ slug, activeId: active?.id ?? null, patchSession });
+
+  const createSession = () => {
+    const fresh = newSession();
+    setArchive((a) => ({ sessions: [...a.sessions, fresh], activeId: fresh.id }));
+  };
+
+  const renameSession = (id: string, title: string) =>
+    patchSession(id, (s) => ({ ...s, title }));
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    const id = deleteTarget.id;
+    setArchive((a) => {
+      const kept = a.sessions.filter((s) => s.id !== id);
+      if (kept.length === 0) {
+        const fresh = newSession();
+        return { sessions: [fresh], activeId: fresh.id };
+      }
+      return { sessions: kept, activeId: a.activeId === id ? kept[kept.length - 1].id : a.activeId };
+    });
+    setDeleteTarget(null);
+  };
+
+  const send = (text: string) => {
+    if (!active) return;
+    const action = actionOf(actionKey);
+
+    // 只读的三项（校对/审校/敏感词）不走对话端点：只出报告，没有任何落库路径
+    if (action.mode !== 'chat') {
+      readings.run({
+        action,
+        text,
+        startIndex: active.messages.length,
+        chapter: chapterList.find((c) => c.id === chapterId) ?? null,
+      });
+      return;
+    }
+
+    const sessionId = active.id;
+    const now = Date.now();
+    const userMsg: HubMessage = { role: 'user', content: text, at: now };
+    const history = [...active.messages, userMsg];
+    patchSession(sessionId, (s) => ({
+      ...s,
+      title: s.messages.length === 0 ? titleFromText(text) : s.title,
+      messages: history,
+      updatedAt: now,
+    }));
+
+    chat.mutate(
+      {
+        messages: history.map((m) => ({ role: m.role, content: m.content })),
+        chapter_id: chapterId,
+        intent: actionKey === 'auto' ? null : actionOf(actionKey).intent,
+      },
+      {
+        onSuccess: (res) => {
+          const at = Date.now();
+          patchSession(sessionId, (s) => ({
+            ...s,
+            messages: [
+              ...s.messages,
+              {
+                role: 'assistant',
+                content: res.reply,
+                draft: res.draft ?? null,
+                contextUsed: res.context_used,
+                at,
+              },
+            ],
+            updatedAt: at,
+          }));
+        },
+        onError: (e) => toast.error(userMessageOf(e)),
+      },
+    );
+  };
+
+  const confirmDraft = async (index: number) => {
+    if (!active) return;
+    const sessionId = active.id;
+    const draft = parseAiChatDraft(active.messages[index]?.draft);
+    if (!draft) return;
+
+    if (draft.kind === 'prose') {
+      // 正文永不自动保存：只复制走，让作者自己粘、自己改、自己定稿
+      try {
+        await navigator.clipboard.writeText(draft.text);
+      } catch {
+        toast.error('复制失败。可以手动选中这段文字复制。');
+        return;
+      }
+      patchSession(sessionId, (s) => withMarkedDraft(s, index, 'applied'));
+      toast.success('已复制。到写作台粘贴，改完记得保存。');
+      return;
+    }
+
+    setWritingIndex(index);
+    writeDraft.mutate(draft, {
+      onSuccess: (res) => {
+        patchSession(sessionId, (s) => withMarkedDraft(s, index, 'applied'));
+        toast.success(`已把 ${res.written} 条${res.label}写进作品`);
+      },
+      onError: (e) => toast.error(userMessageOf(e)),
+      onSettled: () => setWritingIndex(null),
+    });
+  };
+
+  const discardDraft = (index: number) => {
+    if (!active) return;
+    patchSession(active.id, (s) => withMarkedDraft(s, index, 'discarded'));
+    toast.info('已丢弃，没有写进作品');
+  };
+
+  const needChapter = actionOf(actionKey).needsChapter && chapterId === null;
+
+  return (
+    <div className={styles.hub}>
+      <SessionRail
+        slug={slug}
+        sessions={archive.sessions}
+        activeId={active?.id ?? null}
+        onSelect={(id) => setArchive((a) => ({ ...a, activeId: id }))}
+        onCreate={createSession}
+        onRename={renameSession}
+        onDelete={(id) =>
+          setDeleteTarget(archive.sessions.find((s) => s.id === id) ?? null)
+        }
+      />
+
+      <section className={styles.main}>
+        <ChatHead chapterId={chapterId} onChapterChange={setChapterId} chapters={chapterList} />
+
+        {noModel ? <ModelWarn slug={slug} /> : null}
+
+        <ChatStream
+          slug={slug}
+          messages={messages}
+          opening={HUB_WELCOME}
+          pending={chat.isPending || readings.busy}
+          pendingText={readings.busy ? readings.busyText : undefined}
+          busyIndex={writingIndex}
+          streamIndex={readings.streamIndex}
+          onConfirmDraft={(i) => void confirmDraft(i)}
+          onDiscardDraft={discardDraft}
+          onStopReading={readings.stop}
+        />
+
+        <HubComposer
+          actionKey={actionKey}
+          onActionChange={setActionKey}
+          onSend={send}
+          pending={chat.isPending || readings.busy}
+          disabled={noModel}
+          disabledHint="还没配好 AI 模型，配了就能对话、校对和审校。"
+          needChapter={needChapter}
+        />
+      </section>
+
+      <ContextPanel used={lastUsed} />
+
+      {deleteTarget ? (
+        <ConfirmDialog
+          open
+          title="删除这个对话？"
+          confirmLabel="删除"
+          cancelLabel="取消"
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={confirmDelete}
+        >
+          <p>
+            将删除「{deleteTarget.title}」及其 {deleteTarget.messages.length} 条对话记录。
+            写进作品的人物、设定和大纲不受影响。
+          </p>
+        </ConfirmDialog>
+      ) : null}
+    </div>
+  );
+}

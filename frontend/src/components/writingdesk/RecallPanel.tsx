@@ -102,12 +102,12 @@ export function RecallPanel({
                   <div>
                     人物状态与线索仍会正常显示（这部分不需要模型）。
                     {data && !data.budget.semantic_available
-                      ? '「相关的旧段落」需要模型帮你联想，配置后才会出现。'
+                      ? '「相关的旧段落」要靠一种专门的「记住全文」模型来联想 —— 多数平台只有聊天模型（没有也不影响写作）。人物状态与线索照常显示。'
                       : ''}
                   </div>
                   <div className={styles.degradedAction}>
                     <Button size="sm" variant="secondary" icon="settings" onClick={onOpenConfig}>
-                      去配置
+                      去配置模型
                     </Button>
                   </div>
                 </div>
@@ -122,16 +122,15 @@ export function RecallPanel({
                 <div className={styles.degradedBody}>
                   <div className={styles.degradedTitle}>「相关的旧段落」暂时用不了</div>
                   <div>
-                    它要两样东西：一个能干「向量嵌入」的模型（把你写过的章节变成可搜索的记忆），
-                    以及本机的向量扩展。你现在的模型都只做写大纲/写正文 —— 这也正常，
-                    多数平台只提供聊天模型、不提供嵌入模型。
+                    它需要一种专门用来「记住全文」的模型 —— 把写过的章节变成可搜索的记忆。
+                    多数平台只提供聊天模型，不提供这种。
                   </div>
                   <div>
                     人物状态和线索两栏是完整的，不受影响，照常写作即可。
                   </div>
                   <div className={styles.degradedAction}>
                     <Button size="sm" variant="secondary" icon="settings" onClick={onOpenConfig}>
-                      看看模型配置
+                      去配置模型
                     </Button>
                   </div>
                 </div>

@@ -17,6 +17,7 @@ import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useDeskStore } from '@/stores/deskStore';
 import { toast } from '@/stores/toastStore';
 import type { EditorDoc } from '@/components/writingdesk/Editor';
+import { slugSegment } from '@/lib/slug';
 
 /**
  * 写作台控制器：把查询 / Zustand UI 状态 / 派生值 / 全部副作用收敛到一处，
@@ -220,9 +221,9 @@ export function useWritingDesk() {
     slug,
     navigate,
     toLibrary: () => navigate('/'),
-    toConfig: () => navigate(`/book/${encodeURIComponent(slug)}/config`),
+    toConfig: () => navigate(`/book/${slugSegment(slug)}/config`),
     toProfile: (name: string) =>
-      navigate(`/book/${encodeURIComponent(slug)}/settings?tab=characters&highlight=${encodeURIComponent(name)}`),
+      navigate(`/book/${slugSegment(slug)}/settings?tab=characters&highlight=${encodeURIComponent(name)}`),
 
     online,
     isWide,

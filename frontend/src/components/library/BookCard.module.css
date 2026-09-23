@@ -27,13 +27,16 @@
   min-width: 0;
 }
 
+/* 书名与字数的主次：卡片上最该被一眼认出来的是"这是哪本书"，
+   所以书名比字数大一号。此前正好反着（书名 16px / 字数 18px 加粗等宽），
+   截图上「54,874」比书名还醒目，扫一眼先看到数字、认不出是哪本书。 */
 .title {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--color-text-primary);
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--tracking-tight);
 }
@@ -75,7 +78,7 @@
 }
 
 .words {
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
   font-family: var(--font-mono);

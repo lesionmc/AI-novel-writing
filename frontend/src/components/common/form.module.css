@@ -145,6 +145,18 @@
   transition: background var(--duration-fast) var(--ease-out);
 }
 
+/* 视觉仍是 24×24，但把可点热区扩到 44×44（WCAG 2.5.5 触摸目标）——
+   与 Toast 的关闭按钮同款处理（宿主本身已 position:absolute，无需再加）。 */
+.comboToggle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+
 .comboToggle:hover {
   background: var(--color-surface-hover);
   color: var(--color-text-primary);

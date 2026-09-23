@@ -20,6 +20,11 @@ export interface Provider {
   /** 密钥环引用名；**绝不返回密钥明文** */
   key_ref: string | null;
   task_role: TaskRole | null;
+  /**
+   * 该模型承担的全部角色（**可多个**）—— 角色路由以它为准。
+   * 旧字段 `task_role` 仍返回但**不再参与路由**；省略时按空数组处理。
+   */
+  task_roles?: TaskRole[];
   /** 契约 `type: integer` —— 0/1 */
   is_default: number;
   /** 契约 `type: integer` —— 0/1 */
@@ -33,6 +38,8 @@ export interface ProviderWriteRequest {
   api_key: string;
   base_url?: string | null;
   task_role?: TaskRole | null;
+  /** 省略时按 `task_role` 挂一个角色；传了就按这个集合挂 */
+  task_roles?: TaskRole[];
 }
 
 /** `PATCH /api/providers/{id}` 请求体 */
@@ -40,6 +47,8 @@ export interface ProviderUpdateRequest {
   model?: string;
   base_url?: string | null;
   task_role?: TaskRole | null;
+  /** 传了就**整体替换**角色集合；传 `[]` 即解除全部分配 */
+  task_roles?: TaskRole[];
   is_default?: number;
   enabled?: number;
   /** 仅在需要更换密钥时传入 */

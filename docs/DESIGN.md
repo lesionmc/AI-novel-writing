@@ -2,7 +2,7 @@
 
 > 生成日期：2026-09-20 ｜ 设计师：颜好看 ｜ 基于：《01-需求文档（专业版）》V1.0 + 《03-技术方案》V1.0 + 《04-界面设计说明》V1.0
 > 三轴刻度：Variance=3 / Motion=3 / Density=4
-> 定位：本文件是全项目**设计契约源文件**（9 节标准）。页面清单与组件清单见 `spec-设计与页面章节.md`；Token 定义见 `design-tokens.css` / `design-tokens.json`。
+> 定位：本文件是全项目**设计契约源文件**（9 节标准）。页面清单与组件清单见 `spec-分片归档.md`；Token 定义见 `design-tokens.css` / `design-tokens.json`。
 
 ---
 

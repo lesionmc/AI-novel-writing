@@ -141,6 +141,7 @@ export function CharacterForm({ formId, value, onChange, nameError }: CharacterF
             options={CONTRADICTION_OPTIONS}
             value={value.contradiction ?? ''}
             placeholder="点箭头选一个，或直接输入"
+            aria-label="矛盾行为"
             onChange={(v) => onChange({ contradiction: v })}
           />
         </FieldWithHint>

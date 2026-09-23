@@ -42,7 +42,9 @@ def get_stats(book: str) -> BookStats:
 def search_book(
     book: str,
     q: str = Query(...),
-    limit: int = Query(default=30),
+    # 必须给上下界：SQLite 的 `LIMIT -1` 语义是**无上限**，裸传 limit 会让 `?limit=-1`
+    # 静默返回全表（安全/性能双问题）。非法值走 RequestValidationError → 400。
+    limit: int = Query(default=30, ge=1, le=200),
 ) -> list[SearchHit]:
     """M1 仅覆盖设定库范围（character / world_entry）；全书级检索留 M3。"""
     return [SearchHit(**hit) for hit in search_service.search_settings(book, q, limit)]

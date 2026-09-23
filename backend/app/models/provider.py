@@ -13,6 +13,8 @@ from pydantic import BaseModel, ConfigDict, Field
 # **不是白名单** —— 不在映射里的平台，只要显式传 base_url 就必须能配上。
 ProviderName = str
 TaskRole = Literal["outline", "content", "review", "embedding"]
+#: 角色的规范顺序（与 `provider_repo.ROLE_ORDER` 一致）—— 仅用于给契约/文档一个稳定枚举序。
+TASK_ROLES: tuple[TaskRole, ...] = ("outline", "content", "review", "embedding")
 
 
 class ProviderCreate(BaseModel):
@@ -23,6 +25,8 @@ class ProviderCreate(BaseModel):
     api_key: str | None = None
     base_url: str | None = None
     task_role: TaskRole = "content"
+    #: 可选：一次挂多个角色。省略时取 `task_role` 单值（保持老客户端语义）。
+    task_roles: list[TaskRole] | None = None
     is_default: bool = False
     enabled: bool = True
 
@@ -33,6 +37,8 @@ class ProviderUpdate(BaseModel):
     model: str | None = None
     base_url: str | None = None
     task_role: TaskRole | None = None
+    #: 传了就**整体替换**该模型的角色集合（传 `[]` = 解除全部分配）；不传则不改。
+    task_roles: list[TaskRole] | None = None
     is_default: bool | None = None
     enabled: bool | None = None
     api_key: str | None = None
@@ -44,7 +50,11 @@ class LLMProviderOut(BaseModel):
     model: str
     base_url: str | None = None
     key_ref: str | None = None
+    #: 旧字段（`llm_provider.task_role` 列）—— 保留以免破坏既有前端类型与契约，
+    #: 但**路由不再读它**；真实分配见 `task_roles`。
     task_role: str = "content"
+    #: 该模型承担的全部角色（可多个；空列表 = 未分配给任何角色，仅作默认回退候选）。
+    task_roles: list[str] = Field(default_factory=list)
     is_default: int = 0
     enabled: int = 1
 

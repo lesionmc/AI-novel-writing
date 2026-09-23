@@ -82,6 +82,30 @@ class WritingContext:
     recent_text: str
     chapter_text: str
     character_states_history: str = ""
+    # 「这次到底喂了什么」的计数（对话工作台要把它**显示给用户看**）。
+    # 计数与上面几块文本由**同一批查询**得出，故不会出现"显示 3 个人物、实际喂了 5 个"。
+    ctx_characters: int = 0
+    ctx_foreshadows: int = 0
+    ctx_outlines: int = 0
+    ctx_has_prev_summary: bool = False
+
+    def usage(self) -> dict[str, object]:
+        """本次注入的**可读摘要**（供前端展示"AI 这次读了什么"）。只读、无副作用。"""
+        blocks = (
+            self.settings,
+            self.characters,
+            self.open_foreshadows,
+            self.chapter_outline,
+            self.prev_summary,
+            self.recent_text,
+        )
+        return {
+            "characters": self.ctx_characters,
+            "foreshadows": self.ctx_foreshadows,
+            "outlines": self.ctx_outlines,
+            "has_prev_summary": self.ctx_has_prev_summary,
+            "injected_chars": sum(len(b or "") for b in blocks),
+        }
 
     def variables(self) -> dict[str, object]:
         """转成提示词插值变量（键名与 prompts/*.md 里的占位符一一对应）。"""
@@ -134,8 +158,8 @@ def _settings_text(conn: sqlite3.Connection) -> str:
     return clip_text("\n".join(lines), MAX_SETTINGS_CHARS)
 
 
-def _characters_text(conn: sqlite3.Connection, chapter: dict) -> str:
-    """本章出场人物 + **截至本章的现状**。
+def _characters_text(conn: sqlite3.Connection, chapter: dict) -> tuple[str, int]:
+    """本章出场人物 + **截至本章的现状**。返回 `(文本, 人物条数)`。
 
     优先按「正文里出现过的名字」识别（与召回同源，见 `presence.characters_in_text`）；
     正文为空（开篇）时退回设定库前若干个角色。
@@ -157,11 +181,11 @@ def _characters_text(conn: sqlite3.Connection, chapter: dict) -> str:
             desc += "｜暂无状态记录"
         lines.append(desc)
 
-    return clip_text("\n".join(lines), MAX_CHARACTERS_CHARS)
+    return clip_text("\n".join(lines), MAX_CHARACTERS_CHARS), len(found)
 
 
-def _foreshadows_text(conn: sqlite3.Connection, seq: int) -> str:
-    """未回收伏笔，按重要度排序后取前 N 条（与召回同一套截断口径）。"""
+def _foreshadows_text(conn: sqlite3.Connection, seq: int) -> tuple[str, int]:
+    """未回收伏笔，按重要度排序后取前 N 条（与召回同一套截断口径）。返回 `(文本, 条数)`。"""
     rows = foreshadow_repo.open_foreshadows(conn)[:MAX_FORESHADOWS]
     lines: list[str] = []
     for row in rows:
@@ -170,10 +194,11 @@ def _foreshadows_text(conn: sqlite3.Connection, seq: int) -> str:
         lines.append(
             f"- [{row.get('importance') or 'medium'}] {row['title']}{age}"
         )
-    return "\n".join(lines)
+    return "\n".join(lines), len(rows)
 
 
-def _outline_text(conn: sqlite3.Connection, chapter_id: int) -> str:
+def _outline_text(conn: sqlite3.Connection, chapter_id: int) -> tuple[str, int]:
+    """本章大纲要点。返回 `(文本, 非空条数)`。"""
     from app.repositories.base import fetch_all
 
     rows = fetch_all(
@@ -181,8 +206,9 @@ def _outline_text(conn: sqlite3.Connection, chapter_id: int) -> str:
         "SELECT content FROM outline WHERE level = 'chapter' AND chapter_id = ?",
         (chapter_id,),
     )
-    text = "\n".join((r.get("content") or "").strip() for r in rows if r.get("content"))
-    return clip_text(text, MAX_OUTLINE_CHARS)
+    kept = [(r.get("content") or "").strip() for r in rows]
+    kept = [text for text in kept if text]
+    return clip_text("\n".join(kept), MAX_OUTLINE_CHARS), len(kept)
 
 
 def _prev_summary(conn: sqlite3.Connection, seq: int) -> str:
@@ -229,6 +255,11 @@ def load(conn: sqlite3.Connection, slug: str, chapter: dict) -> WritingContext:
     book = book_repo.get_row(conn) or {}
     seq = int(chapter.get("seq") or 1)
     chapter_text = strip_html(chapter.get("content") or "").strip()
+    settings = _settings_text(conn)
+    characters, char_count = _characters_text(conn, chapter)
+    foreshadows, fs_count = _foreshadows_text(conn, seq)
+    outline, outline_count = _outline_text(conn, int(chapter["id"]))
+    prev_summary = _prev_summary(conn, seq)
 
     return WritingContext(
         slug=slug,
@@ -237,14 +268,18 @@ def load(conn: sqlite3.Connection, slug: str, chapter: dict) -> WritingContext:
         book_premise=(book.get("premise") or "").strip() or "（未填写）",
         chapter_seq=seq,
         chapter_title=(chapter.get("title") or "").strip() or "（未命名）",
-        settings=_settings_text(conn),
-        characters=_characters_text(conn, chapter),
-        open_foreshadows=_foreshadows_text(conn, seq),
-        chapter_outline=_outline_text(conn, int(chapter["id"])),
-        prev_summary=_prev_summary(conn, seq),
+        settings=settings,
+        characters=characters,
+        open_foreshadows=foreshadows,
+        chapter_outline=outline,
+        prev_summary=prev_summary,
         recent_text=_recent_text(chapter_text),
         chapter_text=chapter_text,
         character_states_history=_states_history(conn, seq),
+        ctx_characters=char_count,
+        ctx_foreshadows=fs_count,
+        ctx_outlines=outline_count,
+        ctx_has_prev_summary=bool(prev_summary),
     )
 
 

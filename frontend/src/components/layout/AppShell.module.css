@@ -81,33 +81,9 @@
   color: var(--color-primary);
 }
 
-.navItemDisabled {
-  color: var(--color-text-disabled);
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.bookTag {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  max-width: 260px;
-  flex-shrink: 0;
-  padding: var(--space-1) var(--space-3);
-  border: var(--border-width-1) solid var(--color-border);
-  border-radius: var(--radius-pill);
-  background-color: var(--color-surface);
-  color: var(--color-text-secondary);
-  font-size: var(--text-sm);
-}
-
-.bookTagName {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--color-text-primary);
-  font-weight: var(--font-weight-medium);
-}
+/* 说明：`.navItemDisabled` 与 `.bookTag` 已删除 ——
+   前者是「没有当前作品就把导航置灰」的旧实现（用户实测否掉了），
+   后者被导航条右侧的作品选择器（BookSwitcher）取代。 */
 
 /* ---------- 二级页：左导航 + 内容 ---------- */
 .body {

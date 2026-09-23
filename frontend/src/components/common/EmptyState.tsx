@@ -10,6 +10,12 @@ export interface EmptyStateProps {
   actionLabel?: string;
   onAction?: () => void;
   actionLoading?: boolean;
+  /**
+   * 行动按钮的图标。默认 `plus`（大多数空态的下一步是"新建"）。
+   * 但行动不是"新建"而是"去某个页面"时必须显式换掉 —— 否则会出现
+   * 「＋ 去写作台写第一章」这种图标与动作对不上的按钮。
+   */
+  actionIcon?: IconName;
 }
 
 /**
@@ -23,6 +29,7 @@ export function EmptyState({
   actionLabel,
   onAction,
   actionLoading,
+  actionIcon = 'plus',
 }: EmptyStateProps) {
   return (
     <div className={styles.empty}>
@@ -33,7 +40,7 @@ export function EmptyState({
       {description ? <p className={styles.emptyDesc}>{description}</p> : null}
       {actionLabel && onAction ? (
         <div className={styles.emptyAction}>
-          <Button variant="primary" icon="plus" loading={actionLoading} onClick={onAction}>
+          <Button variant="primary" icon={actionIcon} loading={actionLoading} onClick={onAction}>
             {actionLabel}
           </Button>
         </div>

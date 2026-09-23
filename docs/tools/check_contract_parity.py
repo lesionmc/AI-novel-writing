@@ -20,6 +20,9 @@
 
 - **path 集合必须逐个相等**（契约里已无 `deferred` 端点，差集应为空）。
 - operation 数按 HTTP 方法逐个累加 —— 与 path 数**分开报**，不混算。
+- **method-per-path 必须一致**：同一形状的路径，契约与代码的 HTTP 方法集合要完全相同。
+  只比 path 集合 + operation 总数是不够的 —— 把 `GET /x` 改成 `DELETE /x`、同时在别处补一个
+  `GET`，集合与总数都不变，旧口径会误判为 PASS（A-08）。
 - 路径模板里的参数名差异（`{id}` vs `{chapter_id}`）**视为已知遗留、不判失败**，
   但会在 `-v` 下打印提醒。理由：URL 形状一致、运行期无影响，
   统一它要改 16 个路由签名，收益为零、回归风险高（见 `docs/decisions/OPEN-DECISIONS.md`）。
@@ -44,16 +47,16 @@ def _append_backend_to_path() -> None:
         sys.path.insert(0, str(BACKEND_DIR))
 
 
-def contract_paths(text: str) -> tuple[list[str], int]:
-    """解析契约：返回 (path 列表, operation 数)。
+def contract_operations(text: str) -> dict[str, set[str]]:
+    """解析契约：返回 `{path: {方法集合}}`（方法为大写）。
 
     用极简缩进解析而不是 PyYAML —— 本工具要在**裸 Python**（可能没装第三方库）下也能跑，
     因为它是"环境出问题时最需要能跑"的那类工具。
     """
-    paths: list[str] = []
-    operations = 0
+    ops: dict[str, set[str]] = {}
     in_paths = False
     in_current_path = False
+    current = ""
     for raw in text.splitlines():
         line = raw.rstrip()
         if not line or line.lstrip().startswith("#"):
@@ -68,7 +71,8 @@ def contract_paths(text: str) -> tuple[list[str], int]:
         if not in_paths:
             continue
         if indent == 2 and body.startswith("/") and body.endswith(":"):
-            paths.append(body[:-1])
+            current = body[:-1]
+            ops.setdefault(current, set())
             in_current_path = True
             continue
         if indent == 2:
@@ -77,23 +81,19 @@ def contract_paths(text: str) -> tuple[list[str], int]:
         if in_current_path and indent == 4:
             m = re.match(r"^([a-z]+):", body)
             if m and m.group(1) in HTTP_METHODS:
-                operations += 1
-    return paths, operations
+                ops[current].add(m.group(1).upper())
+    return ops
 
 
-def code_paths() -> tuple[list[str], int]:
+def code_operations() -> dict[str, set[str]]:
     _append_backend_to_path()
     from app.main import app  # noqa: PLC0415 - 延迟导入，保证纯解析模式也能用
 
     spec = app.openapi()
-    paths = sorted(spec.get("paths", {}))
-    operations = sum(
-        1
-        for item in spec.get("paths", {}).values()
-        for method in item
-        if method.lower() in HTTP_METHODS
-    )
-    return paths, operations
+    return {
+        path: {m.upper() for m in item if m.lower() in HTTP_METHODS}
+        for path, item in spec.get("paths", {}).items()
+    }
 
 
 def _normalize(path: str) -> str:
@@ -116,8 +116,12 @@ def main() -> int:
         return 1
 
     text = CONTRACT.read_text(encoding="utf-8")
-    c_paths, c_ops = contract_paths(text)
-    k_paths, k_ops = code_paths()
+    c_ops_map = contract_operations(text)
+    k_ops_map = code_operations()
+    c_paths = sorted(c_ops_map)
+    k_paths = sorted(k_ops_map)
+    c_ops = sum(len(v) for v in c_ops_map.values())
+    k_ops = sum(len(v) for v in k_ops_map.values())
 
     print("契约 ↔ 代码 对账")
     print("-" * 62)
@@ -137,6 +141,13 @@ def main() -> int:
         (c_norm[k], k_norm[k]) for k in set(c_norm) & set(k_norm) if c_norm[k] != k_norm[k]
     )
 
+    # method-per-path：同一形状路径的 HTTP 方法集合必须完全相同
+    method_mismatches = [
+        (c_norm[shape], k_norm[shape], c_ops_map[c_norm[shape]], k_ops_map[k_norm[shape]])
+        for shape in set(c_norm) & set(k_norm)
+        if c_ops_map[c_norm[shape]] != k_ops_map[k_norm[shape]]
+    ]
+
     ok = True
     if only_contract:
         ok = False
@@ -151,6 +162,11 @@ def main() -> int:
     if c_ops != k_ops:
         ok = False
         print(f"\n[FAIL] operation 数不一致：契约 {c_ops} vs 代码 {k_ops}")
+    if method_mismatches:
+        ok = False
+        print(f"\n[FAIL] 同一路径的 HTTP 方法不一致（{len(method_mismatches)} 条）：")
+        for c_path, k_path, c_methods, k_methods in sorted(method_mismatches):
+            print(f"     {c_path} ↔ {k_path}：契约 {sorted(c_methods)} vs 代码 {sorted(k_methods)}")
 
     if renames:
         print(f"\n[提醒] 同一路径的参数名写法不同（已知遗留，**不计失败**，共 {len(renames)} 条）：")

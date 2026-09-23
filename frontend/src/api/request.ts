@@ -7,10 +7,36 @@
  * [注意] `GET /api/chapters/{id}/recall` 有写副作用（写 recall_log），调用方必须
  *        使用 staleTime:0 + enabled 由章号驱动，一次进章仅触发一次（Spec §11 坑 7）。
  */
-
 import { messageForCode } from './errorMessages';
+import { slugSegment } from '@/lib/slug';
 
 const API_BASE = '/api';
+
+/**
+ * 从当前路由取「正在编辑的作品」slug。
+ * 只在 `/book/<slug>/...` 形态下取得到；首页 / 书库页返回 null（此时不带该头）。
+ * 取到后 percent-encode 放进 `X-Book-Slug` —— 后端据此把 by-id 端点**限定在本作品内**，
+ * 避免多标签页并发时把甲书的自动保存写进乙书（P0-2）。
+ */
+function bookSlugHeader(): Record<string, string> {
+  const match = /^\/book\/([^/]+)(?:\/|$)/.exec(window.location.pathname);
+  if (!match) return {};
+  const raw = match[1];
+  let slug: string;
+  try {
+    slug = decodeURIComponent(raw);
+  } catch {
+    // 路径里含非法百分号转义（典型来源：书名本身就是「100%达成」，而链接未编码）。
+    //
+    // [重要] 这里**绝不能** return {} 放弃作用域 —— 那会让 by-id 端点退回
+    // 「全局当前作品指针」解析，等于把"跨书静默写错书"的入口重新打开（P0-2 的绕过路径）。
+    // 退而求其次：拿原始段当 slug 用。它可能没被解码，但至少作用域是**限定**的，
+    // 而后面还要再 encodeURIComponent 一次，所以这里最坏情况只是 slug 多了转义，
+    // 也远比"无作用域"安全。
+    slug = raw;
+  }
+  return slug ? { 'X-Book-Slug': slugSegment(slug) } : {};
+}
 
 /** 后端统一错误对象 */
 export class ApiError extends Error {
@@ -72,7 +98,10 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   try {
     res = await fetch(buildUrl(path, query), {
       method,
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+      headers: {
+        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+        ...bookSlugHeader(),
+      },
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: controller.signal,
     });
@@ -111,7 +140,7 @@ export async function downloadFile(
   path: string,
   query?: RequestOptions['query'],
 ): Promise<void> {
-  const res = await fetch(buildUrl(path, query));
+  const res = await fetch(buildUrl(path, query), { headers: bookSlugHeader() });
   if (!res.ok) {
     let code = 'INTERNAL_ERROR';
     try {
@@ -211,7 +240,11 @@ export async function streamSse(
   try {
     res = await fetch(buildUrl(path), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+        ...bookSlugHeader(),
+      },
       body: JSON.stringify(body ?? {}),
       signal: controller.signal,
     });

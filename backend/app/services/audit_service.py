@@ -52,6 +52,8 @@ def scan_sensitive(slug: str) -> SensitiveResult:
     hits = sensitive.scan_chapters(rows, wordlist)
     return SensitiveResult(
         total_hits=sum(h.count for h in hits),
+        # 显式告知本次是否**真的检查了内容**：词库为空时 total_hits=0 不代表稿子没问题。
+        wordlist_available=wordlist.count > 0,
         hits=[
             SensitiveHitOut(
                 word=h.word, category=h.category, chapter_seq=h.chapter_seq, count=h.count

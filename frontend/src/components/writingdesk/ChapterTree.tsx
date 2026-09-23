@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useChapterBriefs, useOutlines } from '@/hooks/queries';
 import { useChapterTree } from '@/hooks/useChapterTree';
+import { bookPath } from '@/lib/slug';
 import { ErrorBar } from '@/components/common/ErrorBar';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonRows } from '@/components/common/Skeleton';
@@ -34,6 +36,7 @@ export function ChapterTree({
   const outlines = useOutlines(slug);
   const groups = useChapterTree(query.data, outlines.data);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const navigate = useNavigate();
 
   return (
     <div className={styles.tree}>
@@ -51,15 +54,16 @@ export function ChapterTree({
         ) : groups.length === 0 ? (
           /* 开书引导（E5）：原来是「新建第一章，就可以开始写了」——
              直接把人推进空白编辑器，于是"吃书"从第一章就开始埋。
-             这里按实战指南的六阶段顺序（立项 → **骨架** → 包装 → 写稿）指路，
-             但**不新增任何流程/页面**，只是把已有页面的入口说清楚。 */
+             现在统一指向 `/book/<slug>/start`「开书清单」，由那一页按
+             实战指南的六阶段（立项 → 骨架 → 包装 → 写稿）逐步指路 ——
+             指路文案只维护一份，避免这里和向导各说一套。
+             **不阻断**：头部 + 按钮与中间面板的「新建第一章」始终可用。 */
           <EmptyState
             icon="chapter"
             title="这部作品还没有章节"
-            description="建议先搭骨架再动笔：① 去「设定库」立人物、建世界观、记下要埋的线索 → ② 去「大纲」把主线分段 → ③ 再回来写第一章。左上角「本书」菜单可以直接跳过去。"
-            actionLabel="直接写第一章"
-            onAction={onCreate}
-            actionLoading={creating}
+            description="建议先搭骨架再动笔 —— 打开「开书清单」，按顺序立人物、写世界观、把主线分段。清单里每一步都能跳过，想直接开写也随时可以。"
+            actionLabel="打开开书清单"
+            onAction={() => navigate(bookPath(slug, '/start'))}
           />
         ) : (
           groups.map((group) => {

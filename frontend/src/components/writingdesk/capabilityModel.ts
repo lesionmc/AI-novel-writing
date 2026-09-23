@@ -49,8 +49,8 @@ export const CAPABILITY_DEFS: CapabilityDef[] = [
     tone: 'warn',
     icon: 'warning',
     body: '全书与设定里的关键词搜索暂时用不了；写作与「帮你记住前文」不受影响。',
-    detail: '本机 SQLite 未启用 FTS5 全文索引。',
-    help: '使用支持 FTS5 的 SQLite 运行环境后重启应用，即可恢复关键词检索。',
+    detail: '本机的数据库版本较旧，未开启关键词索引。',
+    help: '这是随程序安装的组件，通常重装/升级到最新版程序即可恢复。恢复前，全书检索用不了，写作不受影响。',
     restartHint: true,
   },
   {

@@ -17,6 +17,11 @@ logger = get_logger(__name__)
 
 _RANGE_RE = re.compile(r"^\s*(\d+)\s*(?:-\s*(\d+)\s*)?$")
 
+# 标题里已有的章号前缀，如「第1章」「第 12 章：」「第3章、」。
+# 本项目章节 title 常被自动填成「第1章」这类题名，导出时必须先剥掉，
+# 否则会渲染成「第1章 第1章」（P1）。数字一律以 row["seq"] 为准。
+_CHAPTER_PREFIX_RE = re.compile(r"^\s*第\s*\d+\s*章\s*[：:、.．\-—]?\s*")
+
 
 def parse_range(text: str | None) -> tuple[int | None, int | None]:
     if not text:
@@ -43,8 +48,18 @@ def _load_chapters(slug: str, range_text: str | None) -> tuple[list[dict], str]:
 
 
 def _chapter_heading(row: dict) -> str:
-    title = (row.get("title") or "").strip()
-    return f"第{row['seq']}章 {title}".rstrip()
+    """章节标题：**只输出一个章号**，章号取自 `row["seq"]`。
+
+    四种输入都收敛到同一形态（title 自带的章号一律丢弃，以 seq 为准）：
+      ""            → 第5章
+      "第1章"        → 第5章          （仅含章号）
+      "第1章 风雪夜"  → 第5章 风雪夜   （剥掉旧前缀）
+      "风雪夜"       → 第5章 风雪夜   （无章号，直接加前缀）
+    """
+    title = _CHAPTER_PREFIX_RE.sub("", (row.get("title") or "").strip()).strip()
+    if not title:
+        return f"第{row['seq']}章"
+    return f"第{row['seq']}章 {title}"
 
 
 def export_txt(slug: str, range_text: str | None) -> tuple[bytes, str]:
