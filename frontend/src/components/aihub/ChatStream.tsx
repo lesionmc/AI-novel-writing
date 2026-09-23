@@ -97,6 +97,14 @@ export function ChatStream({
                     </a>
                   ))}
                 </div>
+              ) : m.role === 'assistant' && m.webAttempted ? (
+                <div className={styles.webSources}>
+                  <Icon name="world" size={16} />
+                  <span>
+                    联网检索没有命中 —— 可能是本机网络到不了搜索引擎（可给后端配
+                    HTTP(S)_PROXY 后重试）、搜索引擎限流，或确实没有结果；也可以关掉「联网」直接问。
+                  </span>
+                </div>
               ) : null}
               {draft ? (
                 <DraftCard

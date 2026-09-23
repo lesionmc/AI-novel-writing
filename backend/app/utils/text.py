@@ -6,8 +6,8 @@ import re
 from html import unescape
 
 _TAG_RE = re.compile(r"<[^>]+>")
-_ASCII_RUN_RE = re.compile(r"[A-Za-z0-9]+")
-_WS_RE = re.compile(r"\s+")
+_ASCII_RUN_RE = re.compile(r"[A-Za-z0-9]+(?:['’-][A-Za-z0-9]+)*")
+_CJK_RE = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]")
 _BLOCK_TAGS_RE = re.compile(
     r"</?(p|div|br|li|h[1-6]|blockquote|tr|td)[^>]*>", re.IGNORECASE
 )
@@ -26,17 +26,18 @@ def strip_html(raw: str) -> str:
 def count_words(raw: str) -> int:
     """中文字数统计。
 
-    规则：去除 HTML 与空白后，每个中日韩字符 / 全角标点记 1，
-         每段连续的 ASCII 字母数字记 1（英文单词按词计）。
-    与前端 Intl.Segmenter 计口径近似，允许 ±2 字误差（坑 19）。
+    规则（与前端 `lib/wordCount.ts` 逐字对齐：同一字符集、同一 ASCII 词正则）：
+    每个中日韩汉字记 1，每段连续的 ASCII 字母数字记 1；**标点与空白一律不计**。
+    曾把全角标点也记 1，导致同一章「顶栏 44 字 / 接口 66 字」两套答案 ——
+    字数只允许有一个真源规则，故在此对齐（原"坑 19 ±2 字误差"约定作废：
+    中文按词计与按字计差 30% 以上，容差救不了两套口径）。
     """
     text = strip_html(raw or "")
     if not text:
         return 0
-    ascii_runs = _ASCII_RUN_RE.findall(text)
-    remainder = _ASCII_RUN_RE.sub("", text)
-    remainder = _WS_RE.sub("", remainder)
-    return len(remainder) + len(ascii_runs)
+    ascii_runs = len(_ASCII_RUN_RE.findall(text))
+    cjk = len(_CJK_RE.findall(text))
+    return cjk + ascii_runs
 
 
 def estimate_tokens(text: str) -> int:

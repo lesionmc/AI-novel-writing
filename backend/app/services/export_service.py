@@ -4,9 +4,15 @@ from __future__ import annotations
 
 import io
 import re
+import sqlite3
+import tempfile
+import zipfile
+from contextlib import closing
+from datetime import datetime
+from pathlib import Path
 from urllib.parse import quote
 
-from app.db.registry import get_registry
+from app.db.registry import BookRegistry, get_registry
 from app.errors import ValidationError
 from app.logging_config import get_logger, log_fields
 from app.repositories import chapter_repo
@@ -36,10 +42,20 @@ def parse_range(text: str | None) -> tuple[int | None, int | None]:
     return start, end
 
 
-def _load_chapters(slug: str, range_text: str | None) -> tuple[list[dict], str]:
+def _activate_book(slug: str) -> BookRegistry:
+    """校验作品存在并把它设为当前活动库，返回 registry 供调用方取连接/目录。
+
+    `require` 必须先于 `set_active`：后者会把 slug 落进共享的 active_book.json
+    全局指针，若指向不存在的书就等于写坏这个指针。
+    """
     registry = get_registry()
     registry.require(slug)
     workspace.set_active(slug)
+    return registry
+
+
+def _load_chapters(slug: str, range_text: str | None) -> tuple[list[dict], str]:
+    registry = _activate_book(slug)
     start, end = parse_range(range_text)
     with registry.database(slug).connection() as conn:
         rows = chapter_repo.list_full_chapters(conn, start, end)
@@ -95,3 +111,42 @@ def export_docx(slug: str, range_text: str | None) -> tuple[bytes, str]:
 def content_disposition(filename: str) -> str:
     ascii_fallback = re.sub(r"[^A-Za-z0-9_.-]", "_", filename) or "export"
     return f"attachment; filename=\"{ascii_fallback}\"; filename*=UTF-8''{quote(filename)}"
+
+
+def export_backup(slug: str) -> tuple[bytes, str]:
+    """整本 zip 备份（R16 扩展）：把"备份 = 复制整个书目录"的承诺产品化。
+
+    库文件走 SQLite **在线备份 API** 取一致快照，而不是拷贝活文件 ——
+    用户正在写作（本产品最高频场景）时，活 db + -wal 是不同瞬间的拼凑，
+    换机恢复可能静默丢最近编辑甚至撕裂；快照则天然一致。
+    打包只走白名单（novel.db 快照 + meta.json + exports/），
+    避免 `meta.json.<uuid>.tmp` 原子写残留与崩溃伴生文件进包。
+    """
+    registry = _activate_book(slug)
+    book_dir = registry.book_dir(slug)
+
+    with (
+        tempfile.TemporaryDirectory(prefix="ainovel-backup-") as tmp,
+        registry.database(slug).connection() as conn,
+    ):
+        snap = Path(tmp) / "novel.db"
+        with closing(sqlite3.connect(snap)) as dest:
+            conn.backup(dest)  # 在线备份：自带读锁协调，含未合并的 WAL 内容
+
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.write(snap, "novel.db")
+            meta_file = book_dir / "meta.json"
+            if meta_file.is_file():
+                zf.write(meta_file, "meta.json")
+            exports_dir = book_dir / "exports"
+            if exports_dir.is_dir():
+                for item in sorted(exports_dir.rglob("*")):
+                    if item.is_file():
+                        zf.write(item, f"exports/{item.relative_to(exports_dir).as_posix()}")
+
+    meta = registry.read_meta(slug)
+    title = meta.get("title") or slug
+    stamp = datetime.now().strftime("%Y%m%d")
+    logger.info("export backup", **log_fields(slug=slug, bytes=buf.tell()))
+    return buf.getvalue(), f"{title}-备份-{stamp}.zip"

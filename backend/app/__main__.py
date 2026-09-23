@@ -138,6 +138,13 @@ def main() -> None:
 
     host = settings.host
     port = _pick_port(host, settings.port)
+    # 本工具**没有登录鉴权**：绑到非本机地址等于把稿件与模型配置交给同网段任何人
+    if host not in ("127.0.0.1", "localhost", "::1"):
+        warning = (
+            f"[警告] 正在绑定 {host} —— 本工具无登录鉴权，局域网内任何人都能读写你的稿件"
+            "并查看模型配置。不是刻意共享，请改回默认 AINOVEL_HOST=127.0.0.1。"
+        )
+        print(warning, file=sys.stderr, flush=True)
 
     # 单实例保护：抢锁失败（已有存活实例）时写错误标记 + 打印中文提示，以非零退出码退出
     try:

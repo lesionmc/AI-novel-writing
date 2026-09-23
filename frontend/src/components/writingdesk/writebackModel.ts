@@ -170,10 +170,13 @@ export interface ModelCounts {
 
 export function countModel(m: WritebackModel): ModelCounts {
   const all = [...m.characters, ...m.plotProgress, ...m.newForeshadows, ...m.closedForeshadows];
+  // 摘要随确认请求无条件写入（见 toPayload），必须计入 —— 否则填了摘要还显示「将写入 0/0 条」
+  const summaryItem = m.summary.trim() ? 1 : 0;
+  const total = all.length + summaryItem;
   return {
-    total: all.length,
-    accepted: all.filter((x) => x.accepted).length,
-    hasItems: all.length > 0,
+    total,
+    accepted: all.filter((x) => x.accepted).length + summaryItem,
+    hasItems: total > 0,
   };
 }
 

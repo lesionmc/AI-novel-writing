@@ -56,6 +56,7 @@ function parseStoredMessage(v: unknown): HubMessage | null {
     draft: parseAiChatDraft(rawDraft) ? (rawDraft as AiChatDraft) : null,
     contextUsed: parseContextUsed(row.contextUsed),
     webSources: parseWebSources(row.webSources),
+    webAttempted: row.webAttempted === true,
     // 只读报告同理：形状不对就整块丢掉（列表还会被截到上限，见 hubReading）
     reading: parseHubReading(row.reading),
     draftState,
@@ -98,13 +99,12 @@ export function loadHubArchive(slug: string): HubArchive | null {
   return archive.read(slug);
 }
 
-/** 写存档。写空表等于删键：会话全删光就不留空壳。 */
-export function saveHubArchive(slug: string, data: HubArchive): void {
+/** 写存档。写空表等于删键：会话全删光就不留空壳。返回 false = 没存上（调用方提示用户）。 */
+export function saveHubArchive(slug: string, data: HubArchive): boolean {
   if (data.sessions.length === 0) {
-    archive.write(slug, null);
-    return;
+    return archive.write(slug, null);
   }
-  archive.write(slug, {
+  return archive.write(slug, {
     v: PAYLOAD_VERSION,
     activeId: data.activeId,
     sessions: data.sessions.slice(-MAX_SESSIONS).map((s) => ({

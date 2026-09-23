@@ -33,6 +33,17 @@ def export_book(
     )
 
 
+@router.get("/{book}/backup")
+def backup_book(book: str) -> Response:
+    """整本 zip 备份（库 + meta + 导出件），下载即得一份完整一致的迁移包。"""
+    data, filename = export_service.export_backup(book)
+    return Response(
+        content=data,
+        media_type="application/zip",
+        headers={"Content-Disposition": export_service.content_disposition(filename)},
+    )
+
+
 @router.get("/{book}/stats", response_model=BookStats)
 def get_stats(book: str) -> BookStats:
     return BookStats(**stats_service.get_stats(book))

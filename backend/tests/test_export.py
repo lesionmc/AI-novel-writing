@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import io
 
+from app.config import settings
 from app.services.export_service import _chapter_heading
+from app.utils.text import count_words
 
 
 def _seed(client, book, n=3):
@@ -93,6 +95,47 @@ def test_stats_reflects_written_words(client, book):
     _seed(client, book, 3)
     stats = client.get(f"/api/books/{book}/stats").json()
     assert stats["chapter_count"] == 3
+    # 与全书统一口径（标点不计）一致：用 count_words 而不是 len
     assert stats["total_words"] == sum(
-        len(f"第{i}章的正文内容。") for i in range(1, 4)
+        count_words(f"第{i}章的正文内容。") for i in range(1, 4)
     )
+
+
+# ------------------------------------------------------------- 整本备份 zip
+def test_backup_returns_valid_zip_with_db_and_meta(client, book, tmp_path):
+    import io
+    import zipfile
+
+    ch = client.post(f"/api/books/{book}/chapters", json={"title": "备份章"}).json()
+    client.patch(f"/api/chapters/{ch['id']}", json={"content": "这段必须出现在备份库里。"})
+    # 原子写 meta 的残留 tmp 文件不得进包（白名单打包）
+    (settings.books_dir / book / "meta.json.deadbeef.tmp").write_text("{}", encoding="utf-8")
+
+    resp = client.get(f"/api/books/{book}/backup")
+    assert resp.status_code == 200
+    assert resp.headers["content-type"] == "application/zip"
+    assert "Content-Disposition" in resp.headers
+
+    zf = zipfile.ZipFile(io.BytesIO(resp.content))
+    names = set(zf.namelist())
+    assert "novel.db" in names and "meta.json" in names
+    assert not any(n.endswith(("-wal", "-shm")) for n in names)
+    assert not any(n.endswith(".tmp") for n in names), "meta 原子写残留不该进备份包"
+    # 备份库是完整可用的 SQLite：能查到刚写的正文
+    with zf.open("novel.db") as fh:
+        raw = fh.read()
+    import sqlite3
+
+    db_file = tmp_path / "restored.db"
+    db_file.write_bytes(raw)
+    conn = sqlite3.connect(db_file)
+    try:
+        row = conn.execute("SELECT content FROM chapter LIMIT 1").fetchone()
+        assert row and "这段必须出现在备份库里。" in row[0]
+    finally:
+        conn.close()
+
+
+def test_backup_unknown_book_404(client):
+    resp = client.get("/api/books/不存在的书/backup")
+    assert resp.status_code == 404

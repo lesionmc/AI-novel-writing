@@ -103,4 +103,6 @@ export interface AiChatResponse {
   context_used: AiChatContextUsed;
   /** 本轮实际注入提示词的联网资料；空数组 = 没搜或没搜到 */
   web_sources: AiChatWebSource[];
+  /** 本轮确实发起过联网检索（哪怕 0 命中）—— 用于如实提示 */
+  web_attempted: boolean;
 }

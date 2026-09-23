@@ -192,13 +192,20 @@ def _format_web_sources(sources: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def _plan_web_search(client: object, question: str) -> str | None:
-    """让模型决定要不要搜、搜什么。判断失败 = 不搜（宁可不联网）。"""
+def _plan_web_search(client: object, question: str, slug: str) -> str | None:
+    """让模型决定要不要搜、搜什么。判断失败 = 不搜（宁可不联网），但**必须留日志**——
+    否则某 provider 对规划提示词稳定解析失败时，"联网永久失效"与
+    "模型判断不需要搜"表现完全相同，无从排查。"""
     try:
-        plan, _ = chat_json(client, _SEARCH_PLAN_PROMPT.format(question=question[:500]))  # type: ignore[arg-type]
-    except JSONParseFailedError:
+        # 规划只是产出几个 token 的小任务，不该沿用生成类的 120s 大超时
+        plan, _ = chat_json(  # type: ignore[arg-type]
+            client, _SEARCH_PLAN_PROMPT.format(question=question[:500]), timeout=30.0
+        )
+    except JSONParseFailedError as exc:
+        logger.warning("web search plan failed", **log_fields(slug=slug, err=str(exc)[:160]))
         return None
-    if plan.get("need_search") is True:
+    # 宽松真值：不少模型把布尔写成 "true"/1，严格 `is True` 会静默不搜
+    if str(plan.get("need_search") or "").strip().lower() in ("true", "1", "yes"):
         query = str(plan.get("query") or "").strip()
         return query[:60] or None
     return None
@@ -223,12 +230,14 @@ def chat(book: str, payload: AiChatRequest) -> AiChatResponse:
     intent = str(payload.intent or "auto").strip() or "auto"
 
     sources: list[dict] = []
+    web_attempted = False
     if payload.use_web:
         last_user = next(
             (m.content for m in reversed(payload.messages) if m.role == "user"), ""
         )
-        query = _plan_web_search(client, last_user)
+        query = _plan_web_search(client, last_user, book)
         if query:
+            web_attempted = True
             sources = web_search.web_search(query)
             logger.info("ai chat web search", **log_fields(slug=book, query=query[:60], hits=len(sources)))
 
@@ -264,4 +273,5 @@ def chat(book: str, payload: AiChatRequest) -> AiChatResponse:
         draft=draft,
         context_used=context_used,
         web_sources=[WebSource(**s) for s in sources],
+        web_attempted=web_attempted,
     )

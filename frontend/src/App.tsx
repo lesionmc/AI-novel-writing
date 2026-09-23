@@ -1,16 +1,30 @@
+import { Suspense, lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { ToastViewport } from '@/components/common/Toast';
 import { LibraryPage } from '@/pages/LibraryPage';
-import { AiHubPage } from '@/pages/AiHubPage';
-import { WritingDeskPage } from '@/pages/WritingDeskPage';
-import { StartWizardPage } from '@/pages/StartWizardPage';
-import { SettingsLibraryPage } from '@/pages/SettingsLibraryPage';
-import { OutlinePage } from '@/pages/OutlinePage';
-import { AuditPage } from '@/pages/AuditPage';
-import { StatsPage } from '@/pages/StatsPage';
-import { ConfigPage } from '@/pages/ConfigPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+
+/**
+ * 路由级代码分割（2026-09-23）：除书库落地页外全部懒加载 ——
+ * TipTap（写作台）、AiHub、质检等各自成 chunk，按需下载，首包显著变小。
+ */
+const AiHubPage = lazy(() => import('@/pages/AiHubPage').then((m) => ({ default: m.AiHubPage })));
+const WritingDeskPage = lazy(() =>
+  import('@/pages/WritingDeskPage').then((m) => ({ default: m.WritingDeskPage })),
+);
+const StartWizardPage = lazy(() =>
+  import('@/pages/StartWizardPage').then((m) => ({ default: m.StartWizardPage })),
+);
+const SettingsLibraryPage = lazy(() =>
+  import('@/pages/SettingsLibraryPage').then((m) => ({ default: m.SettingsLibraryPage })),
+);
+const OutlinePage = lazy(() => import('@/pages/OutlinePage').then((m) => ({ default: m.OutlinePage })));
+const AuditPage = lazy(() => import('@/pages/AuditPage').then((m) => ({ default: m.AuditPage })));
+const StatsPage = lazy(() => import('@/pages/StatsPage').then((m) => ({ default: m.StatsPage })));
+const ConfigPage = lazy(() => import('@/pages/ConfigPage').then((m) => ({ default: m.ConfigPage })));
+
+const PageFallback = <p className="pageSubtitle">加载中…</p>;
 
 /**
  * 路由表（Spec §7 锁定，不得改名）：
@@ -30,23 +44,25 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 export function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route element={<AppShell />}>
-          <Route path="/" element={<LibraryPage />} />
-          <Route path="/chat" element={<AiHubPage />} />
-          <Route path="/config" element={<ConfigPage />} />
-          <Route path="/book/:slug/start" element={<StartWizardPage />} />
-          <Route path="/book/:slug/chat" element={<AiHubPage />} />
-          <Route path="/book/:slug/settings" element={<SettingsLibraryPage />} />
-          <Route path="/book/:slug/outline" element={<OutlinePage />} />
-          <Route path="/book/:slug/audit" element={<AuditPage />} />
-          <Route path="/book/:slug/stats" element={<StatsPage />} />
-          <Route path="/book/:slug/config" element={<ConfigPage />} />
-          <Route path="/book/:slug" element={<Navigate to="desk" replace />} />
-        </Route>
-        <Route path="/book/:slug/desk" element={<WritingDeskPage />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+      <Suspense fallback={PageFallback}>
+        <Routes>
+          <Route element={<AppShell />}>
+            <Route path="/" element={<LibraryPage />} />
+            <Route path="/chat" element={<AiHubPage />} />
+            <Route path="/config" element={<ConfigPage />} />
+            <Route path="/book/:slug/start" element={<StartWizardPage />} />
+            <Route path="/book/:slug/chat" element={<AiHubPage />} />
+            <Route path="/book/:slug/settings" element={<SettingsLibraryPage />} />
+            <Route path="/book/:slug/outline" element={<OutlinePage />} />
+            <Route path="/book/:slug/audit" element={<AuditPage />} />
+            <Route path="/book/:slug/stats" element={<StatsPage />} />
+            <Route path="/book/:slug/config" element={<ConfigPage />} />
+            <Route path="/book/:slug" element={<Navigate to="desk" replace />} />
+          </Route>
+          <Route path="/book/:slug/desk" element={<WritingDeskPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
       <ToastViewport />
     </BrowserRouter>
   );

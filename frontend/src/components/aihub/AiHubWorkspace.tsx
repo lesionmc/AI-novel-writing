@@ -40,16 +40,13 @@ function withMarkedDraft(session: HubSession, index: number, state: 'applied' | 
 }
 
 /**
- * AI 对话工作台（`/chat` 与 `/book/:slug/chat`）。
+ * AI 对话工作台（`/chat` 与 `/book/:slug/chat`）—— 唯一的 AI 对话入口。
  *
  * 三栏：左会话列表 / 中对话流 / 右「这次 AI 读了什么」。
- * 对话史存本机（`hubArchive`，按作品分键）；**上下文由服务端组装** ——
- * 前端只把对话历史 + 可选章节 + 可选意图发出去，从不自己拼一份设定上下文。
- *
- * 八项能力分两类（见 `HUB_ACTIONS`）：
- *   · 会产出草稿的（建人物 / 世界观 / 大纲 / 写正文）—— **必须用户点「确认写入」才落库**，
- *     正文草稿连确认写入都没有，只能复制走（正文必须人工定稿）；
- *   · 只读的（校对 / 审校 / 敏感词）—— 只出一份报告，**没有任何落库路径**（见 `useHubReadings`）。
+ * 对话史存本机（`hubArchive`，按作品分键）；**上下文由服务端组装**，前端从不自己拼。
+ * 能力分两类（见 `HUB_ACTIONS`）：产草稿的（建人物/世界观/大纲/正文/扩写/情节方向）
+ * **必须用户点「确认写入」才落库**，正文只能复制走；只读的（校对/审校/敏感词）
+ * 只出报告、**没有任何落库路径**（见 `useHubReadings`）。
  */
 export function AiHubWorkspace({ slug }: { slug: string }) {
   if (!slug) {
@@ -78,9 +75,12 @@ function HubWorkspace({ slug }: { slug: string }) {
   const [deleteTarget, setDeleteTarget] = useState<HubSession | null>(null);
   const autoPicked = useRef(false);
 
-  // 退出再进来还在 —— 每次改动都落盘（换本书不会串，键按 slug 分）
+  // 退出再进来还在 —— 每次改动都落盘；存不上要**说出来**（数据没丢、认知不能丢）
+  const storageWarned = useRef(false);
   useEffect(() => {
-    saveHubArchive(slug, archive);
+    if (saveHubArchive(slug, archive) || storageWarned.current) return;
+    storageWarned.current = true;
+    toast.error('本机存储写入失败（可能已满或被禁用），本次会话刷新后不会保留。');
   }, [slug, archive]);
 
   // 默认落在最新一章：用户说"接着写"时最自然的落点
@@ -183,6 +183,7 @@ function HubWorkspace({ slug }: { slug: string }) {
                 draft: res.draft ?? null,
                 contextUsed: res.context_used,
                 webSources: res.web_sources?.length ? res.web_sources : null,
+                webAttempted: res.web_attempted === true,
                 at,
               },
             ],

@@ -228,6 +228,9 @@ export const api = {
   exportBook: (book: string, format: 'txt' | 'docx', range?: string) =>
     downloadFile(`/books/${slugSegment(book)}/export`, { format, range }),
 
+  /** 整本 zip 备份（库 + meta + 导出件），换电脑拷这一份就够 */
+  backupBook: (book: string) => downloadFile(`/books/${slugSegment(book)}/backup`),
+
   /* --- 5.8 system（能力探测，Spec §12） --- */
   /** 只读无副作用；M1 无 `?refresh`，返回值恒为启动自检缓存 */
   getCapabilities: () => request<SystemCapabilities>('/system/capabilities'),

@@ -11,14 +11,15 @@ def test_save_recomputes_word_count(client, book):
     content = "张三握紧剑柄，指节的伤口又裂开了。"
     resp = client.patch(f"/api/chapters/{ch['id']}", json={"content": content})
     assert resp.status_code == 200
-    assert resp.json()["word_count"] == count_words(content)
-    assert resp.json()["word_count"] == len(content)
+    # 17 个字符里有 2 个标点：与前端同口径，标点不计字（见 utils/text 注释）
+    assert resp.json()["word_count"] == count_words(content) == 15
 
 
 def test_chinese_word_count_rules():
-    assert count_words("你好，世界。") == 6
+    assert count_words("你好，世界。") == 4  # 标点不计
     assert count_words("hello world") == 2
     assert count_words("<p>你好</p><p>世界</p>") == 4
+    assert count_words("，。！？、；：") == 0
     assert count_words("") == 0
     assert count_words("   \n  ") == 0
 

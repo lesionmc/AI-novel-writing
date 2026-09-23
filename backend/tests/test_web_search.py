@@ -45,8 +45,21 @@ def test_parses_results_and_unwraps_redirect(monkeypatch):
 
 
 def test_network_failure_degrades_to_empty(monkeypatch):
-    _patch_post(monkeypatch, exc=RuntimeError("offline"))
+    import httpx
+
+    _patch_post(monkeypatch, exc=httpx.ConnectError("offline"))
     assert web_search.web_search("任意查询") == []
+
+
+def test_non_httpx_bug_propagates(monkeypatch):
+    """非网络类异常（代码 bug）不许被降级吞掉 —— 审查修复项，防真 bug 伪装成断网。"""
+    _patch_post(monkeypatch, exc=ZeroDivisionError("bug"))
+    try:
+        web_search.web_search("任意查询")
+    except ZeroDivisionError:
+        pass
+    else:
+        raise AssertionError("应当抛出而不是降级")
 
 
 def test_garbage_page_degrades_to_empty(monkeypatch):

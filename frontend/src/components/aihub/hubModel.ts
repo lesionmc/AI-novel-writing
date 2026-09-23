@@ -39,6 +39,8 @@ export interface HubMessage {
   contextUsed?: AiChatContextUsed | null;
   /** 本轮 AI 实际用到的联网资料（渲染为可点开的来源） */
   webSources?: AiChatWebSource[] | null;
+  /** 本轮发起过联网检索但可能 0 命中（如实提示用） */
+  webAttempted?: boolean;
   /** 只读能力的报告（校对/审校/敏感词）。**没有草稿、没有确认按钮**。 */
   reading?: HubReading | null;
   /** 草稿处理结果；未处理时不带该字段 */

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { Icon } from '@/components/common/Icon';
@@ -30,7 +30,14 @@ export function AppShell({ children }: AppShellProps) {
         <OfflineBanner message="当前处于离线状态，本地功能照常可用；AI 相关操作暂不可用。" />
       ) : null}
 
-      <div className={styles.body}>{children ?? <Outlet />}</div>
+      {/* 懒加载 chunk 到达前只换内容区，导航壳保持在场（整壳重挂会闪白） */}
+      <div className={styles.body}>
+        {children ?? (
+          <Suspense fallback={<p className="pageSubtitle">加载中…</p>}>
+            <Outlet />
+          </Suspense>
+        )}
+      </div>
     </div>
   );
 }

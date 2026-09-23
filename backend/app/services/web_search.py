@@ -60,8 +60,12 @@ def web_search(query: str, max_results: int = _MAX_RESULTS) -> list[dict]:
             follow_redirects=True,
         )
         resp.raise_for_status()
-    except Exception as exc:  # noqa: BLE001 —— 降级是刻意的，见模块头
-        logger.info("web search failed", **log_fields(query=query[:60], err=type(exc).__name__))
+    except httpx.HTTPError as exc:
+        # 网络类失败（超时/连接被拒/5xx）：用户侧可恢复，降级为不联网
+        logger.warning(
+            "web search request failed",
+            **log_fields(query=query[:60], err=type(exc).__name__),
+        )
         return []
 
     out: list[dict] = []
@@ -84,7 +88,13 @@ def web_search(query: str, max_results: int = _MAX_RESULTS) -> list[dict]:
             )
             if len(out) >= max_results:
                 break
-    except Exception as exc:  # noqa: BLE001 —— 页面改版同样降级
-        logger.info("web search parse failed", **log_fields(query=query[:60], err=type(exc).__name__))
+    except Exception:
+        # 解析炸了多半是 DDG 改版或打包缺 lxml backend —— 降级但**按 warning + 堆栈**留证，
+        # 否则"永久 0 命中"会被前端归因成用户网络问题，排查方向从第一天就是错的
+        logger.warning(
+            "web search parse failed",
+            exc_info=True,
+            **log_fields(query=query[:60], status=resp.status_code, head=resp.text[:200]),
+        )
         return []
     return out

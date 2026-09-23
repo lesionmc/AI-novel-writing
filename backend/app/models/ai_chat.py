@@ -121,3 +121,5 @@ class AiChatResponse(BaseModel):
     context_used: AiChatContextUsed = Field(default_factory=AiChatContextUsed)
     #: 本轮实际联网检索并注入提示词的资料；空表 = 没搜或没搜到。
     web_sources: list[WebSource] = Field(default_factory=list)
+    #: 本轮确实发起过联网检索（哪怕 0 命中）—— 前端据此如实提示"搜了但没搜到"。
+    web_attempted: bool = False

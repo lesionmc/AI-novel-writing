@@ -23,6 +23,7 @@ export function ExportPanel({ slug, chapterCount }: ExportPanelProps) {
   const [format, setFormat] = useState<'txt' | 'docx'>('txt');
   const [range, setRange] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [backingUp, setBackingUp] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
   const run = async () => {
@@ -35,6 +36,19 @@ export function ExportPanel({ slug, chapterCount }: ExportPanelProps) {
       setError(e);
     } finally {
       setExporting(false);
+    }
+  };
+
+  const backup = async () => {
+    setBackingUp(true);
+    setError(null);
+    try {
+      await api.backupBook(slug);
+      toast.success('备份已开始下载 —— 这是一份完整一致的整本 zip（含设定与版本）');
+    } catch (e) {
+      setError(e);
+    } finally {
+      setBackingUp(false);
     }
   };
 
@@ -67,6 +81,14 @@ export function ExportPanel({ slug, chapterCount }: ExportPanelProps) {
           导出
         </Button>
       </div>
+      <p className={styles.sectionHint}>
+        导出的是「读的书稿」。要<b>备份或迁移整本书</b>（正文、设定库、版本历史、导出件），
+        点下面的备份按钮。注意：模型配置与 API Key 存在系统密钥环、<b>不随备份走</b>，
+        换电脑后需在新机器的「设置 → 模型配置」重新配一次。
+      </p>
+      <Button variant="secondary" icon="archive" loading={backingUp} onClick={() => void backup()}>
+        整本备份（.zip）
+      </Button>
     </div>
   );
 }

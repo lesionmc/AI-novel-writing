@@ -286,7 +286,7 @@ def test_use_web_plans_searches_and_injects_sources(client, book, fake_llm, monk
     monkeypatch.setattr("app.services.web_search.web_search", fake_search)
     fake = FakeLLMClient(
         chat_responses=[
-            json.dumps({"need_search": True, "query": "宋代城防 瓮城"}, ensure_ascii=False),
+            json.dumps({"need_search": "true", "query": "宋代城防 瓮城"}, ensure_ascii=False),  # 字符串布尔也要认
             json.dumps(
                 {"reply": "查到了：宋代城防普遍设瓮城（来源：宋代城防制度）。", "draft": None},
                 ensure_ascii=False,
@@ -306,6 +306,7 @@ def test_use_web_plans_searches_and_injects_sources(client, book, fake_llm, monk
     body = resp.json()
     assert calls == ["宋代城防 瓮城"]
     assert body["web_sources"][0]["url"] == "https://example.org/a"
+    assert body["web_attempted"] is True
     # 两次模型调用：第一次是检索计划，第二次带上了资料
     assert len(fake.chat_calls) == 2
     assert "瓮城与马面" in fake.chat_calls[1][0]["content"]
@@ -333,6 +334,7 @@ def test_use_web_planner_declines_skips_search(client, book, fake_llm, monkeypat
     )
     assert resp.status_code == 200, resp.text
     assert resp.json()["web_sources"] == []
+    assert resp.json()["web_attempted"] is False  # 模型说不搜 ≠ 搜了没搜到
     assert len(fake.chat_calls) == 2
 
 
