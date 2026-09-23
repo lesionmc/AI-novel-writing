@@ -17,7 +17,7 @@ import type {
  *     再由既有的自动保存链路去写）。
  * 所以这里没有任何 `invalidateQueries` —— 加了反而会让写作台无谓重取。
  *
- * 与 `useSetupChat` 的处理方式一致（同样是"AI 只出草稿、不落库"）。
+ * 处理方式与 AI 助手对话一致（同样是"AI 只出草稿、不落库"）。
  */
 
 interface ChapterScoped<V> {

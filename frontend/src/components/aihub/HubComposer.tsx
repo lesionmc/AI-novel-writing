@@ -6,6 +6,9 @@ import styles from './hub.module.css';
 export interface HubComposerProps {
   actionKey: string;
   onActionChange: (key: string) => void;
+  /** 联网开关（本轮是否允许 AI 检索外部实时资料） */
+  useWeb: boolean;
+  onUseWebChange: (v: boolean) => void;
   onSend: (text: string) => void;
   pending: boolean;
   /** 还没配模型（页面级状态） */
@@ -31,6 +34,8 @@ const PLACEHOLDER = '说点什么，比如「帮我加一个反派，跟我哥�
 export function HubComposer({
   actionKey,
   onActionChange,
+  useWeb,
+  onUseWebChange,
   onSend,
   pending,
   disabled,
@@ -78,6 +83,15 @@ export function HubComposer({
             {a.label}
           </button>
         ))}
+        <button
+          type="button"
+          className={[styles.actionChip, useWeb ? styles.actionChipActive : ''].join(' ')}
+          title="打开后，AI 会自己判断这句话要不要联网查外部资料（时事 / 数据 / 专业知识），查到会附来源"
+          aria-pressed={useWeb}
+          onClick={() => onUseWebChange(!useWeb)}
+        >
+          联网
+        </button>
       </div>
 
       <div className={styles.composerRow}>

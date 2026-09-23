@@ -269,3 +269,111 @@ def test_chat_empty_reply_is_parse_failure(client, book, fake_llm):
     assert resp.status_code == 400
     assert resp.json()["error"]["code"] == "JSON_PARSE_FAILED"
     assert "Traceback" not in resp.text
+
+
+# ------------------------------------------------------------- 联网检索回路
+def test_use_web_plans_searches_and_injects_sources(client, book, fake_llm, monkeypatch):
+    """开联网开关：先让模型出检索计划 → 搜索 → 资料注入最终提示词并回传来源。"""
+    _add_provider(client)
+    calls: list[str] = []
+
+    def fake_search(query, max_results=5):
+        calls.append(query)
+        return [
+            {"title": "宋代城防制度", "url": "https://example.org/a", "snippet": "瓮城与马面……"},
+        ]
+
+    monkeypatch.setattr("app.services.web_search.web_search", fake_search)
+    fake = FakeLLMClient(
+        chat_responses=[
+            json.dumps({"need_search": True, "query": "宋代城防 瓮城"}, ensure_ascii=False),
+            json.dumps(
+                {"reply": "查到了：宋代城防普遍设瓮城（来源：宋代城防制度）。", "draft": None},
+                ensure_ascii=False,
+            ),
+        ]
+    )
+    fake_llm(fake)
+
+    resp = client.post(
+        f"/api/books/{book}/ai/chat",
+        json={
+            "messages": [{"role": "user", "content": "宋代城墙的瓮城一般什么形制？"}],
+            "use_web": True,
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert calls == ["宋代城防 瓮城"]
+    assert body["web_sources"][0]["url"] == "https://example.org/a"
+    # 两次模型调用：第一次是检索计划，第二次带上了资料
+    assert len(fake.chat_calls) == 2
+    assert "瓮城与马面" in fake.chat_calls[1][0]["content"]
+
+
+def test_use_web_planner_declines_skips_search(client, book, fake_llm, monkeypatch):
+    """模型判断不需要联网（打招呼/纯创作）→ 一次都不搜，正常回话。"""
+    _add_provider(client)
+
+    def boom(*_a, **_k):
+        raise AssertionError("不该触发搜索")
+
+    monkeypatch.setattr("app.services.web_search.web_search", boom)
+    fake = FakeLLMClient(
+        chat_responses=[
+            json.dumps({"need_search": False, "query": ""}),
+            json.dumps({"reply": "早，今天想推进哪块？", "draft": None}, ensure_ascii=False),
+        ]
+    )
+    fake_llm(fake)
+
+    resp = client.post(
+        f"/api/books/{book}/ai/chat",
+        json={"messages": [{"role": "user", "content": "你好"}], "use_web": True},
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["web_sources"] == []
+    assert len(fake.chat_calls) == 2
+
+
+def test_search_plan_parse_failure_degrades_to_no_search(client, book, fake_llm, monkeypatch):
+    """检索计划解析失败 → 降级为不联网，主回答照常。"""
+    _add_provider(client)
+    monkeypatch.setattr(
+        "app.services.web_search.web_search",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("不该触发搜索")),
+    )
+    fake = FakeLLMClient(
+        chat_responses=[
+            "not json at all",
+            "still not json",
+            json.dumps({"reply": "好，接着写。", "draft": None}, ensure_ascii=False),
+        ]
+    )
+    fake_llm(fake)
+    resp = client.post(
+        f"/api/books/{book}/ai/chat",
+        json={"messages": [{"role": "user", "content": "继续"}], "use_web": True},
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["reply"] == "好，接着写。"
+
+
+def test_chat_without_use_web_never_searches(client, book, fake_llm, monkeypatch):
+    """没开开关：即使模型想搜也不给搜（联网是作者显式授权）。"""
+    _add_provider(client)
+
+    def boom(*_a, **_k):
+        raise AssertionError("不该触发搜索")
+
+    monkeypatch.setattr("app.services.web_search.web_search", boom)
+    fake_llm(
+        FakeLLMClient(
+            chat_responses=[json.dumps({"reply": "嗯。", "draft": None}, ensure_ascii=False)]
+        )
+    )
+    resp = client.post(
+        f"/api/books/{book}/ai/chat",
+        json={"messages": [{"role": "user", "content": "最新网文行情怎么样？"}]},
+    )
+    assert resp.status_code == 200, resp.text

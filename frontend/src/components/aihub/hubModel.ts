@@ -15,6 +15,7 @@ import type {
   AiChatDraftCharacter,
   AiChatDraftOutlineNode,
   AiChatDraftWorldEntry,
+  AiChatWebSource,
   ChatRole,
 } from '@/types/api';
 import type { HubReading } from './hubReading';
@@ -36,6 +37,8 @@ export interface HubMessage {
   content: string;
   draft?: AiChatDraft | null;
   contextUsed?: AiChatContextUsed | null;
+  /** 本轮 AI 实际用到的联网资料（渲染为可点开的来源） */
+  webSources?: AiChatWebSource[] | null;
   /** 只读能力的报告（校对/审校/敏感词）。**没有草稿、没有确认按钮**。 */
   reading?: HubReading | null;
   /** 草稿处理结果；未处理时不带该字段 */
@@ -79,6 +82,8 @@ export const HUB_ACTIONS: HubAction[] = [
   { key: 'world', label: '世界观', mode: 'chat', intent: 'world_entries', needsChapter: false, needsModel: true, hint: '地点、势力、规则、道具' },
   { key: 'outline', label: '大纲', mode: 'chat', intent: 'outline_nodes', needsChapter: false, needsModel: true, hint: '往后的情节怎么走' },
   { key: 'continue', label: '写正文', mode: 'chat', intent: 'continue', needsChapter: true, needsModel: true, hint: '接着某章往下写一段' },
+  { key: 'expand', label: '扩写', mode: 'chat', intent: 'expand', needsChapter: true, needsModel: true, hint: '把这段写得更丰满' },
+  { key: 'plot', label: '情节方向', mode: 'chat', intent: 'plot_directions', needsChapter: true, needsModel: true, hint: '接下来可以往哪几个方向走' },
   { key: 'proofread', label: '校对', mode: 'proofread', intent: '', needsChapter: true, needsModel: true, hint: '挑出这一章的错别字、病句、前后矛盾' },
   { key: 'consistency', label: '审校', mode: 'consistency', intent: '', needsChapter: false, needsModel: true, hint: '通读全书，找前后对不上的地方' },
   { key: 'sensitive', label: '敏感词', mode: 'sensitive', intent: '', needsChapter: false, needsModel: false, hint: '按本地词库扫全书（不联网、不花模型额度）' },
@@ -93,11 +98,10 @@ export function actionOf(key: string): HubAction {
   return HUB_ACTIONS.find((a) => a.key === key) ?? HUB_ACTIONS[0];
 }
 
-/** 选好作品后，会话里的第一句话（AI 说的）。**本地预置，不发请求**。 */
+/** 选好作品后，会话里的第一句话（AI 说的）。**本地预置，不发请求**；刻意短，不做功能清单。 */
 export const HUB_WELCOME =
-  '我是你的写作搭子。这本书的设定、人物、伏笔和大纲我都记着，你直接说要干什么就行——' +
-  '想加个人、排排后面的情节、接着往下写一段都可以；也能让我校对某一章、通读全书挑前后矛盾，' +
-  '或者用本地词库扫一遍敏感词。这三样只出报告，不会动你的稿子。';
+  '我在。这本书的设定、人物、伏笔和大纲我都记着，你直接说要干什么就行。' +
+  '要查书外面的实时资料，把下面的「联网」打开再问。';
 
 export function newSessionId(): string {
   return `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
@@ -248,6 +252,23 @@ export function isHubMessage(v: unknown): v is HubMessage {
   if (!row) return false;
   if (row.role !== 'user' && row.role !== 'assistant') return false;
   return typeof row.content === 'string';
+}
+
+/** 联网来源归一：URL 必须是 http(s)，否则整条丢弃（防 `javascript:` 之类注入） */
+export function parseWebSources(v: unknown): AiChatWebSource[] {
+  if (!Array.isArray(v)) return [];
+  const out: AiChatWebSource[] = [];
+  for (const item of v) {
+    const row = asRecord(item);
+    const url = asText(row?.url);
+    if (!row || !url || !/^https?:\/\//i.test(url)) continue;
+    out.push({
+      title: asText(row.title) ?? url,
+      url,
+      snippet: typeof row.snippet === 'string' ? row.snippet.slice(0, 300) : '',
+    });
+  }
+  return out.slice(0, 5);
 }
 
 export { asRecord, asText };

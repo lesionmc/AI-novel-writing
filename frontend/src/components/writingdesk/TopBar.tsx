@@ -163,7 +163,7 @@ export function TopBar({
                   label: '跟 AI 聊着建人物和世界观',
                   icon: 'sparkles',
                   onSelect: () =>
-                    navigate(`/book/${slugSegment(slug)}/settings?ai=1`),
+                    navigate(`/book/${slugSegment(slug)}/chat`),
                 },
                 {
                   key: 'recall',

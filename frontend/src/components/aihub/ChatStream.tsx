@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Icon } from '@/components/common/Icon';
 import { DraftCard } from './DraftCard';
 import { ReadingCard } from './ReadingCard';
-import { parseAiChatDraft } from './hubModel';
+import { parseAiChatDraft, parseWebSources } from './hubModel';
 import { parseHubReading } from './hubReading';
 import type { HubMessage } from './hubModel';
 import styles from './hub.module.css';
@@ -61,6 +61,7 @@ export function ChatStream({
       {messages.map((m, index) => {
         const draft = m.role === 'assistant' ? parseAiChatDraft(m.draft) : null;
         const reading = m.role === 'assistant' ? parseHubReading(m.reading) : null;
+        const sources = m.role === 'assistant' ? parseWebSources(m.webSources) : [];
         return (
           <div
             key={index}
@@ -80,6 +81,23 @@ export function ChatStream({
               >
                 {m.content}
               </div>
+              {sources.length > 0 ? (
+                <div className={styles.webSources}>
+                  <Icon name="world" size={16} />
+                  <span>联网来源</span>
+                  {sources.map((s) => (
+                    <a
+                      key={s.url}
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={s.snippet || s.title}
+                    >
+                      {s.title}
+                    </a>
+                  ))}
+                </div>
+              ) : null}
               {draft ? (
                 <DraftCard
                   slug={slug}

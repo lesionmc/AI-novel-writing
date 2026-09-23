@@ -50,8 +50,6 @@ import type {
   SaveChapterResponse,
   SearchHit,
   SensitiveAuditResult,
-  SetupChatRequest,
-  SetupChatResponse,
   SystemCapabilities,
   TestDraftRequest,
   TestDraftResponse,
@@ -252,19 +250,6 @@ export const api = {
     }),
 
   /* --- 5.10 ai（AI 对话式建设定，M1 增项） --- */
-  /**
-   * 对话式建设定：**无状态**（每轮带全量 messages）、**不落库**。
-   * `done:true` 且带 `draft` 时，前端切「草稿确认」；确认后才由前端逐条调
-   * `createCharacter` / `createWorldEntry` 入库（AI 绝不直接写）。
-   * 真后端实测单轮 4s–34s（轮次越靠后越长），超时放到 120s。
-   */
-  setupChat: (payload: SetupChatRequest) =>
-    request<SetupChatResponse>('/ai/setup-chat', {
-      method: 'POST',
-      body: payload,
-      timeoutMs: 120000,
-    }),
-
   /* --- 5.11 audit（质检：去 AI 味 / 敏感词 / 词库状态，M1 增项） --- */
   /**
    * 去 AI 味（**单章**）。先跑本地规则（套话 / 情感标签 / 形容词密度），

@@ -72,6 +72,8 @@ function HubWorkspace({ slug }: { slug: string }) {
   const [archive, setArchive] = useState<HubArchive>(() => initialArchive(slug));
   const [actionKey, setActionKey] = useState('auto');
   const [chapterId, setChapterId] = useState<number | null>(null);
+  /** 联网开关：开着时服务端会让模型判断要不要实时检索外部资料 */
+  const [useWeb, setUseWeb] = useState(false);
   const [writingIndex, setWritingIndex] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<HubSession | null>(null);
   const autoPicked = useRef(false);
@@ -166,6 +168,7 @@ function HubWorkspace({ slug }: { slug: string }) {
         messages: history.map((m) => ({ role: m.role, content: m.content })),
         chapter_id: chapterId,
         intent: actionKey === 'auto' ? null : actionOf(actionKey).intent,
+        use_web: useWeb,
       },
       {
         onSuccess: (res) => {
@@ -179,6 +182,7 @@ function HubWorkspace({ slug }: { slug: string }) {
                 content: res.reply,
                 draft: res.draft ?? null,
                 contextUsed: res.context_used,
+                webSources: res.web_sources?.length ? res.web_sources : null,
                 at,
               },
             ],
@@ -263,6 +267,8 @@ function HubWorkspace({ slug }: { slug: string }) {
         <HubComposer
           actionKey={actionKey}
           onActionChange={setActionKey}
+          useWeb={useWeb}
+          onUseWebChange={setUseWeb}
           onSend={send}
           pending={chat.isPending || readings.busy}
           disabled={noModel}

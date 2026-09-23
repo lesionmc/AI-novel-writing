@@ -17,7 +17,6 @@ from app.logging_config import get_logger, log_fields, setup_logging
 from app.middlewares import RequestContextMiddleware
 from app.routers import (
     ai_chat,
-    ai_setup,
     audit,
     books,
     chapters,
@@ -73,7 +72,6 @@ app.include_router(providers.router)
 app.include_router(export.router)
 app.include_router(system.router)
 app.include_router(topics.router)
-app.include_router(ai_setup.router)
 app.include_router(ai_chat.router)
 app.include_router(writing_ai.router)
 

@@ -598,3 +598,28 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* 联网来源：AI 气泡下方的一行小链接（title 悬停看摘要） */
+.webSources {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 0 4px;
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+.webSources a {
+  color: var(--color-primary);
+  text-decoration: none;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.webSources a:hover {
+  text-decoration: underline;
+}

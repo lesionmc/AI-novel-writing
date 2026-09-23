@@ -11,7 +11,7 @@
 
 import type { AiChatContextUsed, AiChatDraft } from '@/types/api';
 import { makeArchive } from '@/lib/localArchive';
-import { asRecord, asText, isHubMessage, parseAiChatDraft } from './hubModel';
+import { asRecord, asText, isHubMessage, parseAiChatDraft, parseWebSources } from './hubModel';
 import { parseHubReading } from './hubReading';
 import type { HubMessage, HubSession } from './hubModel';
 
@@ -55,6 +55,7 @@ function parseStoredMessage(v: unknown): HubMessage | null {
     // 过一遍校验器才留下：形状不对就当没有草稿（否则会渲染出一张空卡片）
     draft: parseAiChatDraft(rawDraft) ? (rawDraft as AiChatDraft) : null,
     contextUsed: parseContextUsed(row.contextUsed),
+    webSources: parseWebSources(row.webSources),
     // 只读报告同理：形状不对就整块丢掉（列表还会被截到上限，见 hubReading）
     reading: parseHubReading(row.reading),
     draftState,

@@ -26,7 +26,7 @@ export function SkeletonStep({ slug, facts }: SkeletonStepProps) {
         <Button
           variant="primary"
           icon="sparkles"
-          onClick={() => navigate(bookPath(slug, '/settings', 'ai=1'))}
+          onClick={() => navigate(bookPath(slug, '/chat'))}
         >
           跟 AI 聊着把设定建起来
         </Button>

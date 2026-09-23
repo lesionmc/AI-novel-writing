@@ -1,10 +1,14 @@
-"""AI 对话工作台服务：一个 AI 做完全部，且**有记忆**。
+"""AI 对话工作台服务：一个 AI 做完全部，且**有记忆**（必要时还能联网）。
 
 ## 为什么上下文不在这里拼
 `services/writing_context.py` 是本项目「记忆包」的**唯一组装点**（设定库 + 本章人物现状
-+ 未回收伏笔 + 本章大纲 + 上一章摘要 + 最近正文），现有 5 个写作 AI 能力共用它。
++ 未回收伏笔 + 本章大纲 + 上一章摘要 + 最近正文），所有写作 AI 能力共用它。
 本服务同样只调 `writing_context.load()`，**一句上下文都不自己拼** ——
 否则「到底喂了什么给模型」会散落成两份答案（双真源，本项目已因它吃过亏，见 ADR-006）。
+
+## 联网检索（use_web）
+两段式：先让模型判断「这句话需不需要查外部资料、该搜什么」，需要才发一次
+DuckDuckGo 检索并把结果注入最终提示词。搜索失败一律降级为不联网（见 web_search 模块头）。
 
 ## 红线
 本服务**不写任何库表**。AI 产出的`characters` / `world_entries` / `outline_nodes` 都是草稿，
@@ -22,10 +26,13 @@ from app.models.ai_chat import (
     AiChatDraft,
     AiChatRequest,
     AiChatResponse,
+    ChatMessageIn,
+    DraftCharacter,
+    DraftWorldEntry,
+    WebSource,
 )
-from app.models.ai_setup import ChatMessageIn, DraftCharacter, DraftWorldEntry
 from app.repositories import chapter_repo
-from app.services import writing_context
+from app.services import web_search, writing_context
 from app.services.llm import registry as llm_registry
 from app.services.llm.json_chat import chat_json
 from app.services.llm.prompts import build_prompt
@@ -51,10 +58,28 @@ _INTENT_TEXT = {
     "world_entries": "他想整理世界观（地点 / 势力 / 规则 / 道具）。",
     "outline_nodes": "他想排大纲（总纲 / 卷纲 / 章节卡，往后写什么）。",
     "continue": "他想接着往下写一段正文（产出草稿，由他自己删改）。",
+    "expand": (
+        "他想把一段已有文字**扩写**得更丰满（一般是他贴来的原句，或本章最近正文）。"
+        "产出 `prose` 草稿：保留原意与视角，补细节、动作、氛围，不要另起新剧情。"
+    ),
+    "plot_directions": (
+        "他想看**接下来可以往哪几个方向走**。在 `reply` 里给 3 个彼此明显不同的方向，"
+        "每个两三句话说清冲突与代价，按你的推荐度排序；`draft` 留 null "
+        "（他看中哪个，会再让你展开成章节卡）。"
+    ),
 }
 
 #: 没有指定章节时用的"空章节"：设定库照常注入，但不带任何本章上下文。
 _NO_CHAPTER = {"id": 0, "seq": 0, "title": "", "content": ""}
+
+#: 联网开关打开时的前置判断：要不要搜、搜什么。刻意短，一次小调用。
+_SEARCH_PLAN_PROMPT = (
+    "你是检索规划器。作者的最后一句话如下，他打开了联网搜索开关。\n"
+    "判断这句话是否依赖**书外部的实时/事实信息**（时事、资料、数据、专业知识、"
+    "市场行情等）；纯虚构创作类请求（续写、建人物、排大纲）和打招呼**不需要**联网。\n"
+    '只输出 JSON：{{"need_search": true/false, "query": "适合搜索引擎的中文关键词，不超过30字"}}\n'
+    "不需要联网时 query 给空字符串。\n\n作者的话：{question}"
+)
 
 
 def _text(value: object, limit: int = 20000) -> str | None:
@@ -157,6 +182,28 @@ def _draft_from(raw: object) -> AiChatDraft | None:
     return None
 
 
+def _format_web_sources(sources: list[dict]) -> str:
+    if not sources:
+        return "（本轮没有联网资料）"
+    lines = []
+    for i, s in enumerate(sources, 1):
+        snippet = s.get("snippet") or ""
+        lines.append(f"{i}. {s.get('title', '')}｜{s.get('url', '')}\n   {snippet}")
+    return "\n".join(lines)
+
+
+def _plan_web_search(client: object, question: str) -> str | None:
+    """让模型决定要不要搜、搜什么。判断失败 = 不搜（宁可不联网）。"""
+    try:
+        plan, _ = chat_json(client, _SEARCH_PLAN_PROMPT.format(question=question[:500]))  # type: ignore[arg-type]
+    except JSONParseFailedError:
+        return None
+    if plan.get("need_search") is True:
+        query = str(plan.get("query") or "").strip()
+        return query[:60] or None
+    return None
+
+
 def chat(book: str, payload: AiChatRequest) -> AiChatResponse:
     """一轮对话。**无写入副作用**；记忆包在服务端组装。"""
     registry = get_registry()
@@ -174,9 +221,21 @@ def chat(book: str, payload: AiChatRequest) -> AiChatResponse:
 
     client = llm_registry.require_any_client("content")
     intent = str(payload.intent or "auto").strip() or "auto"
+
+    sources: list[dict] = []
+    if payload.use_web:
+        last_user = next(
+            (m.content for m in reversed(payload.messages) if m.role == "user"), ""
+        )
+        query = _plan_web_search(client, last_user)
+        if query:
+            sources = web_search.web_search(query)
+            logger.info("ai chat web search", **log_fields(slug=book, query=query[:60], hits=len(sources)))
+
     variables = ctx.variables() | {
         "conversation": _conversation_text(payload.messages),
         "intent": _INTENT_TEXT.get(intent, _INTENT_TEXT["auto"]),
+        "web_results": _format_web_sources(sources),
     }
     prompt = build_prompt("ai_chat", variables, provider=client.provider)
     data, raw = chat_json(client, prompt)
@@ -196,7 +255,13 @@ def chat(book: str, payload: AiChatRequest) -> AiChatResponse:
             turns=len(payload.messages),
             has_draft=draft is not None,
             draft_kind=draft.kind if draft else None,
+            web_hits=len(sources),
             chars=len(reply),
         ),
     )
-    return AiChatResponse(reply=reply, draft=draft, context_used=context_used)
+    return AiChatResponse(
+        reply=reply,
+        draft=draft,
+        context_used=context_used,
+        web_sources=[WebSource(**s) for s in sources],
+    )
