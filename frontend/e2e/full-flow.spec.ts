@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 
 /**
  * 全流程 E2E（模拟真人操作）。前置：
@@ -17,6 +17,24 @@ import { expect, test, type Page } from '@playwright/test';
 
 const BOOK = `自动化测试之书${Date.now().toString(36)}`;
 const SLUG_PATH = `/book/${encodeURIComponent(BOOK)}`;
+const MOCK_BASE = 'http://127.0.0.1:8899/v1';
+
+interface ProviderRow {
+  id: number;
+  model?: string;
+  base_url?: string;
+}
+
+/** 删除历次/本次运行注入的 mock 模型配置（字段是 model/base_url，没有 name） */
+async function purgeMockProviders(request: APIRequestContext) {
+  const res = await request.get('/api/providers');
+  if (!res.ok()) return;
+  for (const p of (await res.json()) as ProviderRow[]) {
+    if ((p.base_url ?? '') === MOCK_BASE || (p.model ?? '').includes('mock')) {
+      await request.delete(`/api/providers/${p.id}`);
+    }
+  }
+}
 
 async function createBook(page: Page) {
   await page.goto('/');
@@ -31,12 +49,17 @@ async function addMockModel(page: Page) {
   await page.getByRole('button', { name: '添加模型' }).first().click();
   const dialog = page.getByRole('dialog', { name: '添加模型' });
   await dialog.getByLabel('服务商').selectOption('custom');
-  await dialog.getByLabel('接入地址').fill('http://127.0.0.1:8899/v1');
+  await dialog.getByLabel('接入地址').fill(MOCK_BASE);
   await dialog.getByLabel(/密钥|API Key/).first().fill('mock-key');
   await dialog.getByLabel('模型名称').fill('mock-gpt');
   await dialog.getByRole('button', { name: '保存' }).click();
   await expect(page.getByText(/已添加模型|模型配置已保存/)).toBeVisible({ timeout: 15_000 });
 }
+
+test.afterAll(async ({ request }) => {
+  // 本次运行注入的 mock 模型必须带走 —— 否则用户打开真实界面会以为「AI 只会说模板话」
+  await purgeMockProviders(request);
+});
 
 test('全流程：建书 → AI 对话 → 写作 → 大纲 → 质检 → 导出 → 删书', async ({ page, request }) => {
   test.setTimeout(420_000);
@@ -50,14 +73,7 @@ test('全流程：建书 → AI 对话 → 写作 → 大纲 → 质检 → 导�
       }
     }
   }
-  const providers = await request.get('/api/providers');
-  if (providers.ok()) {
-    for (const p of (await providers.json()) as { id?: number; name?: string }[]) {
-      if (p.id !== undefined && (p.name ?? '').includes('mock')) {
-        await request.delete(`/api/providers/${p.id}`);
-      }
-    }
-  }
+  await purgeMockProviders(request);
 
   await test.step('建书 + 配模型', async () => {
     await createBook(page);
