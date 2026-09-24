@@ -130,8 +130,13 @@ def test_json_endpoint_bad_payload_degrades(client, fake_client):
     assert web_search.web_search("测试") == []
 
 
-def test_bad_proxy_value_degrades_not_500(fake_client, monkeypatch):
-    """代理地址写错（httpx 构造抛 ValueError）→ 降级空结果，不能把主对话打死。"""
+def test_bad_proxy_value_degrades_not_500(client, fake_client):
+    """代理地址写错（httpx 构造抛 ValueError）→ 降级空结果，不能把主对话打死。
+
+    必须挂 `client` fixture：它把 project_root 指到 tmp 并重置全局库单例，
+    否则 save_config 会**写进真实的 data/app.db**（曾把非法值漏进生产库，
+    导致设置页 GET /web-search 响应模型校验 500）。
+    """
     web_search.save_config(None, "not-a-valid-proxy-url")
     fake_client(exc=ValueError("unknown proxy scheme"))
     assert web_search.web_search("测试") == []
