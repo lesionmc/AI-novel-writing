@@ -3,6 +3,7 @@ import { useBook, useStats } from '@/hooks/queries';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ErrorBar } from '@/components/common/ErrorBar';
 import { SkeletonBlock } from '@/components/common/Skeleton';
+import { PageHeader } from '@/components/common/PageHeader';
 import { StatCards } from '@/components/stats/StatCards';
 import { DailyChart } from '@/components/stats/DailyChart';
 import { ChapterProgressBar } from '@/components/stats/ChapterProgressBar';
@@ -23,12 +24,7 @@ export function StatsPage() {
 
   return (
     <main className="pageContent">
-      <header className="pageHeader">
-        <div>
-          <h1 className="pageTitle">统计</h1>
-          <p className="pageSubtitle">看看这本书写了多少、写了多久。数字只做参考，写得顺就好。</p>
-        </div>
-      </header>
+      <PageHeader title="统计" subtitle="看看这本书写了多少、写了多久。数字只做参考，写得顺就好。" />
 
       {query.isPending ? (
         <div className={styles.cards} aria-busy="true">

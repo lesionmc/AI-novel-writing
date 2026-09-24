@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { bookPath } from '@/lib/slug';
 import { Button } from '@/components/common/Button';
+import { PageHeader } from '@/components/common/PageHeader';
 import { ErrorBar } from '@/components/common/ErrorBar';
 import { Icon } from '@/components/common/Icon';
 import { SkeletonRows } from '@/components/common/Skeleton';
@@ -87,23 +88,25 @@ export function StartGuide({ slug }: { slug: string }) {
 
   return (
     <main className="pageContent">
-      <header className={styles.hero}>
-        <div>
-          <h1 className="pageTitle">开书清单</h1>
-          <p className="pageSubtitle">
+      <PageHeader
+        title="开书清单"
+        subtitle={
+          <>
             {book ? `《${book.title}》` : '这部作品'}
             正式动笔前先把下面三件事做了，后面写起来不容易前后打架。做完哪一步算哪一步，都能跳过。
-          </p>
-        </div>
-        <div className={styles.heroActions}>
-          <Button variant="ghost" icon="chevronLeft" onClick={() => navigate('/')}>
-            返回书库
-          </Button>
-          <Button variant="accent" icon="chapter" onClick={() => navigate(bookPath(slug, '/desk'))}>
-            直接开始写
-          </Button>
-        </div>
-      </header>
+          </>
+        }
+        actions={
+          <div className={styles.heroActions}>
+            <Button variant="ghost" icon="chevronLeft" onClick={() => navigate('/')}>
+              返回书库
+            </Button>
+            <Button variant="accent" icon="chapter" onClick={() => navigate(bookPath(slug, '/desk'))}>
+              直接开始写
+            </Button>
+          </div>
+        }
+      />
 
       {loading ? (
         <div className={styles.stateBox} aria-busy="true">

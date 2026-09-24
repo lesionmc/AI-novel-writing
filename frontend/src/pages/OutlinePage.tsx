@@ -8,6 +8,7 @@ import {
   useUpdateOutline,
 } from '@/hooks/mutations/outlines';
 import { Button } from '@/components/common/Button';
+import { PageHeader } from '@/components/common/PageHeader';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ErrorBar } from '@/components/common/ErrorBar';
@@ -183,17 +184,15 @@ function OutlineWorkspace({ slug }: { slug: string }) {
 
   return (
     <main className="pageContent">
-      <header className="pageHeader">
-        <div>
-          <h1 className="pageTitle">大纲</h1>
-          <p className="pageSubtitle">
-            先立总纲，再拆卷纲，最后落到章节卡。写到哪一章，心里都有张地图。
-          </p>
-        </div>
-        <Button variant="primary" icon="plus" onClick={addTotal} loading={create.isPending}>
-          添加总纲
-        </Button>
-      </header>
+      <PageHeader
+        title="大纲"
+        subtitle="先立总纲，再拆卷纲，最后落到章节卡。写到哪一章，心里都有张地图。"
+        actions={
+          <Button variant="primary" icon="plus" onClick={addTotal} loading={create.isPending}>
+            添加总纲
+          </Button>
+        }
+      />
 
       {query.isPending ? (
         <div className={styles.detailPane}>

@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useCharacters, useForeshadows, useWorldEntries } from '@/hooks/queries';
 import { Button } from '@/components/common/Button';
+import { PageHeader } from '@/components/common/PageHeader';
 import { EntryBanner } from '@/components/common/EntryBanner';
 import { Tabs } from '@/components/settings/Tabs';
 import type { TabItem } from '@/components/settings/Tabs';
@@ -73,26 +74,23 @@ export function SettingsLibraryPage() {
 
   return (
     <main className="pageContent">
-      <header className="pageHeader">
-        <div>
-          <h1 className="pageTitle">设定库</h1>
-          <p className="pageSubtitle">
-            把人物、世界和你埋下的线索集中记在这里。写得越具体，写作台右栏「本章提醒」就越准。
-          </p>
-        </div>
-        {/* QA L8：写作台有「返回书库」按钮，设定库只有顶栏一个不起眼的链接 —— 统一加一个。
-            用 ghost 而不是 secondary：本页的主行动是各 Tab 里的「新建人物 / 新建词条」，
-            页头这个按钮只是"离开"通道。做成带边框的次级按钮会跟主行动抢注意力，
-            也和「开书清单」页头（ghost + accent 主行动）的约定不一致。 */}
-        <div className={styles.headerActions}>
-          <Button variant="ghost" icon="users" onClick={() => setGraphOpen(true)}>
-            关系图谱
-          </Button>
-          <Button variant="ghost" icon="chevronLeft" onClick={() => navigate('/')}>
-            返回书库
-          </Button>
-        </div>
-      </header>
+      <PageHeader
+        title="设定库"
+        subtitle="把人物、世界和你埋下的线索集中记在这里。写得越具体，写作台右栏「本章提醒」就越准。"
+        actions={
+          /* QA L8：写作台有「返回书库」按钮，设定库只有顶栏一个不起眼的链接 —— 统一加一个。
+             用 ghost 而不是 secondary：本页的主行动是各 Tab 里的「新建人物 / 新建词条」，
+             页头这个按钮只是"离开"通道，做成带边框的次级按钮会跟主行动抢注意力。 */
+          <div className={styles.headerActions}>
+            <Button variant="ghost" icon="users" onClick={() => setGraphOpen(true)}>
+              关系图谱
+            </Button>
+            <Button variant="ghost" icon="chevronLeft" onClick={() => navigate('/')}>
+              返回书库
+            </Button>
+          </div>
+        }
+      />
 
       <div className={styles.entryWrap}>
         <EntryBanner

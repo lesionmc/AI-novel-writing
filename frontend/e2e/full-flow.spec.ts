@@ -19,10 +19,15 @@ const BOOK = `自动化测试之书${Date.now().toString(36)}`;
 const SLUG_PATH = `/book/${encodeURIComponent(BOOK)}`;
 const MOCK_BASE = 'http://127.0.0.1:8899/v1';
 
+/** 运行前用户的默认模型 id，afterAll 时还原 */
+let originalDefaultId: number | null = null;
+
 interface ProviderRow {
   id: number;
   model?: string;
   base_url?: string;
+  is_default?: number;
+  enabled?: number;
 }
 
 /** 删除历次/本次运行注入的 mock 模型配置（字段是 model/base_url，没有 name） */
@@ -34,6 +39,16 @@ async function purgeMockProviders(request: APIRequestContext) {
       await request.delete(`/api/providers/${p.id}`);
     }
   }
+}
+
+/** 用户可能已配真实模型且它就是默认 —— 测试必须把 mock 顶成默认、跑完再还回去 */
+async function findOriginalDefault(request: APIRequestContext): Promise<number | null> {
+  const res = await request.get('/api/providers');
+  if (!res.ok()) return null;
+  const list = (await res.json()) as ProviderRow[];
+  const isReal = (p: ProviderRow) => (p.base_url ?? '') !== MOCK_BASE && !(p.model ?? '').includes('mock');
+  const def = list.find((p) => p.is_default === 1 && isReal(p));
+  return def ? def.id : null;
 }
 
 async function createBook(page: Page) {
@@ -59,6 +74,10 @@ async function addMockModel(page: Page) {
 test.afterAll(async ({ request }) => {
   // 本次运行注入的 mock 模型必须带走 —— 否则用户打开真实界面会以为「AI 只会说模板话」
   await purgeMockProviders(request);
+  // 把「默认模型」还给用户自己的配置（仅当它原本就是默认；PATCH 必须包 data，否则静默空体失败）
+  if (originalDefaultId !== null) {
+    await request.patch(`/api/providers/${originalDefaultId}`, { data: { is_default: true } });
+  }
 });
 
 test('全流程：建书 → AI 对话 → 写作 → 大纲 → 质检 → 导出 → 删书', async ({ page, request }) => {
@@ -74,10 +93,15 @@ test('全流程：建书 → AI 对话 → 写作 → 大纲 → 质检 → 导�
     }
   }
   await purgeMockProviders(request);
+  originalDefaultId = await findOriginalDefault(request);
 
   await test.step('建书 + 配模型', async () => {
     await createBook(page);
     await addMockModel(page);
+    // 用户可能已配真实模型且它是默认 —— 不顶替的话对话会打到真模型上（花钱且断言必挂）
+    const list = (await (await request.get('/api/providers')).json()) as ProviderRow[];
+    const mock = list.find((p) => (p.base_url ?? '') === MOCK_BASE);
+    if (mock) await request.patch(`/api/providers/${mock.id}`, { data: { is_default: true } });
   });
 
   await test.step('AI 流式对话 + 草稿确认入库', async () => {

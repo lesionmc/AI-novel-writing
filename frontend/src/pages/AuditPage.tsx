@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBook } from '@/hooks/queries';
 import { EmptyState } from '@/components/common/EmptyState';
+import { PageHeader } from '@/components/common/PageHeader';
 import { ConsistencySection } from '@/components/audit/ConsistencySection';
 import { AiFlavorSection } from '@/components/audit/AiFlavorSection';
 import { SensitiveSection } from '@/components/audit/SensitiveSection';
@@ -39,15 +40,10 @@ export function AuditPage() {
 
   return (
     <main className="pageContent">
-      <header className="pageHeader">
-        <div>
-          <h1 className="pageTitle">质检</h1>
-          <p className="pageSubtitle">
-            写完之后，让工具帮你把把关：① 通读全书找前后矛盾（防吃书）② 检查这一章读起来像不像机器写的
-            ③ 拿你的词表扫一遍敏感词。结果都只做参考，改不改由你决定。
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        title="质检"
+        subtitle="写完之后，让工具帮你把把关：① 通读全书找前后矛盾（防吃书）② 检查这一章读起来像不像机器写的 ③ 拿你的词表扫一遍敏感词。结果都只做参考，改不改由你决定。"
+      />
 
       <ConsistencySection slug={slug} />
       <AiFlavorSection slug={slug} />

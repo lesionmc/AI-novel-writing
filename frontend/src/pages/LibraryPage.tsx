@@ -9,6 +9,7 @@ import { Button } from '@/components/common/Button';
 import { EntryBanner } from '@/components/common/EntryBanner';
 import { ErrorBar } from '@/components/common/ErrorBar';
 import { EmptyState } from '@/components/common/EmptyState';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Modal } from '@/components/common/Modal';
 import { SkeletonCard } from '@/components/common/Skeleton';
 import { BookCard, NewBookCard } from '@/components/library/BookCard';
@@ -95,17 +96,15 @@ export function LibraryPage() {
 
   return (
     <main className="pageContent">
-      <header className="pageHeader">
-        <div>
-          <h1 className="pageTitle">书库</h1>
-          <p className="pageSubtitle">
-            你写的每一部作品都单独存在本机的一个文件夹里。换电脑时，把整个文件夹复制走，就是一份完整备份。
-          </p>
-        </div>
-        <Button variant="primary" icon="plus" onClick={openCreate}>
-          新建作品
-        </Button>
-      </header>
+      <PageHeader
+        title="书库"
+        subtitle="你写的每一部作品都单独存在本机的一个文件夹里。换电脑时，把整个文件夹复制走，就是一份完整备份。"
+        actions={
+          <Button variant="primary" icon="plus" onClick={openCreate}>
+            新建作品
+          </Button>
+        }
+      />
 
       {/*
         还没配模型时，首页给一条**配置引导**（TC-03 / 红线 3）。
