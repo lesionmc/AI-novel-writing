@@ -1034,7 +1034,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "characters" | "world_entries" | "outline_nodes" | "prose";
+            kind: "characters" | "world_entries" | "outline_nodes" | "prose" | "book_plan";
             /** Payload */
             payload?: {
                 [key: string]: unknown;

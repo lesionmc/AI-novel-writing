@@ -70,7 +70,8 @@
               "characters",
               "world_entries",
               "outline_nodes",
-              "prose"
+              "prose",
+              "book_plan"
             ],
             "title": "Kind",
             "type": "string"

@@ -74,7 +74,8 @@ export function useHubChat(slug: string) {
 }
 
 /** 可写入库的草稿（`prose` 不在此列 —— 正文只交给用户自己删改，永不自动保存） */
-export type WritableDraft = Exclude<HubDraft, { kind: 'prose' }>;
+/** 能经 `useWriteHubDraft` 落进当前作品的草稿；prose 只复制、book_plan 走建书交接，都不在此列 */
+export type WritableDraft = Exclude<HubDraft, { kind: 'prose' } | { kind: 'book_plan' }>;
 
 export interface HubDraftWriteResult {
   /** 实际写入的条数 */

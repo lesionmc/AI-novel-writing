@@ -494,3 +494,37 @@ def test_chat_stream_without_book(client, fake_llm):
         frames = _collect_sse(resp)
     finals = [d for e, d in frames if e == "final"]
     assert finals and finals[0]["reply"] == "早。"
+
+
+# --------------------------------------------------------- book_plan 立项卡
+def test_book_plan_draft_normalized_and_gated(client, book, fake_llm):
+    """立项卡：题材或卖点至少一样才成立；空壳 / 只有标题 → 丢卡只留话。"""
+    _add_provider(client)
+
+    def _ask(payload: dict):
+        fake_llm(
+            FakeLLMClient(
+                chat_responses=[json.dumps({"reply": "整理好了", "draft": payload}, ensure_ascii=False)]
+            )
+        )
+        resp = client.post(
+            f"/api/books/{book}/ai/chat",
+            json={"messages": [{"role": "user", "content": "就按这个方向来"}]},
+        )
+        assert resp.status_code == 200, resp.text
+        return resp.json()["draft"]
+
+    good = _ask({
+        "kind": "book_plan",
+        "payload": {
+            "genre": " 玄幻 ",
+            "readers": "番茄男频",
+            "premise": "弃子握着祖碑残片",
+            "target_words": 1500000,
+        },
+    })
+    assert good["payload"]["genre"] == "玄幻"
+    assert good["payload"]["target_words"] == 1500000
+
+    assert _ask({"kind": "book_plan", "payload": {"title": "只起了名"}}) is None
+    assert _ask({"kind": "book_plan", "payload": {"genre": ""}}) is None

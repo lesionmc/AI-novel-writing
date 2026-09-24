@@ -74,6 +74,15 @@ async function addMockModel(page: Page) {
 test.afterAll(async ({ request }) => {
   // 本次运行注入的 mock 模型必须带走 —— 否则用户打开真实界面会以为「AI 只会说模板话」
   await purgeMockProviders(request);
+  // 引导步「就建这本」建出的测试书也一并带走（移入回收目录，不物理删）
+  const books = await request.get('/api/books');
+  if (books.ok()) {
+    for (const b of (await books.json()) as { slug: string; title: string }[]) {
+      if (b.title.startsWith('自动化测试之书')) {
+        await request.delete(`/api/books/${encodeURIComponent(b.slug)}`);
+      }
+    }
+  }
   // 把「默认模型」还给用户自己的配置（仅当它原本就是默认；PATCH 必须包 data，否则静默空体失败）
   if (originalDefaultId !== null) {
     await request.patch(`/api/providers/${originalDefaultId}`, { data: { is_default: true } });
@@ -111,6 +120,18 @@ test('全流程：建书 → AI 对话 → 写作 → 大纲 → 质检 → 导�
     await input.fill('写作卡文了怎么办？');
     await page.getByRole('button', { name: /发送/ }).click();
     await expect(page.getByText('（mock 回复）')).toBeVisible({ timeout: 30_000 });
+  });
+
+  await test.step('引导模式：立项卡 →「就建这本」一键建书，会话带进新书', async () => {
+    await page.goto('/chat');
+    await page.getByRole('button', { name: '带我走一遍' }).click();
+    await page.getByLabel('输入你想说的话').fill('想写一本都市异能');
+    await page.getByRole('button', { name: /发送/ }).click();
+    await expect(page.getByText('立项方案 · 建书交接单')).toBeVisible({ timeout: 30_000 });
+    await page.getByRole('button', { name: '就建这本' }).click();
+    // 建书成功 = 地址落到新书的对话页；立项卡内容仍在会话里（交接不断链）
+    await expect(page).toHaveURL(/\/book\/[^/]+\/chat$/, { timeout: 30_000 });
+    await expect(page.getByText('（mock）一键建书交接的卖点')).toBeVisible();
   });
 
   await test.step('AI 流式对话 + 草稿确认入库', async () => {

@@ -73,6 +73,15 @@ _INTENT_TEXT = {
         "每个两三句话说清冲突与代价，按你的推荐度排序；`draft` 留 null "
         "（他看中哪个，会再让你展开成章节卡）。"
     ),
+    "guide": (
+        "他是零基础新手，想让你**带着他一步步把这本书开起来**。按这个顺序走，"
+        "**每一轮只问一个小问题、等他答完再问下一个**，绝不一次抛一堆：\n"
+        "  1) 先问他想写个什么故事（一句话就行，说不清就给他两三个例子挑）；\n"
+        "  2) 问他这书写给谁看、想发在哪个平台（不知道就替他估一个，并说明）；\n"
+        "  3) 帮他把最抓人的那一点拧成「一句话卖点」；\n"
+        "  4) 三样齐了，产出一张 `book_plan` 立项卡，告诉他点「就建这本」就能正式开起来。\n"
+        "在他还没答够之前不要急着出卡；语气像个耐心的老编辑，别用术语。"
+    ),
 }
 
 #: 没有指定章节时用的"空章节"：设定库照常注入，但不带任何本章上下文。
@@ -185,7 +194,36 @@ def _draft_from(raw: object) -> AiChatDraft | None:
     if kind == "prose":
         text = _text(payload.get("text"))
         return AiChatDraft(kind="prose", payload={"text": text}) if text else None
+    if kind == "book_plan":
+        plan = _norm_book_plan(payload)
+        return AiChatDraft(kind="book_plan", payload=plan) if plan else None
     return None
+
+
+def _norm_book_plan(payload: dict) -> dict | None:
+    """立项卡归一：无书对话把「写什么 / 写给谁 / 卖点」聊定后产出的建书交接单。
+
+    至少要有题材或卖点之一，否则不算一份能建书的方案（返回 None → 只回话不摆卡）。
+    """
+    genre = _text(payload.get("genre"), 80)
+    readers = _text(payload.get("readers"), 120)
+    premise = _text(payload.get("premise"), 500)
+    title = _text(payload.get("title"), 80)
+    if not (genre or premise):
+        return None
+    out: dict = {}
+    if title:
+        out["title"] = title
+    if genre:
+        out["genre"] = genre
+    if readers:
+        out["readers"] = readers
+    if premise:
+        out["premise"] = premise
+    tw = payload.get("target_words")
+    if isinstance(tw, (int, float)) and not isinstance(tw, bool) and 0 < int(tw) <= 10_000_000:
+        out["target_words"] = int(tw)
+    return out
 
 
 def _format_web_sources(sources: list[dict]) -> str:

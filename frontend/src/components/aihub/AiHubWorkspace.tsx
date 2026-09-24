@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { userMessageOf } from '@/api/client';
 import { useChapterBriefs } from '@/hooks/queries';
 import { useCapabilities } from '@/hooks/useCapabilities';
-import { useHubChat, useWriteHubDraft } from '@/hooks/mutations/aiHub';
+import { useHubChat } from '@/hooks/mutations/aiHub';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { toast } from '@/stores/toastStore';
 import { ChatHead } from './ChatHead';
@@ -17,11 +17,11 @@ import {
   HUB_WELCOME,
   actionOf,
   newSession,
-  parseAiChatDraft,
   titleFromText,
 } from './hubModel';
 import type { HubMessage, HubSession } from './hubModel';
 import { useHubReadings } from './useHubReadings';
+import { useHubDrafts } from './useHubDrafts';
 import { loadHubArchive, saveHubArchive } from './hubArchive';
 import type { HubArchive } from './hubArchive';
 import styles from './hub.module.css';
@@ -31,13 +31,6 @@ function initialArchive(slug: string): HubArchive {
   if (saved) return saved;
   const fresh = newSession();
   return { sessions: [fresh], activeId: fresh.id };
-}
-
-function withMarkedDraft(session: HubSession, index: number, state: 'applied' | 'discarded'): HubSession {
-  return {
-    ...session,
-    messages: session.messages.map((m, i) => (i === index ? { ...m, draftState: state } : m)),
-  };
 }
 
 /**
@@ -54,14 +47,12 @@ export function AiHubWorkspace({ slug }: { slug: string }) {
   const capabilities = useCapabilities();
   const noModel = capabilities.data?.llm_configured === false;
   const chat = useHubChat(slug);
-  const writeDraft = useWriteHubDraft(slug);
 
   const [archive, setArchive] = useState<HubArchive>(() => initialArchive(slug));
   const [actionKey, setActionKey] = useState('auto');
   const [chapterId, setChapterId] = useState<number | null>(null);
   /** 联网开关：开着时服务端会让模型判断要不要实时检索外部资料 */
   const [useWeb, setUseWeb] = useState(false);
-  const [writingIndex, setWritingIndex] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<HubSession | null>(null);
   const autoPicked = useRef(false);
 
@@ -109,6 +100,8 @@ export function AiHubWorkspace({ slug }: { slug: string }) {
 
   // 只读能力（校对 / 审校 / 敏感词）：结果只进对话流，不进草稿通道
   const readings = useHubReadings({ slug, activeId: active?.id ?? null, patchSession });
+  /** 草稿的人工闸门：确认 / 丢弃（含「立项卡 → 一键建书」的交接） */
+  const drafts = useHubDrafts({ slug, archive, active, patchSession });
 
   const createSession = () => {
     const fresh = newSession();
@@ -191,46 +184,6 @@ export function AiHubWorkspace({ slug }: { slug: string }) {
     );
   };
 
-  const confirmDraft = async (index: number) => {
-    if (!active) return;
-    const sessionId = active.id;
-    const draft = parseAiChatDraft(active.messages[index]?.draft);
-    if (!draft) return;
-
-    if (draft.kind === 'prose') {
-      // 正文永不自动保存：只复制走，让作者自己粘、自己改、自己定稿
-      try {
-        await navigator.clipboard.writeText(draft.text);
-      } catch {
-        toast.error('复制失败。可以手动选中这段文字复制。');
-        return;
-      }
-      patchSession(sessionId, (s) => withMarkedDraft(s, index, 'applied'));
-      toast.success('已复制。到写作台粘贴，改完记得保存。');
-      return;
-    }
-
-    if (!slug) {
-      toast.info('还没关联作品 —— 在左栏「当前作品」选一部，再确认写入。'); // 落库必须有归属
-      return;
-    }
-    setWritingIndex(index);
-    writeDraft.mutate(draft, {
-      onSuccess: (res) => {
-        patchSession(sessionId, (s) => withMarkedDraft(s, index, 'applied'));
-        toast.success(`已把 ${res.written} 条${res.label}写进作品`);
-      },
-      onError: (e) => toast.error(userMessageOf(e)),
-      onSettled: () => setWritingIndex(null),
-    });
-  };
-
-  const discardDraft = (index: number) => {
-    if (!active) return;
-    patchSession(active.id, (s) => withMarkedDraft(s, index, 'discarded'));
-    toast.info('已丢弃，没有写进作品');
-  };
-
   const needChapter = actionOf(actionKey).needsChapter && chapterId === null;
 
   return (
@@ -260,10 +213,10 @@ export function AiHubWorkspace({ slug }: { slug: string }) {
           opening={HUB_WELCOME}
           pending={chat.busy || readings.busy}
           pendingText={readings.busy ? readings.busyText : chat.streamText || undefined}
-          busyIndex={writingIndex}
+          busyIndex={drafts.busyIndex}
           streamIndex={readings.streamIndex}
-          onConfirmDraft={(i) => void confirmDraft(i)}
-          onDiscardDraft={discardDraft}
+          onConfirmDraft={drafts.confirm}
+          onDiscardDraft={drafts.discard}
           onStopReading={readings.stop}
         />
 

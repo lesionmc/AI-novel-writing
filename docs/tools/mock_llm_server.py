@@ -35,6 +35,24 @@ def _reply_for(prompt: str) -> str:
             ensure_ascii=False,
         )
     # 按注入的意图行精确分派（提示词正文本来就含"人物卡"等字样，不能拿它当特征词）
+    if "把这本书开起来" in prompt:
+        # 引导模式（guide 意图）：立项聊定 → 产出建书交接卡
+        return json.dumps(
+            {
+                "reply": "方向齐了，我把它整理成了建书卡，点「就建这本」就能正式开起来。",
+                "draft": {
+                    "kind": "book_plan",
+                    "payload": {
+                        "title": "自动化测试之书立项卡",
+                        "genre": "自动化测试题材",
+                        "readers": "番茄男频 · 通勤读者",
+                        "premise": "（mock）一键建书交接的卖点",
+                        "target_words": 1500000,
+                    },
+                },
+            },
+            ensure_ascii=False,
+        )
     if "他想整理人物" in prompt:
         return json.dumps(
             {

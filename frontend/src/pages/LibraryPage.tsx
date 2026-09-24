@@ -6,10 +6,7 @@ import { useCapabilities } from '@/hooks/useCapabilities';
 import { useCreateBook, useDeleteBook } from '@/hooks/mutations/books';
 import { AiUnavailableNotice } from '@/components/common/AiUnavailableNotice';
 import { Button } from '@/components/common/Button';
-import { EntryBanner } from '@/components/common/EntryBanner';
 import { ErrorBar } from '@/components/common/ErrorBar';
-import { EmptyState } from '@/components/common/EmptyState';
-import { PageHeader } from '@/components/common/PageHeader';
 import { Modal } from '@/components/common/Modal';
 import { SkeletonCard } from '@/components/common/Skeleton';
 import { BookCard, NewBookCard } from '@/components/library/BookCard';
@@ -42,6 +39,7 @@ export function LibraryPage() {
   const [prefill, setPrefill] = useState<Partial<CreateBookRequest> | null>(null);
 
   const books = query.data ?? [];
+  const totalWords = books.reduce((sum, b) => sum + b.total_words, 0);
   const noModel = capabilities.data?.llm_configured === false;
 
   const handleCreate = (values: CreateBookRequest) => {
@@ -98,20 +96,47 @@ export function LibraryPage() {
 
   return (
     <main className="pageContent">
-      <PageHeader
-        title="书库"
-        subtitle="你写的每一部作品都单独存在本机的一个文件夹里。换电脑时，把整个文件夹复制走，就是一份完整备份。"
-        actions={
-          <Button variant="primary" icon="plus" onClick={openCreate}>
-            新建作品
-          </Button>
-        }
-      />
+      {/*
+        创作入口（首页即向导）：零基础用户的第一动作不该是"建表"，
+        而是和 AI 把「写什么、写给谁」聊明白 —— 主 CTA 进无书对话，
+        问卷与手动建书是两条次级路径。还没配模型时本地功能照常（红线 3）。
+      */}
+      <section className={styles.hero}>
+        <div className={styles.heroMain}>
+          <h1 className={styles.heroTitle}>开始写一本书</h1>
+          <p className={styles.heroText}>
+            不确定写什么？先和 AI 聊十分钟 —— 像跟编辑对谈，一问一答把方向、读者和卖点定下来，
+            聊完一键建书，直接开写。
+          </p>
+          <div className={styles.heroActions}>
+            <Button variant="primary" icon="chat" onClick={() => navigate('/chat')}>
+              和 AI 聊出方向
+            </Button>
+            <Button variant="secondary" icon="plus" onClick={openCreate}>
+              直接新建作品
+            </Button>
+            <button type="button" className={styles.heroLink} onClick={openTopic}>
+              用选题问卷找方向
+            </button>
+          </div>
+        </div>
+        {books.length > 0 ? (
+          <dl className={styles.heroStats}>
+            <div className={styles.heroStat}>
+              <dt>作品</dt>
+              <dd className="tabular">{books.length}</dd>
+            </div>
+            <div className={styles.heroStat}>
+              <dt>累计字数</dt>
+              <dd className="tabular">{totalWords.toLocaleString('zh-CN')}</dd>
+            </div>
+          </dl>
+        ) : null}
+      </section>
 
       {/*
         还没配模型时，首页给一条**配置引导**（TC-03 / 红线 3）。
-        与写作台的「功能降级」chip 场景不同：这里是「你还没配，但你现在就能用，想解锁 AI 再去配」。
-        先说「能用」（红线 3：本地功能不被阻断），再说「去哪配」；有模型时不渲染、不占位；不弹窗、不 alert。
+        先说「能用」（本地功能不被阻断），再说「去哪配」；有模型时不渲染、不占位。
       */}
       {noModel ? (
         <div className={styles.noticeWrap}>
@@ -120,16 +145,6 @@ export function LibraryPage() {
           </AiUnavailableNotice>
         </div>
       ) : null}
-
-      <div className={styles.entryWrap}>
-        <EntryBanner
-          icon="lightbulb"
-          title="不知道写什么？让 AI 帮你选题"
-          description="回答四个问题，结合题材库的真实热度与竞争度，给你几个「有人看、写得少」的方向。"
-          prominent={!query.isPending && books.length === 0}
-          onClick={openTopic}
-        />
-      </div>
 
       {query.isPending ? (
         <div className={styles.grid} aria-busy="true">
@@ -141,22 +156,17 @@ export function LibraryPage() {
         <div className={styles.stateWrap}>
           <ErrorBar error={query.error} onRetry={() => void query.refetch()} />
         </div>
-      ) : books.length === 0 ? (
-        <EmptyState
-          icon="book"
-          title="还没有作品"
-          description="先新建一个作品。名字可以先不起（会记作「无名作品」），题材、读者、简介也都能后补 —— 想清楚了再到「开书清单」里定。"
-          actionLabel="新建第一个作品"
-          onAction={openCreate}
-        />
-      ) : (
-        <div className={styles.grid}>
-          {books.map((b) => (
-            <BookCard key={b.slug} book={b} onRename={setRenaming} onDelete={setDeleting} />
-          ))}
-          <NewBookCard onClick={openCreate} />
-        </div>
-      )}
+      ) : books.length > 0 ? (
+        <section aria-label="我的作品">
+          <h2 className={styles.sectionTitle}>我的作品</h2>
+          <div className={styles.grid}>
+            {books.map((b) => (
+              <BookCard key={b.slug} book={b} onRename={setRenaming} onDelete={setDeleting} />
+            ))}
+            <NewBookCard onClick={openCreate} />
+          </div>
+        </section>
+      ) : null}
 
       <Modal
         open={creating}

@@ -78,6 +78,29 @@ function OutlineRows({ draft }: { draft: Extract<HubDraft, { kind: 'outline_node
   );
 }
 
+/** 立项卡：无书对话的落点 —— 确认后一键建书，方向原样带进新书 */
+function BookPlanRows({ draft }: { draft: Extract<HubDraft, { kind: 'book_plan' }> }) {
+  const rows: Array<[string, string | null]> = [
+    ['书名（可后改）', draft.title],
+    ['题材', draft.genre],
+    ['写给谁', draft.readers],
+    ['一句话卖点', draft.premise],
+    ['目标体量', draft.targetWords ? `${Math.round(draft.targetWords / 10000)} 万字` : null],
+  ];
+  return (
+    <div className={styles.draftList}>
+      {rows
+        .filter((r): r is [string, string] => Boolean(r[1]))
+        .map(([label, value]) => (
+          <div className={styles.draftItem} key={label}>
+            <span className={styles.draftItemName}>{label}</span>
+            <span className={styles.draftItemMeta}>{value}</span>
+          </div>
+        ))}
+    </div>
+  );
+}
+
 /**
  * 草稿卡片 = **AI 产出到落库之间的那道人工闸门**（红线 2）。
  * 用户点「确认写入」之前，一个字都不会进库；「丢弃」则只留在本机对话里。
@@ -87,6 +110,7 @@ function OutlineRows({ draft }: { draft: Extract<HubDraft, { kind: 'outline_node
  */
 export function DraftCard({ slug, draft, state, busy, onConfirm, onDiscard }: DraftCardProps) {
   const isProse = draft.kind === 'prose';
+  const isPlan = draft.kind === 'book_plan';
   const resolved = state !== undefined;
 
   return (
@@ -94,12 +118,17 @@ export function DraftCard({ slug, draft, state, busy, onConfirm, onDiscard }: Dr
       <span className={styles.draftHead}>
         <Icon name="sparkles" size={16} />
         {draftLabel(draft)}
-        {isProse ? '（草稿，不会自动保存）' : '（还没写进作品，等你确认）'}
+        {isProse
+          ? '（草稿，不会自动保存）'
+          : isPlan
+            ? '（点确认后这本书就正式建起来）'
+            : '（还没写进作品，等你确认）'}
       </span>
 
       {draft.kind === 'characters' ? <CharacterRows draft={draft} /> : null}
       {draft.kind === 'world_entries' ? <WorldRows draft={draft} /> : null}
       {draft.kind === 'outline_nodes' ? <OutlineRows draft={draft} /> : null}
+      {draft.kind === 'book_plan' ? <BookPlanRows draft={draft} /> : null}
       {draft.kind === 'prose' ? <div className={styles.prose}>{draft.text}</div> : null}
 
       {resolved ? (
@@ -108,7 +137,9 @@ export function DraftCard({ slug, draft, state, busy, onConfirm, onDiscard }: Dr
             ? '已丢弃，没有写进作品。'
             : isProse
               ? '已复制。到写作台粘贴，改完再保存。'
-              : '已写进作品。'}
+              : isPlan
+                ? '书已建好，这轮对话已带进新书。'
+                : '已写进作品。'}
           {state === 'applied' && isProse ? (
             <>
               {' '}
@@ -119,7 +150,7 @@ export function DraftCard({ slug, draft, state, busy, onConfirm, onDiscard }: Dr
       ) : (
         <div className={styles.draftActions}>
           <Button variant="primary" size="sm" loading={busy} onClick={onConfirm}>
-            {isProse ? '复制这段' : '确认写入'}
+            {isProse ? '复制这段' : isPlan ? '就建这本' : '确认写入'}
           </Button>
           <Button variant="ghost" size="sm" disabled={busy} onClick={onDiscard}>
             丢弃

@@ -26,8 +26,9 @@ ChatRole = Literal["user", "assistant"]
 #:   characters    → POST /api/books/{book}/characters
 #:   world_entries → POST /api/books/{book}/world-entries
 #:   outline_nodes → POST /api/books/{book}/outlines
+#:   book_plan     → POST /api/books（无书对话的立项交接：确认后一键建书）
 #:   prose         → 不落库，由前端放进编辑器（正文必须人工确认）
-DraftKind = Literal["characters", "world_entries", "outline_nodes", "prose"]
+DraftKind = Literal["characters", "world_entries", "outline_nodes", "prose", "book_plan"]
 
 #: 前端可指定的"要干什么"。`auto` = 让 AI 自己判断。
 Intent = Literal[

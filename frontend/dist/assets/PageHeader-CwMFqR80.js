@@ -1,0 +1,1 @@
+import{j as e}from"./index-k4WgDg7G.js";function i({title:s,subtitle:a,actions:r}){return e.jsxs("header",{className:"pageHeader",children:[e.jsxs("div",{children:[e.jsx("h1",{className:"pageTitle",children:s}),a?e.jsx("p",{className:"pageSubtitle",children:a}):null]}),r]})}export{i as P};

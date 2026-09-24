@@ -1,12 +1,8 @@
 /**
  * AI 对话工作台 —— 纯数据/映射层（无 React、无网络）。
- *
- * 职责：
- *   ① 校验并归一服务端返回的草稿（`parseAiChatDraft`）—— **一个校验器**同时服务
- *      "刚收到的响应"和"从 localStorage 读回的存档"，因此存档里的脏数据天然被剔除。
- *   ② 定义会话/消息形状与动作（能力入口）清单。
- *
- * 红线：本层不做任何写库动作。"确认写入"由组件调用既有 create 端点完成。
+ * ① `parseAiChatDraft`：一个校验器同时服务"刚收到的响应"与"localStorage 旧存档"，
+ *    脏数据天然被剔除；② 会话/消息形状与动作（能力入口）清单。
+ * 红线：本层不做任何写库动作（"确认写入"见 `useHubDrafts`）。
  */
 
 import type {
@@ -29,7 +25,16 @@ export type HubDraft =
   | { kind: 'characters'; characters: AiChatDraftCharacter[] }
   | { kind: 'world_entries'; entries: AiChatDraftWorldEntry[] }
   | { kind: 'outline_nodes'; nodes: AiChatDraftOutlineNode[] }
-  | { kind: 'prose'; text: string };
+  | { kind: 'prose'; text: string }
+  /** 无书对话聊定方向后的建书交接单：确认 = 建书（书名可空，包装步再定） */
+  | {
+      kind: 'book_plan';
+      title: string | null;
+      genre: string | null;
+      readers: string | null;
+      premise: string | null;
+      targetWords: number | null;
+    };
 
 /** 一条消息。`draft` 存**服务端原样**的草稿，展示前过 `parseAiChatDraft`。 */
 export interface HubMessage {
@@ -80,6 +85,7 @@ export interface HubAction {
 
 export const HUB_ACTIONS: HubAction[] = [
   { key: 'auto', label: '自动', mode: 'chat', intent: 'auto', needsChapter: false, needsModel: true, hint: '让他自己判断该做什么' },
+  { key: 'guide', label: '带我走一遍', mode: 'chat', intent: 'guide', needsChapter: false, needsModel: true, hint: '零基础友好：一次只问一个小问题，从「想写什么」一路聊到建书开写' },
   { key: 'characters', label: '建人物', mode: 'chat', intent: 'characters', needsChapter: false, needsModel: true, hint: '整理成人物卡' },
   { key: 'world', label: '世界观', mode: 'chat', intent: 'world_entries', needsChapter: false, needsModel: true, hint: '地点、势力、规则、道具' },
   { key: 'outline', label: '大纲', mode: 'chat', intent: 'outline_nodes', needsChapter: false, needsModel: true, hint: '往后的情节怎么走' },
@@ -132,6 +138,8 @@ export function draftLabel(draft: HubDraft): string {
       return `剧情安排 · ${draft.nodes.length} 条`;
     case 'prose':
       return '正文片段';
+    case 'book_plan':
+      return '立项方案 · 建书交接单';
   }
 }
 
@@ -242,6 +250,21 @@ export function parseAiChatDraft(draft: unknown): HubDraft | null {
     case 'prose': {
       const text = asText(payload.text);
       return text ? { kind: 'prose', text } : null;
+    }
+    case 'book_plan': {
+      const genre = asText(payload.genre);
+      const premise = asText(payload.premise);
+      // 与后端同判据：题材或卖点至少一样，否则不是一张能建书的卡
+      if (!genre && !premise) return null;
+      const tw = payload.target_words;
+      return {
+        kind: 'book_plan',
+        title: asText(payload.title),
+        genre,
+        readers: asText(payload.readers),
+        premise,
+        targetWords: typeof tw === 'number' && tw > 0 && tw <= 10_000_000 ? Math.round(tw) : null,
+      };
     }
     default:
       return null;
