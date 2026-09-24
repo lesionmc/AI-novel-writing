@@ -4,44 +4,8 @@
   position: relative;
   display: inline-flex;
   flex-shrink: 0;
-}
-
-.trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  max-width: 240px;
-  height: 32px;
-  padding: 0 var(--space-3);
-  border: var(--border-width-1) solid var(--color-border);
-  border-radius: var(--radius-pill);
-  background-color: var(--color-surface);
-  color: var(--color-text-secondary);
-  font-size: var(--text-sm);
-  cursor: pointer;
-}
-
-.trigger:hover {
-  background-color: var(--color-surface-hover);
-  color: var(--color-text-primary);
-}
-
-.trigger:focus-visible {
-  outline: none;
-  box-shadow: var(--shadow-focus);
-}
-
-.triggerName {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--color-text-primary);
-  font-weight: var(--font-weight-medium);
-}
-
-.triggerEmpty {
-  white-space: nowrap;
-  color: var(--color-text-secondary);
+  /* 无触发器后靠撑满导航条高度来给浮层定位（top:100% 即导航条下沿） */
+  align-self: stretch;
 }
 
 /* 下拉浮层：右对齐到触发器，宽度固定以免作品名长短把布局推来推去 */

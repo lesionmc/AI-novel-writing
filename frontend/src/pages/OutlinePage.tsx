@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import type { OutlineCandidate, OutlineNode } from '@/types/api';
 import { useOutlines, useProviders } from '@/hooks/queries';
 import {
@@ -30,19 +29,13 @@ import { toast } from '@/stores/toastStore';
 import styles from '@/components/outline/outline.module.css';
 
 /**
- * 大纲 `/book/:slug/outline`（R7）。
- * 三级树（总纲 → 卷纲 → 章节卡）+ 右详情。AI 展开只出候选，**填入编辑框，用户改完再保存**。
- *
- * 用 `key={slug}` 把工作区**按作品分段**：换作品时整块重挂载，
- * 未保存草稿的 state 与它的 localStorage 存档因此天然按作品隔离 ——
- * 既不会把上一本的草稿带到下一本，也不会拿新 slug 的键去覆盖旧内容。
+ * 大纲工作区（R7）：三级树（总纲 → 卷纲 → 章节卡）+ 右详情。
+ * AI 展开只出候选，**填入编辑框，用户改完再保存**。
+ * 2026-09-24 起并入「设定库」第四个 Tab（`embedded` 模式）；`/book/:slug/outline` 重定向过来。
+ * 调用方须传 `key={slug}` 按作品分段重挂载 —— 未保存草稿的 state 与 localStorage 存档
+ * 因此天然按作品隔离，不会把上一本的草稿带到下一本。
  */
-export function OutlinePage() {
-  const { slug = '' } = useParams();
-  return <OutlineWorkspace key={slug} slug={slug} />;
-}
-
-function OutlineWorkspace({ slug }: { slug: string }) {
+export function OutlineWorkspace({ slug, embedded = false }: { slug: string; embedded?: boolean }) {
   const query = useOutlines(slug);
   const providers = useProviders();
   const create = useCreateOutline(slug);
@@ -182,18 +175,14 @@ function OutlineWorkspace({ slug }: { slug: string }) {
     });
   };
 
-  return (
-    <main className="pageContent">
-      <PageHeader
-        title="大纲"
-        subtitle="先立总纲，再拆卷纲，最后落到章节卡。写到哪一章，心里都有张地图。"
-        actions={
-          <Button variant="primary" icon="plus" onClick={addTotal} loading={create.isPending}>
-            添加总纲
-          </Button>
-        }
-      />
+  const toolbar = (
+    <Button variant="primary" icon="plus" onClick={addTotal} loading={create.isPending}>
+      添加总纲
+    </Button>
+  );
 
+  const content = (
+    <>
       {query.isPending ? (
         <div className={styles.detailPane}>
           <SkeletonRows count={5} />
@@ -270,6 +259,25 @@ function OutlineWorkspace({ slug }: { slug: string }) {
           </p>
         </ConfirmDialog>
       ) : null}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div>
+        <div style={{ marginBottom: 'var(--space-4)' }}>{toolbar}</div>
+        {content}
+      </div>
+    );
+  }
+  return (
+    <main className="pageContent">
+      <PageHeader
+        title="大纲"
+        subtitle="先立总纲，再拆卷纲，最后落到章节卡。写到哪一章，心里都有张地图。"
+        actions={toolbar}
+      />
+      {content}
     </main>
   );
 }

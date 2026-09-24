@@ -19,7 +19,6 @@ import type {
   AiFlavorResult,
   Book,
   BookBrief,
-  BookStats,
   Chapter,
   ChapterBrief,
   ChapterVersion,
@@ -237,8 +236,7 @@ export const api = {
       timeoutMs: 60000,
     }),
 
-  /* --- 5.7 export / stats / search --- */
-  getStats: (book: string) => request<BookStats>(`/books/${slugSegment(book)}/stats`),
+  /* --- 5.7 export / search --- */
   exportBook: (book: string, format: 'txt' | 'docx', range?: string) =>
     downloadFile(`/books/${slugSegment(book)}/export`, { format, range }),
 

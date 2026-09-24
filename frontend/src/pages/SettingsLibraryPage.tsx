@@ -10,12 +10,13 @@ import { CharactersTab } from '@/components/settings/CharactersTab';
 import { WorldEntriesTab } from '@/components/settings/WorldEntriesTab';
 import { ForeshadowTable } from '@/components/settings/ForeshadowTable';
 import { CharacterGraphModal } from '@/components/settings/CharacterGraphModal';
+import { OutlineWorkspace } from '@/pages/OutlinePage';
 import styles from './SettingsLibraryPage.module.css';
 import { bookPath } from '@/lib/slug';
 
-type TabKey = 'characters' | 'world' | 'foreshadows';
+type TabKey = 'characters' | 'world' | 'foreshadows' | 'outline';
 
-const TAB_KEYS: TabKey[] = ['characters', 'world', 'foreshadows'];
+const TAB_KEYS: TabKey[] = ['characters', 'world', 'foreshadows', 'outline'];
 
 function parseTab(raw: string | null): TabKey {
   return raw && (TAB_KEYS as string[]).includes(raw) ? (raw as TabKey) : 'characters';
@@ -51,6 +52,7 @@ export function SettingsLibraryPage() {
       { key: 'characters', label: '人物卡', icon: 'user', count: characters.data?.length },
       { key: 'world', label: '世界词条', icon: 'world', count: worldEntries.data?.length },
       { key: 'foreshadows', label: '待回收的线索', icon: 'foreshadow', count: foreshadows.data?.length },
+      { key: 'outline', label: '大纲', icon: 'outline' },
     ],
     [characters.data, worldEntries.data, foreshadows.data],
   );
@@ -76,7 +78,7 @@ export function SettingsLibraryPage() {
     <main className="pageContent">
       <PageHeader
         title="设定库"
-        subtitle="把人物、世界和你埋下的线索集中记在这里。写得越具体，写作台右栏「本章提醒」就越准。"
+        subtitle="人物、世界、伏笔和大纲都记在这一页。设定写得越具体，写作台右栏「本章提醒」就越准。"
         actions={
           /* QA L8：写作台有「返回书库」按钮，设定库只有顶栏一个不起眼的链接 —— 统一加一个。
              用 ghost 而不是 secondary：本页的主行动是各 Tab 里的「新建人物 / 新建词条」，
@@ -109,6 +111,8 @@ export function SettingsLibraryPage() {
           <CharactersTab slug={slug} highlightName={highlight} onConsumeHighlight={consumeHighlight} />
         ) : active === 'world' ? (
           <WorldEntriesTab slug={slug} />
+        ) : active === 'outline' ? (
+          <OutlineWorkspace key={slug} slug={slug} embedded />
         ) : (
           <ForeshadowTable slug={slug} />
         )}

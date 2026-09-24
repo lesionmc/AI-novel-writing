@@ -75,22 +75,6 @@ const NAV: NavItem[] = [
     to: (s) => bookPath(s, '/settings'),
   },
   {
-    key: 'outline',
-    label: '大纲',
-    icon: 'outline',
-    bookScoped: true,
-    sub: '/outline',
-    to: (s) => bookPath(s, '/outline'),
-  },
-  {
-    key: 'stats',
-    label: '统计',
-    icon: 'stats',
-    bookScoped: true,
-    sub: '/stats',
-    to: (s) => bookPath(s, '/stats'),
-  },
-  {
     key: 'audit',
     label: '质检',
     icon: 'audit',
@@ -111,10 +95,11 @@ const NAV: NavItem[] = [
 ];
 
 /**
- * 全局一级导航（书库 / 开书 / AI 助手 / 写作台 / 设定库 / 大纲 / 统计 / 质检 / 设置 + 作品选择器）。
+ * 全局一级导航（书库 / 开书 / AI 助手 / 写作台 / 设定库 / 质检 / 设置，共 7 项）。
+ * 大纲并入设定库 Tab、统计页下线（2026-09-24 导航精简）；右上角不再放作品选择器 ——
+ * 换作品走「书库」，没选作品时点作品内导航项会弹选择框（BookSwitcher 只提供弹层）。
  *
  * 抽成独立组件的理由：**写作台与其它页面必须是同一条导航**。
- * 此前写作台是唯一不套 AppShell 的页面，「上面的导航没有」正是用户实测的抱怨；
  * 复制第二份导航条迟早会改一处漏一处，所以两处共用本组件。
  */
 export function GlobalNav() {

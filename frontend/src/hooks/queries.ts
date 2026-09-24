@@ -126,15 +126,6 @@ export function useProviderUsage(id: number | null) {
   });
 }
 
-export function useStats(slug: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.stats(slug ?? ''),
-    queryFn: () => api.getStats(slug as string),
-    enabled: Boolean(slug),
-    staleTime: STALE.list,
-  });
-}
-
 export function usePlotArcs(slug: string | undefined) {
   return useQuery({
     queryKey: queryKeys.plotArcs(slug ?? ''),

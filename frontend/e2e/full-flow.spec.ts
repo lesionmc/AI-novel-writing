@@ -143,8 +143,9 @@ test('全流程：建书 → AI 对话 → 写作 → 大纲 → 质检 → 导�
     await expect(page.getByText(/本章已归档/)).toBeVisible({ timeout: 30_000 });
   });
 
-  await test.step('大纲：总纲 → AI 展开候选 → 填入 → 加卷 → 汇总门控', async () => {
-    await page.goto(`${SLUG_PATH}/outline`);
+  await test.step('大纲（设定库 Tab）：总纲 → AI 展开候选 → 填入 → 加卷 → 汇总门控', async () => {
+    // 大纲已并入设定库第四个 Tab；旧地址 /outline 重定向到这里
+    await page.goto(`${SLUG_PATH}/settings?tab=outline`);
     await page.getByRole('button', { name: '添加总纲' }).first().click();
     await expect(page.getByText('已添加总纲')).toBeVisible();
 

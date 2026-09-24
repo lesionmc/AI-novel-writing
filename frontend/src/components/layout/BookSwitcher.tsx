@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useBook, useBooks } from '@/hooks/queries';
+import { useBooks } from '@/hooks/queries';
 import { Icon } from '@/components/common/Icon';
 import { bookPath } from '@/lib/slug';
 import styles from './BookSwitcher.module.css';
 
 /** 作品内子页白名单（与 App.tsx 路由表一一对应，改路由时同步改这里） */
-const SUB_ROUTES = ['/start', '/chat', '/desk', '/settings', '/outline', '/audit', '/stats', '/config'];
+const SUB_ROUTES = ['/start', '/chat', '/desk', '/settings', '/outline', '/audit', '/config'];
 
 /**
  * 取当前地址里的「作品内子页」。换书时保持在同一类子页是用户的默认预期
@@ -29,16 +29,14 @@ export interface BookSwitcherProps {
 }
 
 /**
- * 作品选择器（导航条右侧固定入口）。
- * 为什么需要它：导航条此前只有"当前作品名"这一块只读标签，
- * 想换个作品只能先回书库再点进去（用户实测原话：「上面这些导航页里面应该是可以选择书本的」）。
- * 搜索框是必要的 —— 作品一多，纯列表滚起来找不到。
+ * 作品选择弹层（**无自己的入口** —— 2026-09-24 导航精简后右上角不再放选书按钮）。
+ * 唯一的开法是 GlobalNav 在「没选作品时点了作品内导航项」时把它打开；
+ * 换作品请走「书库」。搜索框保留：作品一多，纯列表滚起来找不到。
  */
 export function BookSwitcher({ slug, open, pendingSub, onOpenChange }: BookSwitcherProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: books, isPending } = useBooks();
-  const { data: current } = useBook(slug ?? undefined);
   const [query, setQuery] = useState('');
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -89,26 +87,10 @@ export function BookSwitcher({ slug, open, pendingSub, onOpenChange }: BookSwitc
     navigate(bookPath(nextSlug, sub));
   };
 
-  const title = current?.title ?? '';
   const total = books?.length ?? 0;
 
   return (
     <div className={styles.wrap} ref={wrapRef}>
-      <button
-        type="button"
-        className={styles.trigger}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        title={title ? `当前作品：${title}。点这里换一部作品` : '还没选定作品，点这里选一部'}
-        onClick={() => onOpenChange(!open)}
-      >
-        <Icon name="book" size={16} />
-        <span className={title ? styles.triggerName : styles.triggerEmpty}>
-          {title || '选择作品'}
-        </span>
-        <Icon name="chevronDown" size={16} />
-      </button>
-
       {open ? (
         <div className={styles.popover} role="dialog" aria-label="选择作品">
           <div className={styles.searchRow}>

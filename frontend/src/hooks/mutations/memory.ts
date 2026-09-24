@@ -21,7 +21,6 @@ export function useConfirmWriteback(slug: string) {
       void qc.invalidateQueries({ queryKey: queryKeys.chapterBriefs(slug) });
       void qc.invalidateQueries({ queryKey: ['foreshadows', slug] });
       void qc.invalidateQueries({ queryKey: queryKeys.plotArcs(slug) });
-      void qc.invalidateQueries({ queryKey: queryKeys.stats(slug) });
       void qc.invalidateQueries({ queryKey: queryKeys.book(slug) });
       // [QA M5] 归档本章后右栏「本章提醒」必须跟着刷新 ——
       // 否则面板还显示「线索 0 / 剧情线 0」，用户以为没存上，只能手动刷新页面。
