@@ -22,7 +22,9 @@ def _require_non_blank(value: str | None) -> str | None:
 class BookCreate(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
-    title: str = Field(min_length=1, max_length=MAX_TITLE_LENGTH)
+    # 六阶段路线图里「起名」属于 PHASE 3 包装，不是建书前置条件 ——
+    # 留空即"先定方向、回头再命名"，服务层会补一个可改的临时名。
+    title: str | None = Field(default=None, max_length=MAX_TITLE_LENGTH)
     genre: str | None = None
     target_words: int = 0
     premise: str | None = None
@@ -30,10 +32,8 @@ class BookCreate(BaseModel):
 
     @field_validator("title")
     @classmethod
-    def _title_not_blank(cls, value: str) -> str:
-        if not value.strip():
-            raise ValueError("书名不能为空白")
-        return value
+    def _title_blank_to_none(cls, value: str | None) -> str | None:
+        return (value or "").strip() or None
 
 
 class BookUpdate(BaseModel):

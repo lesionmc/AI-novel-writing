@@ -200,3 +200,20 @@ def test_old_book_db_gets_readers_column_migrated(client, book):
     resp = client.patch(f"/api/books/{book}", json={"readers": "番茄 · 男频"})
     assert resp.status_code == 200, resp.text
     assert resp.json()["readers"] == "番茄 · 男频"
+
+
+def test_create_book_without_title_gets_placeholder(client):
+    """六阶段路线图：起名属于包装步，建书不该逼用户先想好名字。"""
+    first = client.post("/api/books", json={"title": "", "genre": "玄幻"})
+    assert first.status_code == 201, first.text
+    assert first.json()["title"] == "无名作品 1"
+
+    second = client.post("/api/books", json={"genre": "玄幻"})
+    assert second.status_code == 201, second.text
+    assert second.json()["title"] == "无名作品 2"
+    assert second.json()["slug"] != first.json()["slug"]
+
+    # 临时名随时能改成正式书名（包装步的「改书名」走的就是这条）
+    renamed = client.patch(f"/api/books/{second.json()['slug']}", json={"title": "断剑"})
+    assert renamed.status_code == 200
+    assert renamed.json()["title"] == "断剑"

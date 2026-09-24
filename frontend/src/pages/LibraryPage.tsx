@@ -40,8 +40,6 @@ export function LibraryPage() {
   const [topicKey, setTopicKey] = useState(0);
   /** 从选题向导带进新建表单的预填（题材 + 卖点） */
   const [prefill, setPrefill] = useState<Partial<CreateBookRequest> | null>(null);
-  /** 新建表单的书名是否已填（空则「创建」置灰 —— QA：点了没反应比灰着更糟） */
-  const [titleReady, setTitleReady] = useState(false);
 
   const books = query.data ?? [];
   const noModel = capabilities.data?.llm_configured === false;
@@ -71,7 +69,6 @@ export function LibraryPage() {
 
   const openCreate = () => {
     setPrefill(null);
-    setTitleReady(false);
     setCreating(true);
   };
 
@@ -96,7 +93,6 @@ export function LibraryPage() {
       readers: answers.readers.trim() || undefined,
       target_words: answers.targetLength ?? undefined,
     });
-    setTitleReady(false);
     setCreating(true);
   };
 
@@ -149,7 +145,7 @@ export function LibraryPage() {
         <EmptyState
           icon="book"
           title="还没有作品"
-          description="先新建一个作品。名字可以先随便取，之后随时能改；题材和目标字数也都能后补。"
+          description="先新建一个作品。名字可以先不起（会记作「无名作品」），题材、读者、简介也都能后补 —— 想清楚了再到「开书清单」里定。"
           actionLabel="新建第一个作品"
           onAction={openCreate}
         />
@@ -172,7 +168,7 @@ export function LibraryPage() {
         subtitle={
           prefill?.genre
             ? '已按 AI 推荐的方向预填了题材与卖点，随时可以改。'
-            : '先给作品占个位置就行 —— 名字随手起一个，方向和简介之后在「开书清单」里慢慢定。'
+            : '先把方向定下来就能建书 —— 名字可以留到「开书清单 · 包装」再打磨，这里留空也行。'
         }
         footer={
           <>
@@ -190,8 +186,6 @@ export function LibraryPage() {
               type="submit"
               form={FORM_ID}
               loading={createBook.isPending}
-              disabled={!titleReady}
-              title={titleReady ? undefined : '先填书名'}
             >
               创建
             </Button>
@@ -207,7 +201,6 @@ export function LibraryPage() {
           key={prefill ? `prefill-${topicKey}` : 'blank'}
           formId={FORM_ID}
           initial={prefill ?? undefined}
-          onValidityChange={setTitleReady}
           onSubmit={handleCreate}
         />
       </Modal>

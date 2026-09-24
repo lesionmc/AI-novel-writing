@@ -65,7 +65,8 @@ export interface Book {
 }
 
 export interface CreateBookRequest {
-  title: string;
+  /** 可留空：起名属于「开书清单 · 包装」步，建书只要求先定方向 */
+  title?: string | null;
   genre?: string | null;
   target_words?: number;
   premise?: string | null;

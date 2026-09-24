@@ -300,15 +300,18 @@
             "type": "integer"
           },
           "title": {
-            "maxLength": 80,
-            "minLength": 1,
-            "title": "Title",
-            "type": "string"
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
           }
         },
-        "required": [
-          "title"
-        ],
         "title": "BookCreate",
         "type": "object"
       },

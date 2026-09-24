@@ -1120,7 +1120,7 @@ export interface components {
              */
             target_words: number;
             /** Title */
-            title: string;
+            title?: string | null;
         };
         /** BookOut */
         BookOut: {

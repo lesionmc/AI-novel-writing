@@ -82,19 +82,33 @@ def list_books() -> list[BookBrief]:
     return briefs
 
 
+def _placeholder_title(registry) -> str:
+    """建书没填书名时的临时名 —— 正式命名在「开书清单」第 3 步（包装）完成。
+
+    只数到第一个没被占用的编号；同名目录另有 slug 冲突重试兜底。
+    """
+    taken = {(registry.read_meta(s).get("title") or "").strip() for s in registry.list_slugs()}
+    n = 1
+    while f"无名作品 {n}" in taken:
+        n += 1
+    return f"无名作品 {n}"
+
+
 def create_book(payload: BookCreate) -> BookOut:
     registry = get_registry()
     now = now_iso()
+    title = payload.title or _placeholder_title(registry)
     slug = ""
     meta: dict = {}
     for attempt in range(_SLUG_RETRIES):
-        slug = _unique_slug(payload.title)
+        slug = _unique_slug(title)
         meta = {
             "slug": slug,
-            "title": payload.title,
+            "title": title,
             "genre": payload.genre,
             "target_words": payload.target_words,
             "premise": payload.premise,
+            "readers": payload.readers,
             "writing_mode": "assist",
             "created_at": now,
             "updated_at": now,
@@ -113,13 +127,13 @@ def create_book(payload: BookCreate) -> BookOut:
         break
     else:
         # 重试耗尽仍撞名：明确 409（BOOK_EXISTS），不要退化成 500
-        raise BookExistsError(f"同名作品已存在：{payload.title}")
+        raise BookExistsError(f"同名作品已存在：{title}")
 
     try:
         with registry.database(slug).transaction() as conn:
             book_id = book_repo.create_row(
                 conn,
-                title=payload.title,
+                title=title,
                 genre=payload.genre,
                 target_words=payload.target_words,
                 premise=payload.premise,

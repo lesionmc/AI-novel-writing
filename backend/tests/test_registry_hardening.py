@@ -106,8 +106,9 @@ def test_reject_reserved_and_invalid_titles_without_leaving_dirs(client):
         "LPT9",
         "CONIN$",
         "_abc",  # 前导下划线 → 列表里永远看不见的孤儿作品
-        "   ",  # 纯空白
         "L" * 81,  # 超长（Pydantic max_length 先挡）
+        # 注：纯空白 / 不传 title 不再是 400 —— 起名属包装步，服务层补「无名作品 N」
+        # 占位（见 test_books.test_create_book_without_title_gets_placeholder）。
     ]
     for title in invalid_titles:
         resp = client.post("/api/books", json={"title": title})
