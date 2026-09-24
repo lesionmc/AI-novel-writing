@@ -34,10 +34,6 @@ def get_row(conn: sqlite3.Connection) -> dict | None:
     return fetch_one(conn, "SELECT * FROM book ORDER BY id ASC LIMIT 1")
 
 
-def get_row_by_id(conn: sqlite3.Connection, book_id: int) -> dict | None:
-    return fetch_one(conn, "SELECT * FROM book WHERE id = ?", (book_id,))
-
-
 def update_row(conn: sqlite3.Connection, book_id: int, fields: dict[str, Any]) -> None:
     if not fields:
         return

@@ -106,6 +106,12 @@ def _normalize(path: str) -> str:
 
 
 def main() -> int:
+    # Windows 控制台默认 GBK，结果行里的「↔ / ✅ / ❌」会让 print 直接崩
+    # （重定向输出时同样崩），门禁因此形同虚设 —— 统一切到 UTF-8。
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
     parser = argparse.ArgumentParser(description="契约 ↔ 代码 path/operation 对账")
     parser.add_argument("-v", "--verbose", action="store_true", help="打印逐条差异与参数名提醒")
     args = parser.parse_args()

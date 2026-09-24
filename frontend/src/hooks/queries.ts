@@ -117,43 +117,6 @@ export function useProviders() {
   });
 }
 
-export function useProviderUsage(id: number | null) {
-  return useQuery({
-    queryKey: queryKeys.providerUsage(id ?? -1),
-    queryFn: () => api.getProviderUsage(id as number),
-    enabled: id !== null,
-    staleTime: STALE.meta,
-  });
-}
-
-export function usePlotArcs(slug: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.plotArcs(slug ?? ''),
-    queryFn: () => api.getPlotArcs(slug as string),
-    enabled: Boolean(slug),
-    staleTime: STALE.list,
-  });
-}
-
-export function useRecallLogs(slug: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.recallLogs(slug ?? ''),
-    queryFn: () => api.listRecallLogs(slug as string),
-    enabled: Boolean(slug),
-    staleTime: STALE.list,
-  });
-}
-
-/** 设定变更追踪：查该人物被哪些章节引用过（约束 3 / TC-10） */
-export function useAffectedChapters(characterId: number | null) {
-  return useQuery({
-    queryKey: queryKeys.affectedChapters(characterId ?? -1),
-    queryFn: () => api.getAffectedChapters(characterId as number),
-    enabled: characterId !== null,
-    staleTime: 0,
-  });
-}
-
 /** 题材库（选题向导选项来源，M1 增项）。题材数据近乎静态，长缓存 */
 export function useTopicGenres(enabled = true) {
   return useQuery({

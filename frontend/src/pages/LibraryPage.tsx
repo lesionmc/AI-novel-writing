@@ -15,6 +15,7 @@ import { DeleteBookDialog, RenameBookDialog } from '@/components/library/BookDia
 import { TopicWizard } from '@/components/topics/TopicWizard';
 import type { TopicAnswers } from '@/components/topics/topicsModel';
 import { toast } from '@/stores/toastStore';
+import { formatNumber } from '@/lib/format';
 import { bookPath } from '@/lib/slug';
 import styles from './LibraryPage.module.css';
 
@@ -128,7 +129,7 @@ export function LibraryPage() {
             </div>
             <div className={styles.heroStat}>
               <dt>累计字数</dt>
-              <dd className="tabular">{totalWords.toLocaleString('zh-CN')}</dd>
+              <dd className="tabular">{formatNumber(totalWords)}</dd>
             </div>
           </dl>
         ) : null}

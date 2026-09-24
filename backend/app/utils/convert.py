@@ -1,9 +1,8 @@
-"""tags 列表 <-> JSON 字符串 及 Row -> dict 的通用转换工具。"""
+"""tags 列表 <-> JSON 字符串 的通用转换工具。"""
 
 from __future__ import annotations
 
 import json
-import sqlite3
 from typing import Any
 
 
@@ -25,11 +24,3 @@ def tags_from_db(raw: Any) -> list[str]:
     if isinstance(parsed, list):
         return [str(x) for x in parsed]
     return []
-
-
-def row_to_dict(row: sqlite3.Row | None) -> dict | None:
-    return dict(row) if row is not None else None
-
-
-def rows_to_dicts(rows: list[sqlite3.Row]) -> list[dict]:
-    return [dict(r) for r in rows]

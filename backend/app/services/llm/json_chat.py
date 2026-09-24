@@ -43,12 +43,20 @@ def stream_chat(
 
 
 def chat_json(
-    client: LLMClient, prompt: str, *, timeout: float = DEFAULT_GENERATE_TIMEOUT
+    client: LLMClient,
+    prompt: str,
+    *,
+    parser=parse_json_loose,
+    timeout: float = DEFAULT_GENERATE_TIMEOUT,
 ) -> tuple[dict, str]:
-    """返回 `(解析后的 dict, 最后一次原始输出)`；原始输出用于排障与回传。"""
+    """返回 `(解析后的 dict, 最后一次原始输出)`；原始输出用于排障与回传。
+
+    `parser` 可换（如数组解析 `parse_json_array_loose`）——重试一次的逻辑只此一份，
+    各服务不要再手抄。
+    """
     raw = client.chat([{"role": "user", "content": prompt}], json_mode=True, timeout=timeout)
     try:
-        return parse_json_loose(raw), raw
+        return parser(raw), raw
     except json.JSONDecodeError as first_err:
         raw = client.chat(
             [{"role": "user", "content": prompt + _RETRY_SUFFIX.format(err=first_err)}],
@@ -56,6 +64,6 @@ def chat_json(
             timeout=timeout,
         )
         try:
-            return parse_json_loose(raw), raw
+            return parser(raw), raw
         except json.JSONDecodeError:
             raise JSONParseFailedError(detail={"raw_ai_output": raw}) from None

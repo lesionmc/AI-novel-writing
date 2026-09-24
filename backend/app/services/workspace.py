@@ -20,7 +20,7 @@ from collections.abc import Callable
 from app.book_context import get_request_slug
 from app.config import settings
 from app.db.registry import get_registry
-from app.errors import ConflictError, NoActiveBookError, NotFoundError
+from app.errors import ConflictError, NotFoundError
 from app.logging_config import get_logger, log_fields
 
 logger = get_logger(__name__)
@@ -146,10 +146,3 @@ def resolve_slug(
             "该资源在多个作品中存在，无法确定归属，请先进入对应作品"
         )
     raise not_found
-
-
-def require_active() -> str:
-    active = get_active()
-    if not active or not get_registry().exists(active):
-        raise NoActiveBookError()
-    return active

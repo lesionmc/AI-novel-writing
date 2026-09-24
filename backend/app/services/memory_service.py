@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import sqlite3
 
 from app.db.registry import get_registry
@@ -17,10 +16,10 @@ from app.models.memory import (
 from app.repositories import book_repo, chapter_repo, character_repo, foreshadow_repo, memory_repo
 from app.services import foreshadow_rules, workspace
 from app.services.llm import registry as llm_registry
+from app.services.llm.json_chat import chat_json
 from app.services.llm.prompts import build_prompt
 from app.services.presence import characters_in_text
 from app.services.writeback import confirm_writeback as _confirm
-from app.utils.json_parse import parse_json_loose
 from app.utils.labels import importance_label, role_label
 
 logger = get_logger(__name__)
@@ -150,22 +149,15 @@ def finalize_chapter(slug: str, chapter_id: int) -> WritebackSuggestion:
         variables = _build_variables(conn, chapter)
         prompt = build_prompt("memory_writeback", variables, provider=client.provider)
 
-    raw = client.chat([{"role": "user", "content": prompt}], json_mode=True)
     try:
-        data = parse_json_loose(raw)
-    except json.JSONDecodeError as first_err:
-        retry_prompt = (
-            f"{prompt}\n\n上次输出的 JSON 解析失败，错误信息：{first_err}。"
-            "请重新输出，确保是合法 JSON，不要包含任何解释文字。"
+        data, _raw = chat_json(client, prompt)
+    except JSONParseFailedError:
+        logger.warning(
+            "writeback json parse failed after retry",
+            **log_fields(slug=slug, chapter_id=chapter_id),
         )
-        raw = client.chat([{"role": "user", "content": retry_prompt}], json_mode=True)
-        try:
-            data = parse_json_loose(raw)
-        except json.JSONDecodeError:
-            logger.warning("writeback json parse failed after retry",
-                           **log_fields(slug=slug, chapter_id=chapter_id))
-            raise JSONParseFailedError(detail={"raw_ai_output": raw}) from None
-    return _normalize(data, raw)
+        raise
+    return _normalize(data, _raw)
 
 
 def confirm_chapter(slug: str, chapter_id: int, suggestion: WritebackSuggestion) -> ConfirmResult:

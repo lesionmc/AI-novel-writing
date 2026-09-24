@@ -14,10 +14,6 @@ def _has(conn: sqlite3.Connection, table: str, id_value: int) -> bool:
     return fetch_scalar(conn, f"SELECT 1 FROM {table} WHERE id = ?", (id_value,)) is not None
 
 
-def has_book(conn: sqlite3.Connection, id_value: int) -> bool:
-    return _has(conn, "book", id_value)
-
-
 def has_character(conn: sqlite3.Connection, id_value: int) -> bool:
     return _has(conn, "character", id_value)
 

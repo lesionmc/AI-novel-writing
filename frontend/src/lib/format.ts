@@ -14,7 +14,7 @@ const dtFmt = new Intl.DateTimeFormat('zh-CN', {
 const timeFmt = new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit' });
 const dateFmt = new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
-export function parseDate(iso: string | null | undefined): Date | null {
+function parseDate(iso: string | null | undefined): Date | null {
   if (!iso) return null;
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? null : d;
@@ -35,11 +35,6 @@ export function formatWordCount(n: number): string {
   return `${numberFmt.format(v)} 字`;
 }
 
-/** 近似 token（用于召回开销展示）：中文约 1.5 字/token */
-export function estimateTokens(chars: number): number {
-  return Math.round((chars || 0) / 1.5);
-}
-
 export function formatDateTime(iso: string | null | undefined): string {
   const d = parseDate(iso);
   return d ? dtFmt.format(d) : '—';
@@ -50,7 +45,8 @@ export function formatTime(iso: string | null | undefined): string {
   return d ? timeFmt.format(d) : '—';
 }
 
-export function formatDate(iso: string | null | undefined): string {
+/** zh-CN 日期（仅本模块内部用于 formatRelative） */
+function formatDate(iso: string | null | undefined): string {
   const d = parseDate(iso);
   return d ? dateFmt.format(d) : '—';
 }

@@ -128,11 +128,6 @@ def get_version(conn: sqlite3.Connection, version_id: int) -> dict | None:
     return fetch_one(conn, "SELECT * FROM chapter_version WHERE id = ?", (version_id,))
 
 
-def get_content(conn: sqlite3.Connection, chapter_id: int) -> str:
-    row = fetch_one(conn, "SELECT content FROM chapter WHERE id = ?", (chapter_id,))
-    return str(row["content"]) if row else ""
-
-
 def list_full_chapters(
     conn: sqlite3.Connection, start_seq: int | None = None, end_seq: int | None = None
 ) -> list[dict]:

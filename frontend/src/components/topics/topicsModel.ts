@@ -82,8 +82,3 @@ export function competitionWords(competition: number): string {
 }
 
 /** 一句话结论：值得优先考虑 / 需要更独特的切入角度 */
-export function blueOceanWords(score: number): string {
-  if (score >= 70) return '很值得写';
-  if (score >= 45) return '可以写';
-  return '要很独特的切入';
-}

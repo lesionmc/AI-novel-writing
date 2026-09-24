@@ -20,19 +20,11 @@ export const queryKeys = {
 
   /** [注意] 召回有写副作用：此 key 只用于一次性读取，禁止轮询/预取 */
   recall: (chapterId: number) => ['recall', chapterId] as const,
-  characterStates: (slug: string, upto: number) => ['character-states', slug, upto] as const,
   plotArcs: (slug: string) => ['plot-arcs', slug] as const,
-  recallLogs: (slug: string) => ['recall-logs', slug] as const,
 
   providers: () => ['providers'] as const,
-  providerUsage: (id: number) => ['provider-usage', id] as const,
-
   /** 系统能力自检（Spec §12）：会话内 staleTime Infinity，不轮询 */
   capabilities: () => ['system-capabilities'] as const,
-
-  stats: (slug: string) => ['stats', slug] as const,
-  affectedChapters: (characterId: number) => ['affected-chapters', characterId] as const,
-  search: (slug: string, q: string) => ['search', slug, q] as const,
 
   /** 题材库（选题向导的选项来源，M1 增项）：只读、可缓存 */
   topicGenres: () => ['topic-genres'] as const,

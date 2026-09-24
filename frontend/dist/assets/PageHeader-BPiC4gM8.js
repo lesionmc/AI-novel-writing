@@ -1,1 +1,0 @@
-import{j as e}from"./index-DU4yrv80.js";function i({title:s,subtitle:a,actions:r}){return e.jsxs("header",{className:"pageHeader",children:[e.jsxs("div",{children:[e.jsx("h1",{className:"pageTitle",children:s}),a?e.jsx("p",{className:"pageSubtitle",children:a}):null]}),r]})}export{i as P};

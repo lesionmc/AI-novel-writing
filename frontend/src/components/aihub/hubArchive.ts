@@ -113,7 +113,3 @@ export function saveHubArchive(slug: string, data: HubArchive): boolean {
     })),
   });
 }
-
-export function clearHubArchive(slug: string): void {
-  archive.remove(slug);
-}

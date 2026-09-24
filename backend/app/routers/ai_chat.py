@@ -13,6 +13,7 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
 from app.models.ai_chat import AiChatRequest, AiChatResponse
+from app.routers._params import sse_response
 from app.services import ai_chat_service
 
 router = APIRouter(tags=["ai"])
@@ -32,11 +33,7 @@ def ai_chat_stream(book: str, payload: AiChatRequest) -> StreamingResponse:
     开流之后的异常以 error 帧送达。与审校同一套 SSE 约定。
     """
     frames = ai_chat_service.chat_stream(book, payload)
-    return StreamingResponse(
-        frames,
-        media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
+    return sse_response(frames)
 
 
 # ------------------------------------------------------------- 无作品模式（AI 助手不绑书）
@@ -54,8 +51,4 @@ def ai_chat_global(payload: AiChatRequest) -> AiChatResponse:
 def ai_chat_stream_global(payload: AiChatRequest) -> StreamingResponse:
     """一轮无作品对话（流式）。前置只查模型是否已配。"""
     frames = ai_chat_service.chat_stream("", payload)
-    return StreamingResponse(
-        frames,
-        media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
+    return sse_response(frames)

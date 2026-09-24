@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import sqlite3
 
 from app.db.registry import get_registry, now_iso
@@ -23,6 +22,7 @@ from app.models.outline import (
 from app.repositories import foreshadow_repo, locate_repo, outline_repo
 from app.services import workspace
 from app.services.llm import registry as llm_registry
+from app.services.llm.json_chat import chat_json
 from app.services.llm.prompts import build_prompt
 from app.utils.json_parse import parse_json_array_loose
 
@@ -128,21 +128,11 @@ def expand_outline(outline_id: int, payload: OutlineExpandRequest) -> OutlineExp
         }
         prompt = build_prompt("outline_expand", variables, provider=client.provider)
 
-    raw = client.chat([{"role": "user", "content": prompt}], json_mode=True)
     try:
-        data = parse_json_array_loose(raw)
-    except json.JSONDecodeError as first_err:
-        retry = (
-            f"{prompt}\n\n上次输出的 JSON 解析失败，错误信息：{first_err}。"
-            "请重新输出，确保是合法 JSON，不要包含任何解释文字。"
-        )
-        raw = client.chat([{"role": "user", "content": retry}], json_mode=True)
-        try:
-            data = parse_json_array_loose(raw)
-        except json.JSONDecodeError:
-            logger.warning("outline expand parse failed", **log_fields(outline_id=outline_id))
-            raise JSONParseFailedError(detail={"raw_ai_output": raw}) from None
-
+        data, raw = chat_json(client, prompt, parser=parse_json_array_loose)
+    except JSONParseFailedError:
+        logger.warning("outline expand parse failed", **log_fields(outline_id=outline_id))
+        raise
     candidates = _normalize_candidates(data, payload.expand_level)
     return OutlineExpandResponse(
         parent_id=outline_id,
@@ -245,8 +235,6 @@ def summarize_volume(outline_id: int) -> dict:
             },
             provider=client.provider,
         )
-
-    from app.services.llm.json_chat import chat_json
 
     data, raw = chat_json(client, prompt)
     raw_summary = data.get("summary")

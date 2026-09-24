@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client';
 import { queryKeys } from '@/api/queryKeys';
 import { useDeskStore } from '@/stores/deskStore';
-import type { CreateChapterRequest, CreateVersionRequest, UpdateChapterRequest } from '@/types/api';
+import type { CreateChapterRequest, UpdateChapterRequest } from '@/types/api';
 
 export function useCreateChapter(slug: string) {
   const qc = useQueryClient();
@@ -38,18 +38,6 @@ export function useDeleteChapter(slug: string) {
     mutationFn: (id: number) => api.deleteChapter(id),
     onSuccess: (_data, id) => {
       qc.removeQueries({ queryKey: queryKeys.chapter(id) });
-      void qc.invalidateQueries({ queryKey: queryKeys.chapterBriefs(slug) });
-    },
-  });
-}
-
-export function useCreateVersion(slug: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: CreateVersionRequest }) =>
-      api.createVersion(id, payload),
-    onSuccess: (_v, { id }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.versions(id) });
       void qc.invalidateQueries({ queryKey: queryKeys.chapterBriefs(slug) });
     },
   });

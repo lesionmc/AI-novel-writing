@@ -155,13 +155,6 @@ def probe_capabilities(force: bool = False) -> Capabilities:
         return caps
 
 
-def reset_capability_cache() -> None:
-    """仅供测试使用：清空能力缓存。"""
-    global _caps_cache
-    with _caps_lock:
-        _caps_cache = None
-
-
 def enable_wal(conn: sqlite3.Connection) -> None:
     """把库切到 WAL 模式。
 

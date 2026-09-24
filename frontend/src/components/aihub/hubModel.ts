@@ -82,11 +82,6 @@ export const HUB_ACTIONS: HubAction[] = [
   { key: 'sensitive', label: '敏感词', mode: 'sensitive', intent: '', needsChapter: false, needsModel: false, hint: '按本地词库扫全书（不联网、不花模型额度）' },
 ];
 
-/** 只读动作（不产出草稿、不落库）——渲染层据此走报告卡片而不是草稿卡 */
-export function isReadOnlyAction(action: HubAction): boolean {
-  return action.mode !== 'chat';
-}
-
 export function actionOf(key: string): HubAction {
   return HUB_ACTIONS.find((a) => a.key === key) ?? HUB_ACTIONS[0];
 }

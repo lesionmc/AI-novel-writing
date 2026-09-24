@@ -8,7 +8,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
-from app.routers._params import RowId
+from app.routers._params import RowId, sse_response
 from app.models.audit import AiFlavorResult, RhythmResult, SensitiveResult, WordlistStatus
 from app.models.writing_ai import ConsistencyRequest
 from app.services import audit_service, consistency_service
@@ -51,14 +51,4 @@ def audit_consistency_stream(
     """
     consistency_service.ensure_ready(book)
     scope = payload.scope if payload else None
-    return StreamingResponse(
-        consistency_service.stream(book, scope),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            # 反代（nginx 等）默认会缓冲响应体，那样 SSE 就变成"审完一次性吐出来"，
-            # 前端看不到进度。这个头是关闭 nginx 缓冲的通行做法。
-            "X-Accel-Buffering": "no",
-        },
-    )
+    return sse_response(consistency_service.stream(book, scope))

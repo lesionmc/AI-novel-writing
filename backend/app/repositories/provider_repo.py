@@ -166,9 +166,5 @@ def list_enabled(conn: sqlite3.Connection) -> list[dict]:
     return [dict(r) for r in rows]
 
 
-def any_enabled(conn: sqlite3.Connection) -> bool:
-    return fetch_one(conn, "SELECT 1 AS x FROM llm_provider WHERE enabled = 1 LIMIT 1") is not None
-
-
 def clear_defaults(conn: sqlite3.Connection) -> None:
     conn.execute("UPDATE llm_provider SET is_default = 0")

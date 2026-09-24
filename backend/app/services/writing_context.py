@@ -41,7 +41,7 @@ from app.repositories import (
     world_entry_repo,
 )
 from app.services.presence import characters_in_text
-from app.utils.text import count_words, strip_html
+from app.utils.text import strip_html
 
 # 各块字符预算（中文字符）。超预算按块截断并标注，绝不静默。
 MAX_SETTINGS_CHARS = 6000
@@ -347,7 +347,3 @@ def load(conn: sqlite3.Connection, slug: str, chapter: dict) -> WritingContext:
         ctx_outlines=outline_count,
         ctx_has_prev_summary=bool(prev_summary),
     )
-
-
-def chapter_word_count(chapter: dict) -> int:
-    return count_words(chapter.get("content") or "")

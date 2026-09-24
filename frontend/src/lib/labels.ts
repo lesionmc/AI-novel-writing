@@ -5,7 +5,6 @@
 
 import type { BadgeVariant } from '@/types/ui';
 import type {
-  ChapterStatus,
   CharacterRole,
   CharacterStatus,
   ConflictSeverity,
@@ -39,23 +38,10 @@ export const CHARACTER_STATUS_LABELS: Record<CharacterStatus, string> = {
   unknown: '未知',
 };
 
-export const CHARACTER_STATUS_VARIANT: Record<CharacterStatus, BadgeVariant> = {
-  alive: 'success',
-  dead: 'neutral',
-  missing: 'warning',
-  unknown: 'neutral',
-};
-
 export const FORESHADOW_STATUS_LABELS: Record<ForeshadowStatus, string> = {
   open: '未回收',
   closed: '已回收',
   abandoned: '已放弃',
-};
-
-export const FORESHADOW_STATUS_VARIANT: Record<ForeshadowStatus, BadgeVariant> = {
-  open: 'aging',
-  closed: 'success',
-  abandoned: 'neutral',
 };
 
 export const IMPORTANCE_LABELS: Record<Importance, string> = {
@@ -68,16 +54,6 @@ export const IMPORTANCE_VARIANT: Record<Importance, BadgeVariant> = {
   high: 'danger',
   medium: 'warning',
   low: 'neutral',
-};
-
-export const CHAPTER_STATUS_LABELS: Record<ChapterStatus, string> = {
-  draft: '草稿',
-  done: '已完成',
-};
-
-export const CHAPTER_STATUS_VARIANT: Record<ChapterStatus, BadgeVariant> = {
-  draft: 'neutral',
-  done: 'success',
 };
 
 export const OUTLINE_LEVEL_LABELS: Record<OutlineLevel, string> = {
