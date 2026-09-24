@@ -15,6 +15,8 @@ export interface DraftCardProps {
   busy: boolean;
   onConfirm: () => void;
   onDiscard: () => void;
+  /** 书名候选卡专用：点某一行 = 采用该书名 */
+  onPickTitle?: (title: string) => void;
 }
 
 function CharacterRows({ draft }: { draft: Extract<HubDraft, { kind: 'characters' }> }) {
@@ -105,24 +107,40 @@ function BookPlanRows({ draft }: { draft: Extract<HubDraft, { kind: 'book_plan' 
  * 草稿卡片 = **AI 产出到落库之间的那道人工闸门**（红线 2）。
  * 用户点「确认写入」之前，一个字都不会进库；「丢弃」则只留在本机对话里。
  *
- * 正文（`prose`）是唯一例外：它**永不自动保存**，只提供「复制这段」+ 去写作台的入口，
- * 由作者自己粘贴、删改、定稿。
+ * 三个不落当前作品库的特例：`prose`（只复制）、`retrospective`（只复制）、
+ * `title_options`（点某一行才 PATCH 成书名 —— AI 出量、人拍板）。
  */
-export function DraftCard({ slug, draft, state, busy, onConfirm, onDiscard }: DraftCardProps) {
+export function DraftCard({
+  slug,
+  draft,
+  state,
+  busy,
+  onConfirm,
+  onDiscard,
+  onPickTitle,
+}: DraftCardProps) {
   const isProse = draft.kind === 'prose';
+  const isRetro = draft.kind === 'retrospective';
   const isPlan = draft.kind === 'book_plan';
+  const isTitles = draft.kind === 'title_options';
   const resolved = state !== undefined;
+
+  const headNote = isProse
+    ? '（草稿，不会自动保存）'
+    : isRetro
+      ? '（复制带走，存进你的方法论文件夹）'
+      : isPlan
+        ? '（点确认后这本书就正式建起来）'
+        : isTitles
+          ? '（点中意的书名即采用 —— 定稿权在你）'
+          : '（还没写进作品，等你确认）';
 
   return (
     <div className={[styles.draftCard, resolved ? styles.draftDone : ''].join(' ')}>
       <span className={styles.draftHead}>
         <Icon name="sparkles" size={16} />
         {draftLabel(draft)}
-        {isProse
-          ? '（草稿，不会自动保存）'
-          : isPlan
-            ? '（点确认后这本书就正式建起来）'
-            : '（还没写进作品，等你确认）'}
+        {headNote}
       </span>
 
       {draft.kind === 'characters' ? <CharacterRows draft={draft} /> : null}
@@ -130,6 +148,24 @@ export function DraftCard({ slug, draft, state, busy, onConfirm, onDiscard }: Dr
       {draft.kind === 'outline_nodes' ? <OutlineRows draft={draft} /> : null}
       {draft.kind === 'book_plan' ? <BookPlanRows draft={draft} /> : null}
       {draft.kind === 'prose' ? <div className={styles.prose}>{draft.text}</div> : null}
+      {draft.kind === 'retrospective' ? (
+        <div className={styles.prose}>{draft.content}</div>
+      ) : null}
+      {draft.kind === 'title_options' ? (
+        <div className={styles.titleGrid}>
+          {draft.titles.map((t) => (
+            <button
+              key={t}
+              type="button"
+              className={styles.titleChip}
+              disabled={busy || resolved}
+              onClick={() => onPickTitle?.(t)}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {resolved ? (
         <span className={styles.draftStateText}>
@@ -137,9 +173,13 @@ export function DraftCard({ slug, draft, state, busy, onConfirm, onDiscard }: Dr
             ? '已丢弃，没有写进作品。'
             : isProse
               ? '已复制。到写作台粘贴，改完再保存。'
-              : isPlan
-                ? '书已建好，这轮对话已带进新书。'
-                : '已写进作品。'}
+              : isRetro
+                ? '复盘已复制。'
+                : isTitles
+                  ? '书名已采用，随时能再改。'
+                  : isPlan
+                    ? '书已建好，这轮对话已带进新书。'
+                    : '已写进作品。'}
           {state === 'applied' && isProse ? (
             <>
               {' '}
@@ -149,11 +189,13 @@ export function DraftCard({ slug, draft, state, busy, onConfirm, onDiscard }: Dr
         </span>
       ) : (
         <div className={styles.draftActions}>
-          <Button variant="primary" size="sm" loading={busy} onClick={onConfirm}>
-            {isProse ? '复制这段' : isPlan ? '就建这本' : '确认写入'}
-          </Button>
+          {isTitles ? null : (
+            <Button variant="primary" size="sm" loading={busy} onClick={onConfirm}>
+              {isProse ? '复制这段' : isRetro ? '复制复盘' : isPlan ? '就建这本' : '确认写入'}
+            </Button>
+          )}
           <Button variant="ghost" size="sm" disabled={busy} onClick={onDiscard}>
-            丢弃
+            {isTitles ? '不用了' : '丢弃'}
           </Button>
         </div>
       )}

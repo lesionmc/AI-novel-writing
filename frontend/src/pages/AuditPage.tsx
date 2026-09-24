@@ -4,14 +4,16 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ConsistencySection } from '@/components/audit/ConsistencySection';
 import { AiFlavorSection } from '@/components/audit/AiFlavorSection';
+import { RhythmSection } from '@/components/audit/RhythmSection';
 import { SensitiveSection } from '@/components/audit/SensitiveSection';
 
 /**
  * 质检 `/book/:slug/audit`（04 §5.4）。
- * 三个独立区块，各自一个按钮 + 结果列表：
+ * 四个独立区块：
  *   1) 一致性审校 —— 完整实现（SSE 流式，边审边出；可中断）
  *   2) 去 AI 味   —— 完整实现（单章）
- *   3) 敏感词自查 —— 完整实现（整本书），含免责文案与词库缺失引导
+ *   3) 节奏曲线   —— 完整实现（整本书，纯本地统计，标连续低洼段）
+ *   4) 敏感词自查 —— 完整实现（整本书），含免责文案与词库缺失引导
  * 页面本身只做组装，细节在各区块组件里（对齐开发导览「场景 B：加一个页面」）。
  */
 export function AuditPage() {
@@ -42,11 +44,12 @@ export function AuditPage() {
     <main className="pageContent">
       <PageHeader
         title="质检"
-        subtitle="写完之后，让工具帮你把把关：① 通读全书找前后矛盾（防吃书）② 检查这一章读起来像不像机器写的 ③ 拿你的词表扫一遍敏感词。结果都只做参考，改不改由你决定。"
+        subtitle="写完之后逐层把关：① 通读全书找前后矛盾 ② 检查这一章读起来像不像机器写的 ③ 看逐章节奏有没有连续掉速 ④ 用你自己的词表扫一遍敏感词。结果都只作参考，改不改由你定。"
       />
 
       <ConsistencySection slug={slug} />
       <AiFlavorSection slug={slug} />
+      <RhythmSection slug={slug} />
       <SensitiveSection slug={slug} />
     </main>
   );

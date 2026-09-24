@@ -37,6 +37,28 @@ export interface AiFlavorResult {
   hits: AiFlavorHit[];
 }
 
+/** 一章的节奏指标（`GET /api/books/{book}/audit/rhythm`，纯本地统计） */
+export interface RhythmPoint {
+  seq: number;
+  title: string | null;
+  word_count: number;
+  dialogue_ratio: number;
+  conflict_density: number;
+  /** 节奏强度 0-100（对话占比 + 句长波动 + 对峙词密度合成） */
+  pace: number;
+}
+
+export interface RhythmDip {
+  start_seq: number;
+  end_seq: number;
+}
+
+export interface RhythmResult {
+  chapters: RhythmPoint[];
+  low_threshold: number;
+  dips: RhythmDip[];
+}
+
 /** 敏感词分类标识（`11-敏感词库说明.md` §3.2） */
 export type SensitiveCategory =
   | 'politics'

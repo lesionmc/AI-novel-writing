@@ -229,3 +229,41 @@ def test_chapter_save_ignores_non_whitelisted_fields(client, book):
         row = chapter_repo.get(conn, ch["id"])
     assert row["title"] == "改过的标题"  # 白名单内字段正常写入
     assert row["status"] == "draft"  # 白名单外字段被忽略，未被静默改写
+
+
+# --------------------------------------------------------- 爽点—节奏曲线
+def test_rhythm_endpoint_is_local_and_no_model(client, book):
+    """节奏曲线是纯本地统计：没配模型也能跑（红线 3）。"""
+    _add_chapter(client, book, "天气很好。他走了很久。路上很安静。天色暗了。他回家。" * 5, title="平")
+    _add_chapter(
+        client, book,
+        "突然，刀光劈来！他怒吼：「滚开！」对方冷笑：「你输了。」碎片四溅，杀机毕露。" * 5,
+        title="紧",
+    )
+    resp = client.get(f"/api/books/{book}/audit/rhythm")
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["low_threshold"] == 40
+    pts = body["chapters"]
+    assert len(pts) == 2
+    assert pts[0]["pace"] < pts[1]["pace"], "冲突对话章节奏应高于平铺直叙章"
+    assert pts[1]["dialogue_ratio"] > 0
+
+
+def test_rhythm_detects_consecutive_dip(client, book):
+    """连续 ≥2 章低节奏 → 报一个低洼区。"""
+    flat = "天气很好。他走了很久。路上很安静。天色暗了。他回家。" * 5
+    _add_chapter(client, book, flat, title="一")
+    _add_chapter(client, book, flat, title="二")
+    resp = client.get(f"/api/books/{book}/audit/rhythm")
+    dips = resp.json()["dips"]
+    assert dips == [{"start_seq": 1, "end_seq": 2}]
+
+
+def test_rhythm_ignores_empty_chapters(client, book):
+    """没正文的章不进曲线 —— 不能把平线当数据画给用户看。"""
+    _add_chapter(client, book, "", title="空")
+    _add_chapter(client, book, "突然他反手一击！杀机毕露，碎片四溅。", title="有正文")
+    body = client.get(f"/api/books/{book}/audit/rhythm").json()
+    assert [p["seq"] for p in body["chapters"]] == [2]
+    assert body["dips"] == []

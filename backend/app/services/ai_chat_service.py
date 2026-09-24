@@ -82,6 +82,19 @@ _INTENT_TEXT = {
         "  4) 三样齐了，产出一张 `book_plan` 立项卡，告诉他点「就建这本」就能正式开起来。\n"
         "在他还没答够之前不要急着出卡；语气像个耐心的老编辑，别用术语。"
     ),
+    "title_options": (
+        "他要**起书名**。产出一张 `title_options` 卡：给 12–20 个彼此明显不同的候选，"
+        "按这本书的题材与卖点来起，走「反差 / 具体意象 / 悬念」路子，宁土不空；"
+        "在 `reply` 里点出你最推荐的两个和理由（一两句即可）。"
+        "书名是包装步的事：**作者拍板之前，一个字都不要替他定**。"
+    ),
+    "retrospect": (
+        "他想**把这本书的写作过程复盘沉淀下来**。基于记忆包（全书摘要、伏笔、章节、"
+        "人物状态），产出一张 `retrospective` 复盘卡，`payload.content` 是一份结构化"
+        "markdown，四段固定：① 这本书立住了什么（验证有效的设定/桥段）② 哪里掉速了"
+        "（结合章节数据点名具体段落）③ 踩过的坑（前后矛盾、吃书、废设定）"
+        "④ 下一本直接复用的模板（可执行的做法，不是感想）。"
+    ),
 }
 
 #: 没有指定章节时用的"空章节"：设定库照常注入，但不带任何本章上下文。
@@ -197,7 +210,27 @@ def _draft_from(raw: object) -> AiChatDraft | None:
     if kind == "book_plan":
         plan = _norm_book_plan(payload)
         return AiChatDraft(kind="book_plan", payload=plan) if plan else None
+    if kind == "title_options":
+        titles = _norm_titles(payload.get("titles"))
+        return AiChatDraft(kind="title_options", payload={"titles": titles}) if titles else None
+    if kind == "retrospective":
+        content = _text(payload.get("content"), 20000)
+        # 至少一个二级标题才算一张复盘卡：一段散话配不上「复盘」这张卡的承诺
+        if not content or "## " not in content:
+            return None
+        title = _text(payload.get("title"), 120) or "写作复盘"
+        return AiChatDraft(kind="retrospective", payload={"title": title, "content": content})
     return None
+
+
+def _norm_titles(raw: object) -> list[str]:
+    """书名候选：去空去重，最多 20 条、每条 ≤ 书名长度上界。少于 2 条不成卡。"""
+    out: list[str] = []
+    for item in raw if isinstance(raw, list) else []:
+        title = _text(item, 80)
+        if title and title not in out:
+            out.append(title)
+    return out[:20] if len(out) >= 2 else []
 
 
 def _norm_book_plan(payload: dict) -> dict | None:

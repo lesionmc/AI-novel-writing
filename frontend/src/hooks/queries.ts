@@ -172,3 +172,13 @@ export function useWordlistStatus() {
     staleTime: STALE.meta,
   });
 }
+
+/** 爽点—节奏曲线（整本书，纯本地统计）。写完章节后应重取，故 staleTime 用列表档 */
+export function useRhythm(slug: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.rhythm(slug ?? ''),
+    queryFn: () => api.auditRhythm(slug as string),
+    enabled: Boolean(slug),
+    staleTime: STALE.list,
+  });
+}

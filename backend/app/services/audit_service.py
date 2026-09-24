@@ -12,13 +12,14 @@ from app.errors import ChapterNotFoundError
 from app.models.audit import (
     AiFlavorResult,
     FlavorHitOut,
+    RhythmResult,
     SensitiveHitOut,
     SensitiveResult,
     WordlistStatus,
 )
 from app.repositories import chapter_repo, locate_repo
 from app.services import workspace
-from app.services.audit import ai_flavor, sensitive
+from app.services.audit import ai_flavor, rhythm, sensitive
 from app.services.audit.wordlist import load_wordlist, wordlist_path
 from app.utils.text import strip_html
 
@@ -39,6 +40,16 @@ def detect_ai_flavor(chapter_id: int) -> AiFlavorResult:
             for h in hits
         ],
     )
+
+
+def rhythm_curve(slug: str) -> RhythmResult:
+    """全书逐章节奏曲线（纯本地统计，不调模型、不花额度）。"""
+    registry = get_registry()
+    registry.require(slug)
+    workspace.set_active(slug)
+    with registry.database(slug).connection() as conn:
+        rows = chapter_repo.list_full_chapters(conn)
+    return RhythmResult(**rhythm.analyze(rows))
 
 
 def scan_sensitive(slug: str) -> SensitiveResult:

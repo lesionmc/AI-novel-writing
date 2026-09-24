@@ -22,6 +22,8 @@ export interface ChatStreamProps {
   streamIndex: number | null;
   onConfirmDraft: (index: number) => void;
   onDiscardDraft: (index: number) => void;
+  /** 书名候选卡：点某行 = 采用该书名 */
+  onPickTitle: (index: number, title: string) => void;
   /** 停止流式审校 */
   onStopReading: () => void;
 }
@@ -37,6 +39,7 @@ export function ChatStream({
   streamIndex,
   onConfirmDraft,
   onDiscardDraft,
+  onPickTitle,
   onStopReading,
 }: ChatStreamProps) {
   const endRef = useRef<HTMLDivElement>(null);
@@ -115,6 +118,7 @@ export function ChatStream({
                   busy={busyIndex === index}
                   onConfirm={() => onConfirmDraft(index)}
                   onDiscard={() => onDiscardDraft(index)}
+                  onPickTitle={(title) => onPickTitle(index, title)}
                 />
               ) : null}
               {reading ? (

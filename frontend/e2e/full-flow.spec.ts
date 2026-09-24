@@ -200,10 +200,30 @@ test('全流程：建书 → AI 对话 → 写作 → 大纲 → 质检 → 导�
     await expect(page.getByText(/还没有挂着写完的章节/)).toBeVisible({ timeout: 30_000 });
   });
 
-  await test.step('质检：去 AI 味检测出分', async () => {
+  await test.step('起书名：候选卡点一个即定为正式书名', async () => {
+    await page.goto(`${SLUG_PATH}/chat`);
+    await page.getByRole('button', { name: '起书名' }).click();
+    await page.getByLabel('输入你想说的话').fill('给这本书起个名字');
+    await page.getByRole('button', { name: /发送/ }).click();
+    await expect(page.getByText('书名候选 ·')).toBeVisible({ timeout: 30_000 });
+    await page.getByRole('button', { name: '（mock）书名甲' }).click();
+    await expect(page.getByText('书名已采用，随时能再改')).toBeVisible({ timeout: 15_000 });
+    // 书名改回来：后面的删书步骤按原书名定位卡片
+    const books = await request.get('/api/books');
+    const renamed = ((await books.json()) as { slug: string; title: string }[]).find(
+      (b) => b.title === '（mock）书名甲',
+    );
+    if (renamed) {
+      await request.patch(`/api/books/${encodeURIComponent(renamed.slug)}`, { data: { title: BOOK } });
+    }
+  });
+
+  await test.step('质检：去 AI 味检测出分 + 节奏曲线渲染', async () => {
     await page.goto(`${SLUG_PATH}/audit`);
     await page.getByRole('button', { name: '开始检测' }).click();
     await expect(page.getByText(/AI 味：/)).toBeVisible({ timeout: 30_000 });
+    // 节奏曲线是本地统计，进页即算好：有正文就该出现折线
+    await expect(page.getByRole('img', { name: /节奏曲线/ })).toBeVisible();
   });
 
   await test.step('设定库：关系图谱如实提示', async () => {

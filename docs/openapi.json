@@ -71,7 +71,9 @@
               "world_entries",
               "outline_nodes",
               "prose",
-              "book_plan"
+              "book_plan",
+              "title_options",
+              "retrospective"
             ],
             "title": "Kind",
             "type": "string"
@@ -3185,6 +3187,100 @@
         "title": "RecallResult",
         "type": "object"
       },
+      "RhythmDip": {
+        "description": "一段低洼区：连续 ≥2 章 pace 低于阈值。",
+        "properties": {
+          "end_seq": {
+            "title": "End Seq",
+            "type": "integer"
+          },
+          "start_seq": {
+            "title": "Start Seq",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "start_seq",
+          "end_seq"
+        ],
+        "title": "RhythmDip",
+        "type": "object"
+      },
+      "RhythmPoint": {
+        "description": "一章的节奏指标（纯本地统计，非读者满意度）。",
+        "properties": {
+          "conflict_density": {
+            "title": "Conflict Density",
+            "type": "number"
+          },
+          "dialogue_ratio": {
+            "title": "Dialogue Ratio",
+            "type": "number"
+          },
+          "pace": {
+            "title": "Pace",
+            "type": "integer"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "seq",
+          "word_count",
+          "dialogue_ratio",
+          "conflict_density",
+          "pace"
+        ],
+        "title": "RhythmPoint",
+        "type": "object"
+      },
+      "RhythmResult": {
+        "description": "爽点—节奏曲线。`pace` 只衡量文本节奏，指路用，结论仍要人来读。",
+        "properties": {
+          "chapters": {
+            "items": {
+              "$ref": "#/components/schemas/RhythmPoint"
+            },
+            "title": "Chapters",
+            "type": "array"
+          },
+          "dips": {
+            "items": {
+              "$ref": "#/components/schemas/RhythmDip"
+            },
+            "title": "Dips",
+            "type": "array"
+          },
+          "low_threshold": {
+            "title": "Low Threshold",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "chapters",
+          "low_threshold",
+          "dips"
+        ],
+        "title": "RhythmResult",
+        "type": "object"
+      },
       "SearchHit": {
         "properties": {
           "chapter_seq": {
@@ -4298,6 +4394,49 @@
           }
         },
         "summary": "Audit Consistency Stream",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/books/{book}/audit/rhythm": {
+      "get": {
+        "description": "爽点—节奏曲线（纯本地统计，不花模型额度）：逐章节奏分 + 连续低洼区。",
+        "operationId": "audit_rhythm_api_books__book__audit_rhythm_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "book",
+            "required": true,
+            "schema": {
+              "title": "Book",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RhythmResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Audit Rhythm",
         "tags": [
           "audit"
         ]

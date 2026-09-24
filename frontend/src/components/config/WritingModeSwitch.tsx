@@ -40,7 +40,7 @@ export function WritingModeSwitch({ slug, current }: WritingModeSwitchProps) {
           显示与标色。不写这句，用户按文案选档会发现"没区别"，进而怀疑设置没生效。 */}
       <p className={styles.sectionHint} style={{ marginBottom: 'var(--space-3)' }}>
         现在「辅助」和「半自动」的行为完全相同，只影响顶栏 AI 菜单的显示与标色 ——
-        选哪个都不会漏掉防吃书功能。
+        选哪个都不影响一致性审校等防矛盾功能。
       </p>
       <div className={styles.modeGrid} role="radiogroup" aria-label="写作模式">
         {MODES.map((mode) => {

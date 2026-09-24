@@ -167,6 +167,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/books/{book}/audit/rhythm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Audit Rhythm
+         * @description 爽点—节奏曲线（纯本地统计，不花模型额度）：逐章节奏分 + 连续低洼区。
+         */
+        get: operations["audit_rhythm_api_books__book__audit_rhythm_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/books/{book}/audit/sensitive": {
         parameters: {
             query?: never;
@@ -1034,7 +1054,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "characters" | "world_entries" | "outline_nodes" | "prose" | "book_plan";
+            kind: "characters" | "world_entries" | "outline_nodes" | "prose" | "book_plan" | "title_options" | "retrospective";
             /** Payload */
             payload?: {
                 [key: string]: unknown;
@@ -2196,6 +2216,46 @@ export interface components {
             /** Recalled Chunks */
             recalled_chunks?: components["schemas"]["RecallChunk"][];
         };
+        /**
+         * RhythmDip
+         * @description 一段低洼区：连续 ≥2 章 pace 低于阈值。
+         */
+        RhythmDip: {
+            /** End Seq */
+            end_seq: number;
+            /** Start Seq */
+            start_seq: number;
+        };
+        /**
+         * RhythmPoint
+         * @description 一章的节奏指标（纯本地统计，非读者满意度）。
+         */
+        RhythmPoint: {
+            /** Conflict Density */
+            conflict_density: number;
+            /** Dialogue Ratio */
+            dialogue_ratio: number;
+            /** Pace */
+            pace: number;
+            /** Seq */
+            seq: number;
+            /** Title */
+            title?: string | null;
+            /** Word Count */
+            word_count: number;
+        };
+        /**
+         * RhythmResult
+         * @description 爽点—节奏曲线。`pace` 只衡量文本节奏，指路用，结论仍要人来读。
+         */
+        RhythmResult: {
+            /** Chapters */
+            chapters: components["schemas"]["RhythmPoint"][];
+            /** Dips */
+            dips: components["schemas"]["RhythmDip"][];
+            /** Low Threshold */
+            low_threshold: number;
+        };
         /** SearchHit */
         SearchHit: {
             /** Chapter Seq */
@@ -2759,6 +2819,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    audit_rhythm_api_books__book__audit_rhythm_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RhythmResult"];
                 };
             };
             /** @description Validation Error */

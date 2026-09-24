@@ -27,10 +27,16 @@ ChatRole = Literal["user", "assistant"]
 #:   world_entries → POST /api/books/{book}/world-entries
 #:   outline_nodes → POST /api/books/{book}/outlines
 #:   book_plan     → POST /api/books（无书对话的立项交接：确认后一键建书）
+#:   title_options → 不落库；作者从候选里点一个 → PATCH /api/books/{book}
+#:   retrospective → 不落库；作者点「复制复盘」带走（一书一库，跨书复用靠导出/备份）
 #:   prose         → 不落库，由前端放进编辑器（正文必须人工确认）
-DraftKind = Literal["characters", "world_entries", "outline_nodes", "prose", "book_plan"]
+DraftKind = Literal[
+    "characters", "world_entries", "outline_nodes", "prose",
+    "book_plan", "title_options", "retrospective",
+]
 
 #: 前端可指定的"要干什么"。`auto` = 让 AI 自己判断。
+#: 与 `_INTENT_TEXT`（services/ai_chat_service.py）的键一一对应 —— 加动作两处一起改。
 Intent = Literal[
     "auto",
     "characters",
@@ -39,6 +45,9 @@ Intent = Literal[
     "continue",
     "expand",
     "plot_directions",
+    "guide",
+    "title_options",
+    "retrospect",
 ]
 
 #: 大纲层级（与 `OutlineLevel` 一致）；非法值归一到 chapter。

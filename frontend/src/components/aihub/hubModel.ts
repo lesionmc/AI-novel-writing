@@ -1,40 +1,21 @@
 /**
- * AI 对话工作台 —— 纯数据/映射层（无 React、无网络）。
- * ① `parseAiChatDraft`：一个校验器同时服务"刚收到的响应"与"localStorage 旧存档"，
- *    脏数据天然被剔除；② 会话/消息形状与动作（能力入口）清单。
+ * AI 对话工作台 —— 会话/消息形状 + 动作（能力入口）清单（无 React、无网络）。
+ * 草稿的归一/校验在 `hubDraft.ts`（本文件重导出，调用方 import 路径不变）。
  * 红线：本层不做任何写库动作（"确认写入"见 `useHubDrafts`）。
  */
 
 import type {
   AiChatContextUsed,
   AiChatDraft,
-  AiChatDraftCharacter,
-  AiChatDraftOutlineNode,
-  AiChatDraftWorldEntry,
   AiChatWebSource,
   ChatRole,
 } from '@/types/api';
 import type { HubReading } from './hubReading';
+import { asRecord, asText } from './hubDraft';
 
-const ROLES = ['protagonist', 'supporting', 'antagonist', 'minor'] as const;
-const CATEGORIES = ['force', 'place', 'rule', 'item', 'other'] as const;
-const LEVELS = ['total', 'volume', 'chapter'] as const;
-
-/** 归一后的草稿：渲染层只认这个形状，不必再猜 `payload` 里有什么。 */
-export type HubDraft =
-  | { kind: 'characters'; characters: AiChatDraftCharacter[] }
-  | { kind: 'world_entries'; entries: AiChatDraftWorldEntry[] }
-  | { kind: 'outline_nodes'; nodes: AiChatDraftOutlineNode[] }
-  | { kind: 'prose'; text: string }
-  /** 无书对话聊定方向后的建书交接单：确认 = 建书（书名可空，包装步再定） */
-  | {
-      kind: 'book_plan';
-      title: string | null;
-      genre: string | null;
-      readers: string | null;
-      premise: string | null;
-      targetWords: number | null;
-    };
+// 草稿归一层对外重导出：形状、校验器、卡标题（调用方仍从 hubModel 引）
+export { parseAiChatDraft, draftLabel, asRecord, asText } from './hubDraft';
+export type { HubDraft } from './hubDraft';
 
 /** 一条消息。`draft` 存**服务端原样**的草稿，展示前过 `parseAiChatDraft`。 */
 export interface HubMessage {
@@ -79,6 +60,8 @@ export interface HubAction {
   mode: HubActionMode;
   intent: string;
   needsChapter: boolean;
+  /** 需要先关联某本书（书名候选要 PATCH、复盘要读全书）—— 无作品模式不显示 */
+  needsBook?: boolean;
   needsModel: boolean;
   hint: string;
 }
@@ -89,6 +72,8 @@ export const HUB_ACTIONS: HubAction[] = [
   { key: 'characters', label: '建人物', mode: 'chat', intent: 'characters', needsChapter: false, needsModel: true, hint: '整理成人物卡' },
   { key: 'world', label: '世界观', mode: 'chat', intent: 'world_entries', needsChapter: false, needsModel: true, hint: '地点、势力、规则、道具' },
   { key: 'outline', label: '大纲', mode: 'chat', intent: 'outline_nodes', needsChapter: false, needsModel: true, hint: '往后的情节怎么走' },
+  { key: 'titles', label: '起书名', mode: 'chat', intent: 'title_options', needsChapter: false, needsBook: true, needsModel: true, hint: '一次出十几个书名备选，你挑（定稿权在你）' },
+  { key: 'retrospect', label: '复盘', mode: 'chat', intent: 'retrospect', needsChapter: false, needsBook: true, needsModel: true, hint: '把这本书的经验沉淀成下一本可复用的模板' },
   { key: 'continue', label: '写正文', mode: 'chat', intent: 'continue', needsChapter: true, needsModel: true, hint: '接着某章往下写一段' },
   { key: 'expand', label: '扩写', mode: 'chat', intent: 'expand', needsChapter: true, needsModel: true, hint: '把这段写得更丰满' },
   { key: 'plot', label: '情节方向', mode: 'chat', intent: 'plot_directions', needsChapter: true, needsModel: true, hint: '接下来可以往哪几个方向走' },
@@ -127,150 +112,6 @@ export function newSession(title = '新对话'): HubSession {
   return { id: newSessionId(), title, messages: [], createdAt: now, updatedAt: now };
 }
 
-/** 草稿的展示标题（草稿卡片顶部 + 会话摘要都用它） */
-export function draftLabel(draft: HubDraft): string {
-  switch (draft.kind) {
-    case 'characters':
-      return `人物卡 · ${draft.characters.length} 个人物`;
-    case 'world_entries':
-      return `世界设定 · ${draft.entries.length} 条`;
-    case 'outline_nodes':
-      return `剧情安排 · ${draft.nodes.length} 条`;
-    case 'prose':
-      return '正文片段';
-    case 'book_plan':
-      return '立项方案 · 建书交接单';
-  }
-}
-
-/* ============================================================
-   草稿校验（唯一校验器：响应与存档共用）
-   ============================================================ */
-
-function asRecord(v: unknown): Record<string, unknown> | null {
-  return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
-}
-
-function asText(v: unknown): string | null {
-  return typeof v === 'string' && v.trim() ? v.trim() : null;
-}
-
-/** 可选文本：空串 / 非字符串一律归 null（不保留半截假值） */
-function optText(v: unknown): string | null {
-  return asText(v);
-}
-
-function oneOf<T extends string>(v: unknown, pool: readonly T[]): T | null {
-  const text = typeof v === 'string' ? v.trim() : '';
-  return (pool as readonly string[]).includes(text) ? (text as T) : null;
-}
-
-function parseCharacters(payload: Record<string, unknown>): AiChatDraftCharacter[] {
-  const raw = payload.characters;
-  if (!Array.isArray(raw)) return [];
-  const out: AiChatDraftCharacter[] = [];
-  for (const item of raw) {
-    const row = asRecord(item);
-    const name = asText(row?.name);
-    if (!row || !name) continue;
-    out.push({
-      name,
-      role: oneOf(row.role, ROLES) ?? 'supporting',
-      surface_identity: optText(row.surface_identity),
-      secret_desire: optText(row.secret_desire),
-      fatal_weakness: optText(row.fatal_weakness),
-      contradiction: optText(row.contradiction),
-      appearance: optText(row.appearance),
-      background: optText(row.background),
-    });
-  }
-  return out;
-}
-
-function parseWorldEntries(payload: Record<string, unknown>): AiChatDraftWorldEntry[] {
-  const raw = payload.entries;
-  if (!Array.isArray(raw)) return [];
-  const out: AiChatDraftWorldEntry[] = [];
-  for (const item of raw) {
-    const row = asRecord(item);
-    const name = asText(row?.name);
-    if (!row || !name) continue;
-    out.push({
-      category: oneOf(row.category, CATEGORIES) ?? 'other',
-      name,
-      content: optText(row.content),
-    });
-  }
-  return out;
-}
-
-function parseOutlineNodes(payload: Record<string, unknown>): AiChatDraftOutlineNode[] {
-  const raw = payload.nodes;
-  if (!Array.isArray(raw)) return [];
-  const out: AiChatDraftOutlineNode[] = [];
-  for (const item of raw) {
-    const row = asRecord(item);
-    if (!row) continue;
-    const title = asText(row.title);
-    const content = asText(row.content);
-    if (!title && !content) continue;
-    out.push({
-      level: oneOf(row.level, LEVELS) ?? 'chapter',
-      title: title ?? '未命名',
-      content: content ?? '',
-    });
-  }
-  return out;
-}
-
-/**
- * 把服务端草稿（或存档里的旧草稿）归一为可渲染形状。
- * 入参故意收 `unknown`：同一个校验器同时服务"刚收到的响应"和"localStorage 里的旧数据"，
- * 后者天然是 `unknown`。
- * 形状不对 / 空壳 / 认不出的 `kind` → 返回 null（**不摆半张卡片**给用户点"确认写入"）。
- */
-export function parseAiChatDraft(draft: unknown): HubDraft | null {
-  const row = asRecord(draft);
-  if (!row) return null;
-  const payload = asRecord(row.payload);
-  if (!payload) return null;
-  switch (row.kind) {
-    case 'characters': {
-      const characters = parseCharacters(payload);
-      return characters.length ? { kind: 'characters', characters } : null;
-    }
-    case 'world_entries': {
-      const entries = parseWorldEntries(payload);
-      return entries.length ? { kind: 'world_entries', entries } : null;
-    }
-    case 'outline_nodes': {
-      const nodes = parseOutlineNodes(payload);
-      return nodes.length ? { kind: 'outline_nodes', nodes } : null;
-    }
-    case 'prose': {
-      const text = asText(payload.text);
-      return text ? { kind: 'prose', text } : null;
-    }
-    case 'book_plan': {
-      const genre = asText(payload.genre);
-      const premise = asText(payload.premise);
-      // 与后端同判据：题材或卖点至少一样，否则不是一张能建书的卡
-      if (!genre && !premise) return null;
-      const tw = payload.target_words;
-      return {
-        kind: 'book_plan',
-        title: asText(payload.title),
-        genre,
-        readers: asText(payload.readers),
-        premise,
-        targetWords: typeof tw === 'number' && tw > 0 && tw <= 10_000_000 ? Math.round(tw) : null,
-      };
-    }
-    default:
-      return null;
-  }
-}
-
 /** 存档校验用：这条消息形状是否可用（脏数据逐条剔除） */
 export function isHubMessage(v: unknown): v is HubMessage {
   const row = asRecord(v);
@@ -295,5 +136,3 @@ export function parseWebSources(v: unknown): AiChatWebSource[] {
   }
   return out.slice(0, 5);
 }
-
-export { asRecord, asText };

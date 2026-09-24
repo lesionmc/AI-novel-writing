@@ -528,3 +528,26 @@ def test_book_plan_draft_normalized_and_gated(client, book, fake_llm):
 
     assert _ask({"kind": "book_plan", "payload": {"title": "只起了名"}}) is None
     assert _ask({"kind": "book_plan", "payload": {"genre": ""}}) is None
+
+
+def test_title_options_and_retrospective_drafts(client, book, fake_llm):
+    """书名候选（≥2 条去重）与复盘卡（content 必填）归一。"""
+    _add_provider(client)
+
+    def _ask(draft_payload):
+        fake_llm(FakeLLMClient(chat_responses=[json.dumps(
+            {"reply": "给你", "draft": draft_payload}, ensure_ascii=False)]))
+        r = client.post(f"/api/books/{book}/ai/chat",
+                        json={"messages": [{"role": "user", "content": "起书名"}]})
+        assert r.status_code == 200, r.text
+        return r.json()["draft"]
+
+    titles = _ask({"kind": "title_options", "payload": {"titles": ["断剑", "断剑", "  ", "祖碑"]}})
+    assert titles["payload"]["titles"] == ["断剑", "祖碑"]
+    # 少于两条不成卡（一个候选没有"备选"的意义）
+    assert _ask({"kind": "title_options", "payload": {"titles": ["只一个"]}}) is None
+
+    retro = _ask({"kind": "retrospective", "payload": {"content": "## 立住了什么\n…"}})
+    assert retro["payload"]["title"] == "写作复盘"
+    assert "立住了什么" in retro["payload"]["content"]
+    assert _ask({"kind": "retrospective", "payload": {"content": ""}}) is None

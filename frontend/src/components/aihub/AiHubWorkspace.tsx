@@ -92,9 +92,9 @@ export function AiHubWorkspace({ slug }: { slug: string }) {
   }, []);
 
   const chapterList = chapters.data ?? [];
-  // 无作品模式只留不依赖书的对话动作（草稿能聊出来，写入时会被引导先关联作品）
+  // 无作品模式只留不依赖具体书的对话动作（草稿能聊出来，写入时会被引导先关联作品）
   const availableActions = useMemo(
-    () => (slug ? HUB_ACTIONS : HUB_ACTIONS.filter((a) => a.mode === 'chat' && !a.needsChapter)),
+    () => (slug ? HUB_ACTIONS : HUB_ACTIONS.filter((a) => !a.needsBook && !(a.mode === 'chat' && a.needsChapter))),
     [slug],
   );
 
@@ -217,6 +217,7 @@ export function AiHubWorkspace({ slug }: { slug: string }) {
           streamIndex={readings.streamIndex}
           onConfirmDraft={drafts.confirm}
           onDiscardDraft={drafts.discard}
+          onPickTitle={drafts.applyTitle}
           onStopReading={readings.stop}
         />
 

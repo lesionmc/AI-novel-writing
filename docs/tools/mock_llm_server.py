@@ -35,6 +35,31 @@ def _reply_for(prompt: str) -> str:
             ensure_ascii=False,
         )
     # 按注入的意图行精确分派（提示词正文本来就含"人物卡"等字样，不能拿它当特征词）
+    if "他要**起书名**" in prompt:
+        return json.dumps(
+            {
+                "reply": "给你一批候选，我最推荐「（mock）书名甲」，反差感最强。",
+                "draft": {
+                    "kind": "title_options",
+                    "payload": {"titles": ["（mock）书名甲", "（mock）书名乙", "（mock）书名丙"]},
+                },
+            },
+            ensure_ascii=False,
+        )
+    if "复盘沉淀" in prompt:
+        return json.dumps(
+            {
+                "reply": "这本书的复盘写好了，复制走存进你的方法论文件夹。",
+                "draft": {
+                    "kind": "retrospective",
+                    "payload": {
+                        "title": "（mock）复盘",
+                        "content": "## 立住了什么\n（mock）祖碑设定\n## 哪里掉速\n第 1 章交代过多",
+                    },
+                },
+            },
+            ensure_ascii=False,
+        )
     if "把这本书开起来" in prompt:
         # 引导模式（guide 意图）：立项聊定 → 产出建书交接卡
         return json.dumps(
@@ -96,12 +121,13 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, *_args) -> None:  # 安静
         return
 
-    def _read_body(self) -> dict:
+    def _read_body(self) -> dict | None:
+        """坏 JSON 要如实报 400：吞掉伪装成 {} 会让后端的请求序列化回归悄悄溜过 E2E。"""
         length = int(self.headers.get("content-length") or 0)
         try:
             return json.loads(self.rfile.read(length) or b"{}")
         except json.JSONDecodeError:
-            return {}
+            return None
 
     def do_GET(self) -> None:  # noqa: N802
         if self.path.endswith("/models"):
@@ -112,6 +138,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         body = self._read_body()
+        if body is None:
+            self.send_error(400, "mock: invalid JSON body")
+            return
         messages = body.get("messages") or [{}]
         prompt = str(messages[-1].get("content") or "")
         content = _reply_for(prompt)

@@ -47,6 +47,7 @@ import type {
   ProviderWriteRequest,
   RecallLog,
   RecallResponse,
+  RhythmResult,
   SaveChapterResponse,
   SearchHit,
   SensitiveAuditResult,
@@ -293,4 +294,7 @@ export const api = {
     }),
   /** 词库状态（设置页展示：未配置 / 已配置 N 条）。只读、无副作用 */
   getWordlistStatus: () => request<WordlistStatus>('/audit/wordlist-status'),
+  /** 爽点—节奏曲线（整本书）：纯本地统计，不调模型 */
+  auditRhythm: (book: string) =>
+    request<RhythmResult>(`/books/${slugSegment(book)}/audit/rhythm`),
 };

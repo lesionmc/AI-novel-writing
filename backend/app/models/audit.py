@@ -25,6 +25,32 @@ class AiFlavorResult(BaseModel):
     hits: list[FlavorHitOut]
 
 
+class RhythmPoint(BaseModel):
+    """一章的节奏指标（纯本地统计，非读者满意度）。"""
+
+    seq: int
+    title: str | None = None
+    word_count: int
+    dialogue_ratio: float
+    conflict_density: float
+    pace: int
+
+
+class RhythmDip(BaseModel):
+    """一段低洼区：连续 ≥2 章 pace 低于阈值。"""
+
+    start_seq: int
+    end_seq: int
+
+
+class RhythmResult(BaseModel):
+    """爽点—节奏曲线。`pace` 只衡量文本节奏，指路用，结论仍要人来读。"""
+
+    chapters: list[RhythmPoint]
+    low_threshold: int
+    dips: list[RhythmDip]
+
+
 class SensitiveHitOut(BaseModel):
     """敏感词命中项，按「词条 × 章节」聚合。"""
 

@@ -332,6 +332,40 @@
   gap: var(--space-2);
 }
 
+/* 书名候选：一行一个（书名长短不一，胶囊换行会乱），点整行即采用 */
+.titleGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.titleChip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--radius-button);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.titleChip:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+}
+
+.titleChip:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
 .draftStateText {
   color: var(--color-text-tertiary);
   font-size: var(--text-xs);

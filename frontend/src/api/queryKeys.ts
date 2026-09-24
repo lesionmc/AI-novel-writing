@@ -39,4 +39,7 @@ export const queryKeys = {
 
   /** 敏感词词库状态（质检 / 设置页共享）：只读、低频变化 */
   wordlistStatus: () => ['audit', 'wordlist-status'] as const,
+
+  /** 爽点—节奏曲线（按书）：纯本地统计，随正文变化 */
+  rhythm: (slug: string) => ['audit', 'rhythm', slug] as const,
 };
