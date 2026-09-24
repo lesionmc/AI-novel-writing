@@ -49,7 +49,7 @@ export interface BookBrief {
   updated_at: string;
 }
 
-/** 契约 `Book`（详情用，10 字段） */
+/** 契约 `Book`（详情用，11 字段） */
 export interface Book {
   id: number;
   slug: string;
@@ -57,6 +57,7 @@ export interface Book {
   genre: string | null;
   target_words: number;
   premise: string | null;
+  readers: string | null; // 写给谁看：目标读者 / 平台（立项信息，进 AI 上下文）
   summary: string | null;
   writing_mode: WritingMode;
   created_at: string;
@@ -68,6 +69,7 @@ export interface CreateBookRequest {
   genre?: string | null;
   target_words?: number;
   premise?: string | null;
+  readers?: string | null;
 }
 
 export interface UpdateBookRequest {
@@ -75,6 +77,7 @@ export interface UpdateBookRequest {
   genre?: string | null;
   target_words?: number;
   premise?: string | null;
+  readers?: string | null;
   summary?: string | null;
   writing_mode?: WritingMode;
 }
@@ -286,13 +289,9 @@ export interface ChapterVersion {
   created_at: string;
 }
 
-export interface CreateVersionRequest {
-  note?: string | null;
-}
+export interface CreateVersionRequest { note?: string | null; }
 
-/* ============================ 前端专用 ============================ */
-
-/** 写作台左侧树的卷分组（由章节列表 + 大纲卷纲合成，非 API 契约） */
+/* ===== 前端专用（非 API 契约）：写作台左侧树的卷分组，由章节列表 + 大纲卷纲合成 ===== */
 export interface VolumeGroup {
   volumeId: number | null;
   title: string;

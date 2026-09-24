@@ -48,6 +48,8 @@ export interface TopicAdviceRequest {
   daily_words?: number;
   /** 目标总字数：500000 / 1000000 / 2000000 */
   target_length?: number;
+  /** 写给谁看（平台 + 读者群），自由文本 */
+  readers?: string;
 }
 
 /** 一条推荐方向 */

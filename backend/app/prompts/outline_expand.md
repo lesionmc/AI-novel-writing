@@ -3,6 +3,7 @@
 ## 作品信息
 题材：{{genre}}
 一句话卖点：{{premise}}
+写给谁看：{{readers}}
 
 ## 当前节点
 层级：{{level_name}}

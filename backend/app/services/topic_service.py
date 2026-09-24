@@ -129,6 +129,7 @@ def advice(payload: TopicAdviceRequest) -> TopicAdviceResponse:
         "unique_background": payload.unique_background or "（未提供）",
         "daily_words": _opt(payload.daily_words),
         "target_length": _opt(payload.target_length),
+        "readers": (payload.readers or "").strip() or "（未提供 —— 按题材主流读者群推断）",
         "genre_data": _genre_data_text(genres),
     }
     prompt = build_prompt("topic_advice", variables, provider=client.provider)

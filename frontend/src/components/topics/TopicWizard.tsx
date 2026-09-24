@@ -19,8 +19,8 @@ export interface TopicWizardProps {
   noModel: boolean;
   /** 引导用户去配置模型（书库页没有 book 上下文，交给外层决定去哪） */
   onOpenConfig: () => void;
-  /** 「就用这个方向建书」 */
-  onUse: (rec: TopicRecommendation) => void;
+  /** 「就用这个方向建书」：连同问卷答案（读者定位 / 目标长度）一起交给上层落进作品 */
+  onUse: (rec: TopicRecommendation, answers: TopicAnswers) => void;
 }
 
 /**
@@ -91,7 +91,7 @@ export function TopicWizard({ onClose, noModel, onOpenConfig, onUse }: TopicWiza
       showClose={!loading}
       closeOnOverlay={!loading}
       title="让 AI 帮你选题"
-      subtitle="回答四个问题，我给你几个「有人看、写得少」的方向。"
+      subtitle="回答五个问题，我给你几个「有人看、写得少」的方向。"
       footer={footer}
     >
       <div className={styles.stack}>
@@ -116,7 +116,7 @@ export function TopicWizard({ onClose, noModel, onOpenConfig, onUse }: TopicWiza
             <p className={styles.stepHint}>{userMessageOf(advice.error)}</p>
           </div>
         ) : advice.data ? (
-          <TopicResults data={advice.data} onUse={onUse} />
+          <TopicResults data={advice.data} onUse={(rec) => onUse(rec, answers)} />
         ) : (
           <TopicSurvey
             genres={genres.data?.genres ?? []}

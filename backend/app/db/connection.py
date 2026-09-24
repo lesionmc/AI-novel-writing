@@ -211,11 +211,25 @@ class Database:
         self.path = Path(path)
         self.caps = caps
         self.lock = threading.RLock()
+        self._migrated = False
+
+    def _ensure_migrated(self, conn: sqlite3.Connection) -> None:
+        """每库每进程补一次列（老作品缺列会在读写时静默 500）。"""
+        if self._migrated:
+            return
+        with self.lock:
+            if self._migrated:
+                return
+            from app.db.schema_loader import ensure_book_migrations
+
+            ensure_book_migrations(conn)
+            self._migrated = True
 
     @contextmanager
     def connection(self) -> Iterator[sqlite3.Connection]:
         conn = connect(self.path, self.caps)
         try:
+            self._ensure_migrated(conn)
             yield conn
         finally:
             conn.close()
@@ -262,6 +276,7 @@ class Database:
         """单事务上下文：全部成功提交，异常回滚；忙锁翻译成可重试错误。"""
         conn = connect(self.path, self.caps)
         try:
+            self._ensure_migrated(conn)
             with self.lock:
                 try:
                     yield conn

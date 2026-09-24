@@ -283,6 +283,17 @@
             ],
             "title": "Premise"
           },
+          "readers": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Readers"
+          },
           "target_words": {
             "default": 0,
             "title": "Target Words",
@@ -332,6 +343,17 @@
               }
             ],
             "title": "Premise"
+          },
+          "readers": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Readers"
           },
           "slug": {
             "title": "Slug",
@@ -434,6 +456,17 @@
               }
             ],
             "title": "Premise"
+          },
+          "readers": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Readers"
           },
           "summary": {
             "anyOf": [
@@ -3274,7 +3307,7 @@
         "type": "object"
       },
       "TopicAdviceRequest": {
-        "description": "对应指南的「四问」。",
+        "description": "对应问卷五问（四问作者自己 + 一问写给谁）。",
         "properties": {
           "daily_words": {
             "anyOf": [
@@ -3295,6 +3328,17 @@
             "minItems": 1,
             "title": "Favorite Genres",
             "type": "array"
+          },
+          "readers": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Readers"
           },
           "target_length": {
             "anyOf": [

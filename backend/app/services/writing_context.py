@@ -81,6 +81,8 @@ class WritingContext:
     prev_summary: str
     recent_text: str
     chapter_text: str
+    # 立项时定下的「写给谁」：目标读者 / 平台 / 男频女频 —— AI 判断口吻与节奏的依据
+    book_readers: str = "（未填写）"
     character_states_history: str = ""
     # 记忆金字塔：已完成卷的卷摘要（超长篇的"远期记忆"，没有就是空串）
     volume_summaries: str = ""
@@ -115,6 +117,7 @@ class WritingContext:
             "book_title": self.book_title,
             "book_genre": self.book_genre,
             "book_premise": self.book_premise,
+            "book_readers": self.book_readers or "（未填写）",
             "chapter_seq": self.chapter_seq,
             "chapter_title": self.chapter_title,
             "settings": self.settings or "（设定库还是空的）",
@@ -327,6 +330,7 @@ def load(conn: sqlite3.Connection, slug: str, chapter: dict) -> WritingContext:
         book_title=(book.get("title") or "").strip() or "（未命名）",
         book_genre=(book.get("genre") or "").strip() or "（未指定）",
         book_premise=(book.get("premise") or "").strip() or "（未填写）",
+        book_readers=(book.get("readers") or "").strip() or "（未填写）",
         chapter_seq=seq,
         chapter_title=(chapter.get("title") or "").strip() or "（未命名）",
         settings=settings,

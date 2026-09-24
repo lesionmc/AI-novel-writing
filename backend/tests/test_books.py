@@ -181,3 +181,22 @@ def test_providers_visible_without_any_book(client):
     assert client.get("/api/providers").status_code == 200
     assert client.get("/api/providers").json() == []
 
+
+
+def test_old_book_db_gets_readers_column_migrated(client, book):
+    """老库缺 readers 列 → 首次连接自动补列，PATCH/GET 照常（列级迁移回归）。"""
+    import sqlite3
+
+    from app.config import settings
+    from app.db.registry import get_registry
+
+    db = settings.books_dir / book / "novel.db"
+    conn = sqlite3.connect(db)
+    conn.execute("ALTER TABLE book DROP COLUMN readers")
+    conn.commit()
+    conn.close()
+    get_registry().forget(book)  # 丢掉已缓存的 Database（其"已迁移"标记）
+
+    resp = client.patch(f"/api/books/{book}", json={"readers": "番茄 · 男频"})
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["readers"] == "番茄 · 男频"

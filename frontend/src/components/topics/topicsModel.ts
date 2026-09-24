@@ -26,12 +26,14 @@ export const TARGET_LENGTH_OPTIONS: NumberOption[] = [
   { value: 2_000_000, label: '200 万字以上', hint: '长线连载' },
 ];
 
-/** 四问的作答（全部可留空，不逼用户打字） */
+/** 五问的作答（全部可留空，不逼用户打字） */
 export interface TopicAnswers {
   favoriteGenres: string[];
   uniqueBackground: string;
   dailyWords: number | null;
   targetLength: number | null;
+  /** 写给谁看：平台 + 读者群，自由文本（胶囊只是快捷填入） */
+  readers: string;
 }
 
 export const EMPTY_ANSWERS: TopicAnswers = {
@@ -39,18 +41,24 @@ export const EMPTY_ANSWERS: TopicAnswers = {
   uniqueBackground: '',
   dailyWords: null,
   targetLength: null,
+  readers: '',
 };
 
 /** 作答 → 契约请求体（空值一律不带字段，让后端走默认） */
 export function toAdviceRequest(a: TopicAnswers): TopicAdviceRequest {
   const bg = a.uniqueBackground.trim();
+  const rd = a.readers.trim();
   return {
     favorite_genres: a.favoriteGenres,
     ...(bg ? { unique_background: bg } : {}),
     ...(a.dailyWords !== null ? { daily_words: a.dailyWords } : {}),
     ...(a.targetLength !== null ? { target_length: a.targetLength } : {}),
+    ...(rd ? { readers: rd } : {}),
   };
 }
+
+/** 第 5 问「写给谁看」的平台胶囊（点了即填，也可自己打字补充「男频/女频/学生党多」之类） */
+export const READER_PLATFORM_OPTIONS = ['番茄免费', '起点', '晋江', '飞卢', '七猫'];
 
 /** 最多能选几个题材（选太多反而说明没想好） */
 export const MAX_GENRES = 3;

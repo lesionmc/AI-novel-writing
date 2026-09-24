@@ -8,6 +8,7 @@
 - 书名：{{book_title}}
 - 题材：{{book_genre}}
 - 一句话卖点：{{book_premise}}
+- 写给谁看：{{book_readers}}
 
 ## 本章大纲
 {{chapter_outline}}

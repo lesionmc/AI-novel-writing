@@ -115,6 +115,28 @@ def apply_schema(conn: sqlite3.Connection, caps: Capabilities) -> int:
     return len(statements)
 
 
+# 老库补列清单：列名 → ALTER 语句（幂等，靠 PRAGMA table_info 判重）。
+# 新库由 schema.sql 天然带全列；这里只服务**建库之后才加的列**。
+_BOOK_COLUMN_MIGRATIONS: tuple[tuple[str, str], ...] = (
+    ("readers", "ALTER TABLE book ADD COLUMN readers TEXT"),
+)
+
+
+def ensure_book_migrations(conn: sqlite3.Connection) -> None:
+    """对**已存在**的书库做增量补列（单用户本机库，一条 ALTER 毫秒级）。
+
+    没有这套机制时，老作品的库缺列会在读写时静默 500；
+    列级迁移不 bump user_version，判据就是 PRAGMA table_info 本身。
+    """
+    cols = {str(r[1]) for r in conn.execute("PRAGMA table_info(book)").fetchall()}
+    if not cols:
+        return  # 还没有 book 表（空库/半成品），交给建库语句处理
+    for column, ddl in _BOOK_COLUMN_MIGRATIONS:
+        if column not in cols:
+            conn.execute(ddl)
+    conn.commit()
+
+
 def apply_global_schema(conn: sqlite3.Connection) -> int:
     """建**全局库**（data/app.db）：只执行 @@GLOBAL 段，返回语句条数。"""
     statements = load_statements(scope="global")

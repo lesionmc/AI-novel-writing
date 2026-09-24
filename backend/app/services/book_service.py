@@ -39,6 +39,7 @@ def _row_to_out(slug: str, row: dict) -> BookOut:
         genre=row.get("genre"),
         target_words=row.get("target_words") or 0,
         premise=row.get("premise"),
+        readers=row.get("readers"),
         summary=row.get("summary"),
         writing_mode=row.get("writing_mode") or "assist",
         created_at=row["created_at"],
@@ -122,6 +123,7 @@ def create_book(payload: BookCreate) -> BookOut:
                 genre=payload.genre,
                 target_words=payload.target_words,
                 premise=payload.premise,
+                readers=payload.readers,
                 writing_mode="assist",
                 now=now,
             )

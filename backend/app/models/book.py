@@ -26,6 +26,7 @@ class BookCreate(BaseModel):
     genre: str | None = None
     target_words: int = 0
     premise: str | None = None
+    readers: str | None = None
 
     @field_validator("title")
     @classmethod
@@ -42,6 +43,7 @@ class BookUpdate(BaseModel):
     genre: str | None = None
     target_words: int | None = None
     premise: str | None = None
+    readers: str | None = None
     summary: str | None = None
     writing_mode: WritingMode | None = None
 
@@ -58,6 +60,7 @@ class BookOut(BaseModel):
     genre: str | None = None
     target_words: int = 0
     premise: str | None = None
+    readers: str | None = None
     summary: str | None = None
     writing_mode: WritingMode = "assist"
     created_at: str

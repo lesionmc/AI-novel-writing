@@ -7,6 +7,14 @@
   gap: var(--space-6);
 }
 
+/* 立项卡的字段纵排 */
+.fieldStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
+}
+
 /* 头部 */
 .heroActions {
   display: flex;
@@ -19,6 +27,7 @@
 .progress {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
   background: var(--color-surface);
@@ -32,6 +41,7 @@
   gap: var(--space-2);
   min-width: 0;
   flex: 1;
+  white-space: nowrap;
   color: var(--color-text-tertiary);
   font-size: var(--text-sm);
 }
@@ -84,6 +94,26 @@
   align-items: center;
   gap: var(--space-3);
   margin-bottom: var(--space-2);
+}
+
+/* 可收合卡头：整行是个按钮（收起时右侧显示摘要 + 展开箭头） */
+.cardHeadBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cardChevron {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
 }
 
 .badge {

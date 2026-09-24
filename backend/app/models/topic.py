@@ -30,7 +30,7 @@ class GenresResponse(BaseModel):
 
 
 class TopicAdviceRequest(BaseModel):
-    """对应指南的「四问」。"""
+    """对应问卷五问（四问作者自己 + 一问写给谁）。"""
 
     model_config = ConfigDict(extra="ignore")
 
@@ -38,6 +38,7 @@ class TopicAdviceRequest(BaseModel):
     unique_background: str | None = None
     daily_words: int | None = Field(default=None, ge=0)
     target_length: int | None = Field(default=None, ge=0)
+    readers: str | None = None
 
 
 class TopicRecommendation(BaseModel):

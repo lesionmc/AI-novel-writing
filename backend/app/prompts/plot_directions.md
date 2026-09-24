@@ -5,6 +5,7 @@
 - 书名：{{book_title}}
 - 题材：{{book_genre}}
 - 一句话卖点：{{book_premise}}
+- 写给谁看：{{book_readers}}
 
 ## 当前进度
 - 写到第 {{chapter_seq}} 章

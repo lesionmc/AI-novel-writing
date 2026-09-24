@@ -1112,6 +1112,8 @@ export interface components {
             genre?: string | null;
             /** Premise */
             premise?: string | null;
+            /** Readers */
+            readers?: string | null;
             /**
              * Target Words
              * @default 0
@@ -1130,6 +1132,8 @@ export interface components {
             id: number;
             /** Premise */
             premise?: string | null;
+            /** Readers */
+            readers?: string | null;
             /** Slug */
             slug: string;
             /** Summary */
@@ -1179,6 +1183,8 @@ export interface components {
             genre?: string | null;
             /** Premise */
             premise?: string | null;
+            /** Readers */
+            readers?: string | null;
             /** Summary */
             summary?: string | null;
             /** Target Words */
@@ -2250,13 +2256,15 @@ export interface components {
         };
         /**
          * TopicAdviceRequest
-         * @description 对应指南的「四问」。
+         * @description 对应问卷五问（四问作者自己 + 一问写给谁）。
          */
         TopicAdviceRequest: {
             /** Daily Words */
             daily_words?: number | null;
             /** Favorite Genres */
             favorite_genres: string[];
+            /** Readers */
+            readers?: string | null;
             /** Target Length */
             target_length?: number | null;
             /** Unique Background */

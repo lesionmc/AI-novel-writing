@@ -16,6 +16,7 @@ import { BookCard, NewBookCard } from '@/components/library/BookCard';
 import { NewBookForm } from '@/components/library/NewBookForm';
 import { DeleteBookDialog, RenameBookDialog } from '@/components/library/BookDialogs';
 import { TopicWizard } from '@/components/topics/TopicWizard';
+import type { TopicAnswers } from '@/components/topics/topicsModel';
 import { toast } from '@/stores/toastStore';
 import { bookPath } from '@/lib/slug';
 import styles from './LibraryPage.module.css';
@@ -86,10 +87,15 @@ export function LibraryPage() {
     }
   };
 
-  /** 「就用这个方向建书」→ 关掉向导，打开新建作品并预填题材与卖点 */
-  const useTopic = (rec: TopicRecommendation) => {
+  /** 「就用这个方向建书」→ 关掉向导，打开新建作品并预填题材/卖点/读者定位/目标长度 */
+  const useTopic = (rec: TopicRecommendation, answers: TopicAnswers) => {
     setTopicOpen(false);
-    setPrefill({ genre: rec.niche, premise: rec.sample_premise ?? undefined });
+    setPrefill({
+      genre: rec.niche,
+      premise: rec.sample_premise ?? undefined,
+      readers: answers.readers.trim() || undefined,
+      target_words: answers.targetLength ?? undefined,
+    });
     setTitleReady(false);
     setCreating(true);
   };

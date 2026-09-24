@@ -117,6 +117,7 @@ def expand_outline(outline_id: int, payload: OutlineExpandRequest) -> OutlineExp
         variables = {
             "genre": book.get("genre") or "未指定",
             "premise": book.get("premise") or "（未填写）",
+            "readers": book.get("readers") or "（未填写）",
             "level_name": _LEVEL_ZH.get(node["level"], node["level"]),
             "title": node.get("title") or "（未命名）",
             "content": node.get("content") or "（暂无要点）",

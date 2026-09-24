@@ -42,6 +42,7 @@ export function NewBookForm({ formId, onSubmit, onValidityChange, initial }: New
     initial?.target_words ? String(initial.target_words) : '',
   );
   const [premise, setPremise] = useState(initial?.premise ?? '');
+  const [readers, setReaders] = useState(initial?.readers ?? '');
   const [titleError, setTitleError] = useState<string | null>(null);
 
   const validateTitle = (value: string) => {
@@ -65,6 +66,7 @@ export function NewBookForm({ formId, onSubmit, onValidityChange, initial }: New
       genre: genre.trim() || null,
       target_words: Number.isFinite(words) && words > 0 ? words : 0,
       premise: premise.trim() || null,
+      readers: readers.trim() || null,
     });
   };
 
@@ -100,6 +102,13 @@ export function NewBookForm({ formId, onSubmit, onValidityChange, initial }: New
           placeholder="用一句话说清这本书最抓人的地方"
           onChange={(e) => setPremise(e.target.value)}
           hint="写给未来的自己看：一句话讲清核心冲突。也可以之后让 AI 帮你出"
+        />
+        <Input
+          label="写给谁看"
+          value={readers}
+          placeholder="例如：番茄男频，爱看扮猪吃虎的下班读者"
+          onChange={(e) => setReaders(e.target.value)}
+          hint="平台和读者群决定节奏与写法。拿不准就留空，到「开书清单」里补"
         />
       </div>
 

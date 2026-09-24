@@ -5,6 +5,7 @@
 - 独特背景或经历：{{unique_background}}
 - 可稳定承担的日更字数：{{daily_words}}
 - 预期篇幅：{{target_length}} 万字
+- 想写给谁看（目标读者 / 平台 / 男频女频）：{{readers}}
 
 ## 题材库数据（这是真实数据，不要编造）
 {{genre_data}}

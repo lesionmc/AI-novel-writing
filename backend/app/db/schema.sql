@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS book (
     genre           TEXT,
     target_words    INTEGER NOT NULL DEFAULT 0,
     premise         TEXT,                                   -- 一句话卖点
+    readers         TEXT,                                   -- 写给谁看（目标读者/平台/男频女频）
     summary         TEXT,                                   -- 全书摘要（滚动更新）
     writing_mode    TEXT    NOT NULL DEFAULT 'assist'
                     CHECK (writing_mode IN ('manual','assist','semi')),

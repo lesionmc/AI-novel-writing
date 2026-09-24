@@ -12,61 +12,61 @@ import {
   markStepSkipped,
   type GuideStepId,
 } from './onboardingProgress';
-import { STEP_COPY, copyOf, currentStep, doneCount, type GuideFacts } from './onboardingModel';
+import { STEP_COPY, doneCount, type GuideFacts } from './onboardingModel';
 import { useBookProgress } from './useBookProgress';
-import { GuideDoneRow, GuideStepCard } from './GuideStepCard';
+import { GuideStepCard } from './GuideStepCard';
 import { DirectionStep } from './DirectionStep';
 import { SkeletonStep } from './SkeletonStep';
 import { PackageStep } from './PackageStep';
 import styles from './onboarding.module.css';
 
-/** 已完成 / 已跳过步骤的一行摘要 */
+/** 收起卡片上的一行摘要 */
 function metaOf(step: GuideStepId, facts: GuideFacts, skipped: boolean): string {
   if (skipped) return '已跳过，随时可以回来补';
   if (step === 'direction') {
     const parts: string[] = [];
     if (facts.genre) parts.push(`题材：${facts.genre}`);
+    if (facts.readers) parts.push(`写给：${facts.readers}`);
     if (facts.premise) parts.push('卖点已写');
-    return parts.join(' · ') || '已定方向';
+    return parts.join(' · ') || '还没定';
   }
   if (step === 'skeleton') {
     const parts: string[] = [];
     if (facts.characters) parts.push(`人物 ${facts.characters}`);
     if (facts.worldEntries) parts.push(`世界观 ${facts.worldEntries}`);
     if (facts.outlines) parts.push(`大纲 ${facts.outlines}`);
-    return parts.join(' · ') || '已开始搭架子';
+    return parts.join(' · ') || '还没开始';
   }
-  return '简介已写好';
+  return facts.summary ? '简介已写好' : '还没写';
 }
 
 /**
  * 开书清单（`/book/:slug/start`）—— 把指南的六阶段里**开书前的一次性三步**
  * （立项 → 骨架 → 包装）摆到用户眼前，出口交棒给写稿。
  *
- * 产品判断（写进方案第 3 步）：六阶段里 PHASE 4/5/6 是写完一本的**循环**，
- * 塞进"开书"清单只会变成一份永远做不完的待办，所以向导只覆盖前三步。
+ * 布局（2026-09-24 重做）：**三张卡片全部在场**、各自可收合 ——
+ * 做完的收起成一行摘要，没做的展开着等用户；比原先「一次只见一步、其余缩成灰条」
+ * 更好建立全局感，也去掉了 pinned/inferred 两套状态互相打架的老问题。
  *
- * 硬约束：
- *   · 完成度**从已有数据推断**（见 `onboardingModel.stepDone`），不新增接口、不新增状态机；
- *   · **每一步都能跳过**，且跳过不构成任何门禁（写作台的「新建第一章」永远可用）；
- *   · 老作品天然兼容 —— 按真实数据算出"已经过了这一步"，不会显示成"请从第 1 步开始"。
+ * 硬约束不变：完成度**从已有数据推断**（不新增接口）；每一步都能跳过、
+ * 跳过不构成门禁；老作品按真实数据算阶段，不会显示成「请从第 1 步开始」。
  */
 export function StartGuide({ slug }: { slug: string }) {
   const navigate = useNavigate();
   const { book, facts, done, loading, error, refetch } = useBookProgress(slug);
   const [skipped, setSkipped] = useState<GuideStepId[]>(() => loadOnboardingProgress(slug).skipped);
-  /** 用户点过某一行的"继续补"后固定住；没点过就跟着推断结果走 */
-  const [pinned, setPinned] = useState<GuideStepId | null>(null);
+  /** 用户手动开合过的步骤；没动过的按「做完即收起」推断 */
+  const [overrides, setOverrides] = useState<Partial<Record<GuideStepId, boolean>>>({});
 
-  const inferred = currentStep(done);
-  const active = pinned ?? inferred;
-  const activeCopy = copyOf(active);
   const allDone = doneCount(done) === GUIDE_STEP_IDS.length;
+  const isOpen = (id: GuideStepId) => overrides[id] ?? !done[id];
+  const toggle = (id: GuideStepId) =>
+    setOverrides((o) => ({ ...o, [id]: !(o[id] ?? !done[id]) }));
 
   const skip = (step: GuideStepId) => {
     markStepSkipped(slug, step);
     setSkipped((prev) => (prev.includes(step) ? prev : [...prev, step]));
-    setPinned(null);
+    setOverrides((o) => ({ ...o, [step]: false }));
   };
 
   if (error) {
@@ -114,13 +114,12 @@ export function StartGuide({ slug }: { slug: string }) {
         </div>
       ) : (
         <div className={styles.wrap}>
-          <div className={styles.progress}>
+          <div className={styles.progress} aria-hidden="true">
             {STEP_COPY.map((s) => (
               <span
                 key={s.id}
                 className={[
                   styles.progressStep,
-                  s.id === active ? styles.progressStepActive : '',
                   done[s.id] ? styles.progressStepDone : '',
                 ]
                   .filter(Boolean)
@@ -138,31 +137,25 @@ export function StartGuide({ slug }: { slug: string }) {
             ))}
           </div>
 
-          <GuideStepCard
-            no={activeCopy.no}
-            title={activeCopy.title}
-            blurb={activeCopy.blurb}
-            done={done[active]}
-            onSkip={() => skip(active)}
-          >
-            {active === 'direction' ? <DirectionStep slug={slug} facts={facts} /> : null}
-            {active === 'skeleton' ? <SkeletonStep slug={slug} facts={facts} /> : null}
-            {active === 'package' ? (
-              <PackageStep slug={slug} title={book?.title ?? ''} facts={facts} />
-            ) : null}
-          </GuideStepCard>
-
-          <div className={styles.doneList}>
-            {GUIDE_STEP_IDS.filter((id) => id !== active).map((id) => (
-              <GuideDoneRow
-                key={id}
-                no={copyOf(id).no}
-                title={copyOf(id).title}
-                meta={metaOf(id, facts, skipped.includes(id))}
-                onOpen={() => setPinned(id)}
-              />
-            ))}
-          </div>
+          {STEP_COPY.map((s) => (
+            <GuideStepCard
+              key={s.id}
+              no={s.no}
+              title={s.title}
+              blurb={s.blurb}
+              done={done[s.id]}
+              open={isOpen(s.id)}
+              onToggle={() => toggle(s.id)}
+              meta={metaOf(s.id, facts, skipped.includes(s.id))}
+              onSkip={done[s.id] || skipped.includes(s.id) ? undefined : () => skip(s.id)}
+            >
+              {s.id === 'direction' ? <DirectionStep slug={slug} facts={facts} /> : null}
+              {s.id === 'skeleton' ? <SkeletonStep slug={slug} facts={facts} /> : null}
+              {s.id === 'package' ? (
+                <PackageStep slug={slug} title={book?.title ?? ''} facts={facts} />
+              ) : null}
+            </GuideStepCard>
+          ))}
 
           <div className={styles.exitBar}>
             <p className={styles.exitText}>

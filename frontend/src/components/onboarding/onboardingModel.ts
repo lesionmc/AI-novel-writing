@@ -19,6 +19,8 @@ import type { GuideStepId } from './onboardingProgress';
 export interface GuideFacts {
   genre: string | null;
   premise: string | null;
+  readers: string | null;
+  summary: string | null;
   characters: number;
   worldEntries: number;
   foreshadows: number;
@@ -29,6 +31,8 @@ export interface GuideFacts {
 export const EMPTY_FACTS: GuideFacts = {
   genre: null,
   premise: null,
+  readers: null,
+  summary: null,
   characters: 0,
   worldEntries: 0,
   foreshadows: 0,
@@ -40,32 +44,26 @@ export const EMPTY_FACTS: GuideFacts = {
 export type StepDoneMap = Record<GuideStepId, boolean>;
 
 /**
- * 三步的完成判据（与方案 §3.3 逐条对应）：
- *   · 第 1 步「先想清楚写什么」—— 题材**或**卖点任一有值即可（不要求两个都有）
- *   · 第 2 步「先把架子搭起来」—— 人物 / 世界观 / 线索 / 大纲**任一**有内容
- *   · 第 3 步「起个名字，写一句简介」—— 简介（premise）有值
+ * 三步的完成判据：
+ *   · 第 1 步「立项」—— 题材、写给谁、卖点**三样齐**才算定下来（这正是"决定写什么、写给谁"）
+ *   · 第 2 步「骨架」—— 人物 / 世界观 / 线索 / 大纲**任一**有内容
+ *   · 第 3 步「包装」—— 书架简介（summary）有值 —— 与第 1 步的卖点（premise）**分家**，
+ *     否则 AI 选题一次填满 premise 会让两步"同时完成"，第 3 步形同虚设（2026-09-24 修正）。
  * 刻意**不要求"全部填满"**：指南说「答不上就别开」，但产品不能因此把用户卡住。
  */
 export function stepDone(facts: GuideFacts): StepDoneMap {
   const hasText = (v: string | null) => Boolean(v && v.trim());
   return {
-    direction: hasText(facts.genre) || hasText(facts.premise),
+    direction: hasText(facts.genre) && hasText(facts.readers) && hasText(facts.premise),
     skeleton:
       facts.characters > 0 || facts.worldEntries > 0 || facts.foreshadows > 0 || facts.outlines > 0,
-    package: hasText(facts.premise),
+    package: hasText(facts.summary),
   };
 }
 
 /** 已完成步数（用于顶部进度条；不用百分比数字，避免小白纠结） */
 export function doneCount(done: StepDoneMap): number {
   return [done.direction, done.skeleton, done.package].filter(Boolean).length;
-}
-
-/** 第一个没做完的步骤；全做完则返回最后一步（让出口留在视野里） */
-export function currentStep(done: StepDoneMap): GuideStepId {
-  if (!done.direction) return 'direction';
-  if (!done.skeleton) return 'skeleton';
-  return 'package';
 }
 
 /* ========================================================================== */
@@ -84,8 +82,8 @@ export const STEP_COPY: StepCopy[] = [
   {
     id: 'direction',
     no: 1,
-    title: '先想清楚写什么',
-    blurb: '选一个你写得动、又有人看的方向。定了之后随时能改。',
+    title: '先想清楚写什么、写给谁',
+    blurb: '选一个你写得动、又有人看的方向，再定下发哪个平台、给谁看。定了之后随时能改。',
   },
   {
     id: 'skeleton',
@@ -96,14 +94,10 @@ export const STEP_COPY: StepCopy[] = [
   {
     id: 'package',
     no: 3,
-    title: '起个名字，写一句简介',
-    blurb: '读者是先看到名字和这一句话，才决定点不点开的。',
+    title: '打磨书名，写一句书架简介',
+    blurb: '读者是先看到名字和这一句话，才决定点不点开的。简介和卖点分开写：卖点是给你自己的，简介是给读者的。',
   },
 ];
-
-export function copyOf(id: GuideStepId): StepCopy {
-  return STEP_COPY.find((s) => s.id === id) ?? STEP_COPY[0];
-}
 
 /** 第 2 步下面的三张子卡片（点进去都是**已有页面**，向导只负责派活） */
 export interface SkeletonItem {
@@ -137,8 +131,8 @@ export const SKELETON_ITEMS: SkeletonItem[] = [
     key: 'outlines',
     label: '把主线分成几段',
     hint: '先写一句「这本书大概讲什么」，再慢慢拆成一段一段',
-    sub: '/outline',
-    search: '',
+    sub: '/settings',
+    search: 'tab=outline',
     count: (f) => f.outlines,
   },
 ];

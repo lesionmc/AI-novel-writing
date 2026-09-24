@@ -18,18 +18,18 @@ export interface PackageStepProps {
 }
 
 /**
- * 第 3 步：起个名字，写一句简介（指南 PHASE 3 包装）。
+ * 第 3 步：打磨书名，写一句书架简介（指南 PHASE 3 包装）。
  *
- * 说明：书名在本项目里是**建书时就要填**的（`slug` 由书名生成，是一书一库的目录名），
- * 所以这里做的不是"第一次起名"，而是**把内部代号正式改成读者看到的名字**，
- * 并补上「一句话简介」——后者才是首页点击率的另一半。
- * 目录不在这里重做：它就是大纲，直接把人送过去。
+ * 简介写进 `summary`（书架上给读者看的那句），与第 1 步的 `premise`（给自己的卖点）分家 ——
+ * 否则 AI 选题一次填满 premise，第 1、3 步会同时"完成"。
+ * 说明：书名在本项目里是**建书时就要填**的（`slug` 由书名生成），
+ * 这里做的是**把内部代号正式改成读者看到的名字**。目录就在设定库「大纲」Tab。
  */
 export function PackageStep({ slug, title, facts }: PackageStepProps) {
   const navigate = useNavigate();
   const update = useUpdateBook(slug);
   const [renaming, setRenaming] = useState(false);
-  const [premise, setPremise] = useState(facts.premise ?? '');
+  const [summary, setSummary] = useState(facts.summary ?? '');
 
   // RenameBookDialog 只读 slug / title 两个字段，其余按契约补齐（不参与渲染）
   const brief: BookBrief = {
@@ -50,7 +50,7 @@ export function PackageStep({ slug, title, facts }: PackageStepProps) {
         <Button
           variant="secondary"
           icon="outline"
-          onClick={() => navigate(bookPath(slug, '/outline'))}
+          onClick={() => navigate(bookPath(slug, '/settings', 'tab=outline'))}
         >
           去安排目录
         </Button>
@@ -64,17 +64,17 @@ export function PackageStep({ slug, title, facts }: PackageStepProps) {
       {update.isError ? <ErrorBar error={update.error} /> : null}
 
       <Textarea
-        label="一句话简介"
+        label="书架简介（给读者看的一句）"
         rows={3}
-        value={premise}
+        value={summary}
         placeholder="一句话讲清：他是谁、卡在哪、最想看的是什么"
         hint="读者在书架上只看到这一句 —— 「重启末世前三个月，我用一间旧仓库换来了全城补给」"
-        onChange={(e) => setPremise(e.target.value)}
+        onChange={(e) => setSummary(e.target.value)}
       />
       <div className={styles.actions}>
         <Button
           variant="primary"
-          onClick={() => update.mutate({ premise: premise.trim() || null })}
+          onClick={() => update.mutate({ summary: summary.trim() || null })}
           loading={update.isPending}
         >
           保存简介

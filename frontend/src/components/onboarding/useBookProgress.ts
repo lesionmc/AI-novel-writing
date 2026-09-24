@@ -39,6 +39,8 @@ export function useBookProgress(slug: string | undefined): BookProgress {
     ...EMPTY_FACTS,
     genre: book.data?.genre ?? null,
     premise: book.data?.premise ?? null,
+    readers: book.data?.readers ?? null,
+    summary: book.data?.summary ?? null,
     characters: characters.data?.length ?? 0,
     worldEntries: worldEntries.data?.length ?? 0,
     foreshadows: foreshadows.data?.length ?? 0,

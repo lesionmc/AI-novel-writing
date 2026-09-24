@@ -15,17 +15,18 @@ def create_row(
     genre: str | None,
     target_words: int,
     premise: str | None,
+    readers: str | None,
     writing_mode: str,
     now: str,
 ) -> int:
     return insert(
         conn,
         """
-        INSERT INTO book (title, genre, target_words, premise, summary, writing_mode,
+        INSERT INTO book (title, genre, target_words, premise, readers, summary, writing_mode,
                           created_at, updated_at)
-        VALUES (?, ?, ?, ?, NULL, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?)
         """,
-        (title, genre, target_words, premise, writing_mode, now, now),
+        (title, genre, target_words, premise, readers, writing_mode, now, now),
     )
 
 
@@ -41,7 +42,7 @@ def update_row(conn: sqlite3.Connection, book_id: int, fields: dict[str, Any]) -
     if not fields:
         return
     allowed = {
-        "title", "genre", "target_words", "premise", "summary", "writing_mode",
+        "title", "genre", "target_words", "premise", "readers", "summary", "writing_mode",
     }
     clean = {k: v for k, v in fields.items() if k in allowed}
     if not clean:

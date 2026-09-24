@@ -5,6 +5,7 @@ import { SkeletonRows } from '@/components/common/Skeleton';
 import {
   DAILY_WORDS_OPTIONS,
   MAX_GENRES,
+  READER_PLATFORM_OPTIONS,
   TARGET_LENGTH_OPTIONS,
   competitionWords,
   heatWords,
@@ -82,7 +83,7 @@ export function TopicSurvey({
   return (
     <div className={styles.stack}>
       <p className={s.stepHint}>
-        回答四个问题就行，都不用打字。我会结合题材库的真实热度与竞争度，给你几个「有人看、写得少」的方向。
+        回答五个问题就行，都不用打字。我会结合题材库的真实热度与竞争度，给你几个「有人看、写得少」的方向。
       </p>
 
       <section className={s.q}>
@@ -158,6 +159,30 @@ export function TopicSurvey({
           onSelect={(v) => onChange({ targetLength: v })}
         />
       </section>
+
+      <Input
+        label="5. 打算写给谁看、发在哪？"
+        value={answers.readers}
+        placeholder="例如：番茄男频，爱看扮猪吃虎的下班读者；不知道就留空"
+        hint="可不填。定了平台和读者群，推荐的方向和后面的写法判断都有依据。"
+        onChange={(e) => onChange({ readers: e.target.value })}
+      />
+      <div className={s.pillRow}>
+        {READER_PLATFORM_OPTIONS.map((p) => {
+          const active = answers.readers.includes(p);
+          return (
+            <button
+              key={p}
+              type="button"
+              aria-pressed={active}
+              className={[s.pill, active ? s.pillActive : ''].filter(Boolean).join(' ')}
+              onClick={() => onChange({ readers: active ? '' : `${p} · ` })}
+            >
+              <span className={s.pillLabel}>{p}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

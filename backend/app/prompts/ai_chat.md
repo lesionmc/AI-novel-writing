@@ -6,6 +6,7 @@
 - 书名：{{book_title}}
 - 题材：{{book_genre}}
 - 一句话卖点：{{book_premise}}
+- 写给谁看：{{book_readers}}
 
 ## 你记住的这本书的信息（这是你的记忆，回答时必须用它，不许现编）
 
