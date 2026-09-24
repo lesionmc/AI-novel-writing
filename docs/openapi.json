@@ -3801,6 +3801,88 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/ai/chat": {
+      "post": {
+        "description": "一轮无作品对话（非流式）。",
+        "operationId": "ai_chat_global_api_ai_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiChatResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ai Chat Global",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/ai/chat/stream": {
+      "post": {
+        "description": "一轮无作品对话（流式）。前置只查模型是否已配。",
+        "operationId": "ai_chat_stream_global_api_ai_chat_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ai Chat Stream Global",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
     "/api/audit/wordlist-status": {
       "get": {
         "operationId": "wordlist_status_api_audit_wordlist_status_get",

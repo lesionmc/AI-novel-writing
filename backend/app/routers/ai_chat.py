@@ -37,3 +37,25 @@ def ai_chat_stream(book: str, payload: AiChatRequest) -> StreamingResponse:
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+# ------------------------------------------------------------- 无作品模式（AI 助手不绑书）
+# workbuddy/codex 式体验：进来就能聊，不必先选作品。记忆包为空（writing_context.empty()），
+# 草稿仍可生成，但**写入需要作品** —— 前端在未关联作品时门控「确认写入」。
+
+
+@router.post("/api/ai/chat", response_model=AiChatResponse)
+def ai_chat_global(payload: AiChatRequest) -> AiChatResponse:
+    """一轮无作品对话（非流式）。"""
+    return ai_chat_service.chat("", payload)
+
+
+@router.post("/api/ai/chat/stream")
+def ai_chat_stream_global(payload: AiChatRequest) -> StreamingResponse:
+    """一轮无作品对话（流式）。前置只查模型是否已配。"""
+    frames = ai_chat_service.chat_stream("", payload)
+    return StreamingResponse(
+        frames,
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )

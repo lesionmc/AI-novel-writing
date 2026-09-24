@@ -21,13 +21,16 @@ import { request } from './request';
 import { streamSse, type SseEvent, type StreamOptions } from './sse';
 import type { AiChatRequest, AiChatResponse } from '@/types/api';
 
+/** 有作品走 `/books/{book}/ai/...`；未关联作品走全局 `/ai/...`（记忆包为空，进来就能聊） */
+const chatBase = (book: string) => (book ? `/books/${slugSegment(book)}/ai` : '/ai');
+
 export const aiHubApi = {
   /**
    * 一轮「有记忆」的对话。**无写入副作用**。
    * 要读设定库全文再让模型推理，慢模型可能几十秒，超时放宽到 120s。
    */
   aiChat: (book: string, payload: AiChatRequest) =>
-    request<AiChatResponse>(`/books/${slugSegment(book)}/ai/chat`, {
+    request<AiChatResponse>(`${chatBase(book)}/chat`, {
       method: 'POST',
       body: payload,
       timeoutMs: 120000,
@@ -45,7 +48,7 @@ export const aiHubApi = {
     options?: StreamOptions,
   ) =>
     streamSse(
-      `/books/${slugSegment(book)}/ai/chat/stream`,
+      `${chatBase(book)}/chat/stream`,
       payload,
       onEvent,
       { timeoutMs: 300000, ...options },

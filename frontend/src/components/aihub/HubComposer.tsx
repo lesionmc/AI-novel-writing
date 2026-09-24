@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/common/Button';
-import { HUB_ACTIONS, actionOf } from './hubModel';
+import { HUB_ACTIONS, actionOf, type HubAction } from './hubModel';
 import styles from './hub.module.css';
 
 export interface HubComposerProps {
@@ -17,6 +17,8 @@ export interface HubComposerProps {
   disabledHint?: string;
   /** 当前动作需要先选章节（写正文 / 校对） */
   needChapter: boolean;
+  /** 可用动作（无作品模式只给不依赖书的几项）；缺省 = 全部 */
+  actions?: HubAction[];
 }
 
 const PLACEHOLDER = '说点什么，比如「帮我加一个反派，跟我哥是死对头」';
@@ -41,6 +43,7 @@ export function HubComposer({
   disabled,
   disabledHint,
   needChapter,
+  actions = HUB_ACTIONS,
 }: HubComposerProps) {
   const [text, setText] = useState('');
   const action = actionOf(actionKey);
@@ -68,7 +71,7 @@ export function HubComposer({
     <div className={styles.composer}>
       <div className={styles.actionRow} role="group" aria-label="这次想做什么">
         <span className={styles.railLabel}>这次想做什么</span>
-        {HUB_ACTIONS.map((a) => (
+        {actions.map((a) => (
           <button
             key={a.key}
             type="button"

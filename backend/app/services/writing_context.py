@@ -289,6 +289,28 @@ def _states_history(conn: sqlite3.Connection, seq: int) -> str:
     return clip_text("\n".join(lines), MAX_SUMMARY_CHARS * 2)
 
 
+def empty() -> WritingContext:
+    """无作品上下文：AI 助手「不关联作品也能聊」时用它 —— 记忆块全空。
+
+    `variables()` 对空串本就有兜底文案，提示词照常可插值，无需特判。
+    """
+    return WritingContext(
+        slug="",
+        book_title="（未关联作品）",
+        book_genre="（未指定）",
+        book_premise="（未填写）",
+        chapter_seq=1,
+        chapter_title="（未选章节）",
+        settings="",
+        characters="",
+        open_foreshadows="",
+        chapter_outline="",
+        prev_summary="",
+        recent_text="",
+        chapter_text="",
+    )
+
+
 def load(conn: sqlite3.Connection, slug: str, chapter: dict) -> WritingContext:
     """组装一次写作 AI 调用的完整上下文。**只读，无副作用。**"""
     book = book_repo.get_row(conn) or {}

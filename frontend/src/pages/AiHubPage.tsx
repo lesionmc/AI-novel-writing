@@ -8,7 +8,7 @@ import { AiHubWorkspace } from '@/components/aihub/AiHubWorkspace';
  * 会话 state 与它的 localStorage 存档因此天然按作品隔离
  * （不会把上一本的对话带到下一本，也不会拿新 slug 的键覆盖旧内容）。
  *
- * 没选作品时不阻塞页面 —— 落到「选一部作品，AI 才能记住你的设定」的落地页。
+ * 没选作品时不拦路 —— 无作品模式直接开聊（服务端走空记忆包），要写进书里再关联作品。
  */
 export function AiHubPage() {
   const { slug } = useParams();

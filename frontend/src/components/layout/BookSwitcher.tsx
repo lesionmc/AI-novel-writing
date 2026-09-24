@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useBooks } from '@/hooks/queries';
 import { Icon } from '@/components/common/Icon';
+import { Modal } from '@/components/common/Modal';
 import { bookPath } from '@/lib/slug';
 import styles from './BookSwitcher.module.css';
 
@@ -23,22 +24,22 @@ export interface BookSwitcherProps {
   /** 当前作品 slug（来自地址）；不在作品页时为 null */
   slug: string | null;
   open: boolean;
-  /** 导航项要求的目标子页：没有作品时点「大纲」→ '/outline'。null = 保持当前子页 */
+  /** 导航项要求的目标子页：没有作品时点「写作台」→ '/desk'。null = 保持当前子页 */
   pendingSub: string | null;
   onOpenChange: (open: boolean) => void;
 }
 
 /**
- * 作品选择弹层（**无自己的入口** —— 2026-09-24 导航精简后右上角不再放选书按钮）。
- * 唯一的开法是 GlobalNav 在「没选作品时点了作品内导航项」时把它打开；
- * 换作品请走「书库」。搜索框保留：作品一多，纯列表滚起来找不到。
+ * 作品选择弹窗（居中 Modal，无自己的入口）。
+ * 2026-09-24 起右上角不再放选书按钮，此前浮层没有锚点、悬在导航下方很突兀 ——
+ * 改为正经弹窗。唯一的开法是 GlobalNav 在「没选作品时点了作品内导航项」时打开它；
+ * 平时换作品走「书库」。搜索框保留：作品一多，纯列表滚起来找不到。
  */
 export function BookSwitcher({ slug, open, pendingSub, onOpenChange }: BookSwitcherProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: books, isPending } = useBooks();
   const [query, setQuery] = useState('');
-  const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const keyword = query.trim().toLowerCase();
@@ -59,26 +60,6 @@ export function BookSwitcher({ slug, open, pendingSub, onOpenChange }: BookSwitc
     inputRef.current?.focus();
   }, [open]);
 
-  // 点外部 / Esc 关闭：与 Menu 的行为一致，避免"打开后只能再点一次触发器"
-  useEffect(() => {
-    if (!open) return;
-    const onDocDown = (e: MouseEvent) => {
-      if (!wrapRef.current?.contains(e.target as Node)) onOpenChange(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        onOpenChange(false);
-      }
-    };
-    document.addEventListener('mousedown', onDocDown);
-    document.addEventListener('keydown', onKey, true);
-    return () => {
-      document.removeEventListener('mousedown', onDocDown);
-      document.removeEventListener('keydown', onKey, true);
-    };
-  }, [open, onOpenChange]);
-
   /** 选中一部作品：URL 一律经 bookPath() 拼（幂等编码，避免双重编码导致 404） */
   const select = (nextSlug: string) => {
     const sub = pendingSub ?? subPathOf(location.pathname);
@@ -90,57 +71,58 @@ export function BookSwitcher({ slug, open, pendingSub, onOpenChange }: BookSwitc
   const total = books?.length ?? 0;
 
   return (
-    <div className={styles.wrap} ref={wrapRef}>
-      {open ? (
-        <div className={styles.popover} role="dialog" aria-label="选择作品">
-          <div className={styles.searchRow}>
-            <Icon name="search" size={16} />
-            <input
-              ref={inputRef}
-              className={styles.search}
-              type="search"
-              value={query}
-              placeholder="搜索作品名或题材"
-              aria-label="搜索作品"
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </div>
+    <Modal
+      open={open}
+      onClose={() => onOpenChange(false)}
+      title="选择作品"
+      subtitle="换一部作品，页面保持在同一类子页"
+    >
+      <div className={styles.searchRow}>
+        <Icon name="search" size={16} />
+        <input
+          ref={inputRef}
+          className={styles.search}
+          type="search"
+          value={query}
+          placeholder="搜索作品名或题材"
+          aria-label="搜索作品"
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
 
-          {isPending ? (
-            <p className={styles.hint}>正在读取作品列表…</p>
-          ) : total === 0 ? (
-            <p className={styles.hint}>书库里还没有作品，先去「书库」新建一部。</p>
-          ) : list.length === 0 ? (
-            <p className={styles.hint}>没有匹配「{query.trim()}」的作品，换个词试试。</p>
-          ) : (
-            <ul className={styles.list}>
-              {list.map((b) => {
-                const active = b.slug === slug;
-                return (
-                  <li key={b.slug}>
-                    <button
-                      type="button"
-                      className={[styles.item, active ? styles.itemActive : ''].join(' ')}
-                      aria-current={active ? 'true' : undefined}
-                      onClick={() => select(b.slug)}
-                    >
-                      <span className={styles.itemMain}>
-                        <span className={styles.itemTitle} title={b.title}>
-                          {b.title}
-                        </span>
-                        <span className={styles.itemMeta}>
-                          {b.genre ?? '未设题材'} · {b.chapter_count} 章
-                        </span>
-                      </span>
-                      {active ? <Icon name="check" size={16} /> : null}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      ) : null}
-    </div>
+      {isPending ? (
+        <p className={styles.hint}>正在读取作品列表…</p>
+      ) : total === 0 ? (
+        <p className={styles.hint}>书库里还没有作品，先去「书库」新建一部。</p>
+      ) : list.length === 0 ? (
+        <p className={styles.hint}>没有匹配「{query.trim()}」的作品，换个词试试。</p>
+      ) : (
+        <ul className={styles.list}>
+          {list.map((b) => {
+            const active = b.slug === slug;
+            return (
+              <li key={b.slug}>
+                <button
+                  type="button"
+                  className={[styles.item, active ? styles.itemActive : ''].join(' ')}
+                  aria-current={active ? 'true' : undefined}
+                  onClick={() => select(b.slug)}
+                >
+                  <span className={styles.itemMain}>
+                    <span className={styles.itemTitle} title={b.title}>
+                      {b.title}
+                    </span>
+                    <span className={styles.itemMeta}>
+                      {b.genre ?? '未设题材'} · {b.chapter_count} 章
+                    </span>
+                  </span>
+                  {active ? <Icon name="check" size={16} /> : null}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Modal>
   );
 }

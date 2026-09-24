@@ -104,6 +104,15 @@ test('全流程：建书 → AI 对话 → 写作 → 大纲 → 质检 → 导�
     if (mock) await request.patch(`/api/providers/${mock.id}`, { data: { is_default: true } });
   });
 
+  await test.step('无作品模式：/chat 进来就能聊，不必先选作品', async () => {
+    await page.goto('/chat');
+    const input = page.getByLabel('输入你想说的话');
+    await expect(input).toBeEnabled();
+    await input.fill('写作卡文了怎么办？');
+    await page.getByRole('button', { name: /发送/ }).click();
+    await expect(page.getByText('（mock 回复）')).toBeVisible({ timeout: 30_000 });
+  });
+
   await test.step('AI 流式对话 + 草稿确认入库', async () => {
     await page.goto(`${SLUG_PATH}/chat`);
     // 核心回归（用户报障点）：输入框任何状态都能打字，只有发送被门控

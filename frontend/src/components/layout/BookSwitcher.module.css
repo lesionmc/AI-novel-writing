@@ -1,27 +1,4 @@
-/* 导航条右侧的「作品选择器」。颜色一律走语义 token，不写死色值。 */
-
-.wrap {
-  position: relative;
-  display: inline-flex;
-  flex-shrink: 0;
-  /* 无触发器后靠撑满导航条高度来给浮层定位（top:100% 即导航条下沿） */
-  align-self: stretch;
-}
-
-/* 下拉浮层：右对齐到触发器，宽度固定以免作品名长短把布局推来推去 */
-.popover {
-  position: absolute;
-  top: calc(100% + var(--space-2));
-  right: 0;
-  z-index: var(--z-dropdown);
-  width: 300px;
-  padding: var(--space-2);
-  border: var(--border-width-1) solid var(--color-border);
-  border-radius: var(--radius-card);
-  background-color: var(--color-surface-raised);
-  box-shadow: var(--shadow-md);
-  animation: popoverIn var(--duration-fast) var(--ease-out);
-}
+/* 「作品选择」弹窗内部样式（外层容器由 Modal 提供）。颜色一律走语义 token，不写死色值。 */
 
 .searchRow {
   display: flex;
@@ -107,17 +84,4 @@
   padding: var(--space-3);
   color: var(--color-text-tertiary);
   font-size: var(--text-sm);
-}
-
-@keyframes popoverIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .popover {
-    animation: none;
-  }
 }

@@ -453,3 +453,44 @@ def test_chat_stream_carries_draft_and_web_fields(client, book, fake_llm):
     final = [d for e, d in frames if e == "final"][0]
     assert final["draft"]["kind"] == "outline_nodes"
     assert final["web_attempted"] is False
+
+
+# ------------------------------------------------- 无作品模式（AI 助手进来就能聊）
+def test_chat_without_book_works(client, fake_llm):
+    _add_provider(client)
+    fake = FakeLLMClient(
+        chat_responses=[json.dumps({"reply": "在的，先说说你在写什么。", "draft": None}, ensure_ascii=False)]
+    )
+    fake_llm(fake)
+
+    resp = client.post("/api/ai/chat", json={"messages": [{"role": "user", "content": "你好"}]})
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["reply"] == "在的，先说说你在写什么。"
+    assert body["context_used"]["characters"] == 0
+
+    prompt = fake.chat_calls[0][0]["content"]
+    assert "（未关联作品）" in prompt  # 空记忆包有兜底文案，不是插值崩
+    assert "你好" in prompt
+
+
+def test_chat_without_book_no_model_readable_error(client):
+    resp = client.post("/api/ai/chat", json={"messages": [{"role": "user", "content": "你好"}]})
+    assert resp.status_code == 400
+    assert resp.json()["error"]["code"] == "LLM_NOT_CONFIGURED"
+
+
+def test_chat_stream_without_book(client, fake_llm):
+    _add_provider(client)
+    fake_llm(
+        FakeLLMClient(
+            chat_responses=[json.dumps({"reply": "早。", "draft": None}, ensure_ascii=False)]
+        )
+    )
+    with client.stream(
+        "POST", "/api/ai/chat/stream", json={"messages": [{"role": "user", "content": "hi"}]}
+    ) as resp:
+        assert resp.status_code == 200
+        frames = _collect_sse(resp)
+    finals = [d for e, d in frames if e == "final"]
+    assert finals and finals[0]["reply"] == "早。"

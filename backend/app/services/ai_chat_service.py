@@ -233,18 +233,22 @@ class _Prepared:
 
 
 def _prepare(book: str, payload: AiChatRequest) -> _Prepared:
-    registry = get_registry()
-    registry.require(book)  # 作品不存在 → 404 BOOK_NOT_FOUND
+    """`book=""` = 无作品模式（AI 助手未关联作品）：照常陪聊，记忆包全空，404 无从谈起。"""
+    if book:
+        registry = get_registry()
+        registry.require(book)  # 作品不存在 → 404 BOOK_NOT_FOUND
 
-    with registry.database(book).connection() as conn:
-        if payload.chapter_id is not None:
-            chapter = chapter_repo.get(conn, payload.chapter_id)
-            if chapter is None:
-                raise ChapterNotFoundError()
-        else:
-            chapter = dict(_NO_CHAPTER)
-        ctx = writing_context.load(conn, book, chapter)
-        context_used = AiChatContextUsed(**ctx.usage())
+        with registry.database(book).connection() as conn:
+            if payload.chapter_id is not None:
+                chapter = chapter_repo.get(conn, payload.chapter_id)
+                if chapter is None:
+                    raise ChapterNotFoundError()
+            else:
+                chapter = dict(_NO_CHAPTER)
+            ctx = writing_context.load(conn, book, chapter)
+    else:
+        ctx = writing_context.empty()
+    context_used = AiChatContextUsed(**ctx.usage())
 
     client = llm_registry.require_any_client("content")
     intent = str(payload.intent or "auto").strip() or "auto"

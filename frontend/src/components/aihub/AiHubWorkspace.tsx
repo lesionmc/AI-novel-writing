@@ -9,10 +9,11 @@ import { ChatHead } from './ChatHead';
 import { ChatStream } from './ChatStream';
 import { ContextPanel } from './ContextPanel';
 import { HubComposer } from './HubComposer';
-import { HubGate } from './HubGate';
+import { NoBookBar } from './NoBookBar';
 import { ModelWarn } from './ModelWarn';
 import { SessionRail } from './SessionRail';
 import {
+  HUB_ACTIONS,
   HUB_WELCOME,
   actionOf,
   newSession,
@@ -41,25 +42,14 @@ function withMarkedDraft(session: HubSession, index: number, state: 'applied' | 
 
 /**
  * AI 对话工作台（`/chat` 与 `/book/:slug/chat`）—— 唯一的 AI 对话入口。
+ * **无作品也能进**（slug=''）：进来就聊，服务端走空记忆包；写草稿时会提示先关联作品。
  *
  * 三栏：左会话列表 / 中对话流 / 右「这次 AI 读了什么」。
  * 对话史存本机（`hubArchive`，按作品分键）；**上下文由服务端组装**，前端从不自己拼。
- * 能力分两类（见 `HUB_ACTIONS`）：产草稿的（建人物/世界观/大纲/正文/扩写/情节方向）
- * **必须用户点「确认写入」才落库**，正文只能复制走；只读的（校对/审校/敏感词）
- * 只出报告、**没有任何落库路径**（见 `useHubReadings`）。
+ * 能力分两类（见 `HUB_ACTIONS`）：产草稿的**必须用户点「确认写入」才落库**，正文只能复制走；
+ * 只读的（校对/审校/敏感词）只出报告、**没有任何落库路径**（见 `useHubReadings`）。
  */
 export function AiHubWorkspace({ slug }: { slug: string }) {
-  if (!slug) {
-    return (
-      <div className={styles.hub}>
-        <HubGate />
-      </div>
-    );
-  }
-  return <HubWorkspace slug={slug} />;
-}
-
-function HubWorkspace({ slug }: { slug: string }) {
   const chapters = useChapterBriefs(slug);
   const capabilities = useCapabilities();
   const noModel = capabilities.data?.llm_configured === false;
@@ -111,6 +101,11 @@ function HubWorkspace({ slug }: { slug: string }) {
   }, []);
 
   const chapterList = chapters.data ?? [];
+  // 无作品模式只留不依赖书的对话动作（草稿能聊出来，写入时会被引导先关联作品）
+  const availableActions = useMemo(
+    () => (slug ? HUB_ACTIONS : HUB_ACTIONS.filter((a) => a.mode === 'chat' && !a.needsChapter)),
+    [slug],
+  );
 
   // 只读能力（校对 / 审校 / 敏感词）：结果只进对话流，不进草稿通道
   const readings = useHubReadings({ slug, activeId: active?.id ?? null, patchSession });
@@ -215,6 +210,10 @@ function HubWorkspace({ slug }: { slug: string }) {
       return;
     }
 
+    if (!slug) {
+      toast.info('还没关联作品 —— 在左栏「当前作品」选一部，再确认写入。'); // 落库必须有归属
+      return;
+    }
     setWritingIndex(index);
     writeDraft.mutate(draft, {
       onSuccess: (res) => {
@@ -251,6 +250,8 @@ function HubWorkspace({ slug }: { slug: string }) {
       <section className={styles.main}>
         <ChatHead chapterId={chapterId} onChapterChange={setChapterId} chapters={chapterList} />
 
+        {!slug ? <NoBookBar /> : null}
+
         {noModel ? <ModelWarn slug={slug} /> : null}
 
         <ChatStream
@@ -276,6 +277,7 @@ function HubWorkspace({ slug }: { slug: string }) {
           disabled={noModel}
           disabledHint="还没配好 AI 模型，配了就能对话、校对和审校。"
           needChapter={needChapter}
+          actions={availableActions}
         />
       </section>
 

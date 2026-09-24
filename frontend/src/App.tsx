@@ -33,7 +33,7 @@ const PageFallback = <p className="pageSubtitle">加载中…</p>;
 /**
  * 路由表（导航精简 2026-09-24：9 项 → 7 项，统计页删除，大纲并入设定库 Tab）：
  *   /                       书库
- *   /chat                   AI 助手（**无作品也能进**：先选作品才开聊）
+ *   /chat                   AI 助手（**无作品也能进**：进来就聊，写草稿时再关联作品）
  *   /book/:slug/start       开书向导（新建作品后的默认落点）
  *   /book/:slug/chat        AI 助手（带作品）
  *   /book/:slug/desk        写作台（核心页，自有三栏骨架）
